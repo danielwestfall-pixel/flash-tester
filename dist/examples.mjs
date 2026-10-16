@@ -7,7 +7,7 @@ export const examples=[
   {id:'four',title:'Fail example · 4 black/white flashes / second',hz:4,a:[0,0,0],b:[255,255,255],expectation:'Expected failure when the flashing region exceeds the WCAG area threshold: four general flashes per second, ΔY=1.00000. Use the large live field at the reference viewing setup.',fail:true},
   {id:'red',title:'Fail example · 4 red/cyan flashes / second',hz:4,a:[255,0,0],b:[0,255,255],expectation:'Expected failure when the flashing region exceeds the WCAG area threshold: four general and red candidates per second. One state is saturated red.',fail:true}
 ];
-export function exampleValues(example){const a=color(...example.a),b=color(...example.b);return {a,b,delta:Math.abs(a.y-b.y),chromaDistance:Math.hypot(a.u-b.u,a.v-b.v)};}
+export function exampleValues(example){const a=color(...example.a),b=color(...example.b);return {a,b,delta:Math.abs(a.y-b.y),chromaDistance:a.valid&&b.valid?Math.hypot(a.u-b.u,a.v-b.v):null};}
 export function exampleState(example,t){return example.hz&&Math.floor((t+1e-9)*example.hz*2)%2?example.b:example.a;}
 export function syntheticExample(example,snapshot){
   const width=64,height=36,analyzer=new Analyzer(width,height),evidence=new Evidence(width,height);

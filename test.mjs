@@ -49,5 +49,6 @@ e.push(new Uint8ClampedArray(raw),0,f,()=>null);assert.equal(e.report().screensh
 assert.equal(e.report().maximum,1,'Probe reads selected pixel');
 assert.equal(e.report().trace[0].uPrime!==null,true,'White chromaticity defined');
 assert.equal(color(255,0,0).saturation,1);
+assert.equal(exampleValues(examples[1]).chromaDistance,null,'Black has no defined chromaticity');
 assert.equal(new Evidence(1,1).report().minimum,null,'Empty evidence remains unknown');
 console.log('Example expectations, luminance evidence, exports, escaping and screenshot controls passed');
