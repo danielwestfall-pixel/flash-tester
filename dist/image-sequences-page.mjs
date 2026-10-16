@@ -2,7 +2,7 @@ import {Analyzer} from './analyzer.mjs';
 import {stampReport,BUILD_ID} from './report.mjs';
 import {imageUrls,orderedPairs,schedule,imageAt,rasterKind,containRect} from './image-sequence.mjs';
 const $=id=>document.getElementById(id),canvas=$('surface'),context=canvas.getContext('2d',{colorSpace:'srgb'});
-let images=[],failures=[],busy=false,sourceDirty=false,output=null,running=false,raf=null,timer=null,started=0,plan=[],liveLog=[],liveConfig=null;
+let images=[],failures=[],busy=false,sourceDirty=false,output=null,running=false,raf=null,timer=null,started=null,plan=[],liveLog=[],liveConfig=null;
 let generation=0,suspended=false,loadController=null;
 const controls=['files','urls','load','samples','changes','seed','width','height','pairs','shuffle','ack','play','download'];
 function update(){
@@ -106,18 +106,22 @@ $('pairs').addEventListener('click',()=>analyze('pairs'));$('shuffle').addEventL
 function stop(reason){
   if(!running)return;running=false;cancelAnimationFrame(raf);clearTimeout(timer);raf=null;timer=null;
   $('stage').hidden=true;context.fillStyle='#000000';context.fillRect(0,0,canvas.width,canvas.height);$('setup').hidden=false;
-  output={...base(liveConfig,'live-shuffle'),plan,drawCallbacks:liveLog,endedBecause:reason,observedSeconds:Math.min(3,(performance.now()-started)/1000),note:'Draw callbacks are not proof of displayed or captured frames. No pixel analysis was performed during this playback.'};
+  output={...base(liveConfig,'live-shuffle'),plan,drawCallbacks:liveLog,endedBecause:reason,observedSeconds:Math.min(3,(performance.now()-started)/1000),note:'Draw callbacks are not proof of displayed or captured frames. Elapsed seconds use performance.now() at callback entry, starting at zero for the initial draw. No pixel analysis was performed during this playback.'};
   $('ack').checked=false;$('result').textContent=`Playback stopped: ${reason}. Download the plan and draw-callback log; use tab capture for measured screening.`;update();$('ack').focus();
 }
-function tick(now){
-  if(!running)return;const t=(now-started)/1000;if(t>=3){stop('three-second limit');return;}
+function tick(){
+  if(!running)return;
+  // Animation timestamps may precede startup within the current frame. Use the
+  // same monotonic entry clock for the immediate draw and every later callback.
+  const now=performance.now();if(started===null)started=now;
+  const t=(now-started)/1000;if(t>=3){stop('three-second limit');return;}
   const index=imageAt(plan,t);draw(context,images[index],canvas.width,canvas.height);liveLog.push({time:t,image:index});raf=requestAnimationFrame(tick);
 }
 $('play').addEventListener('click',()=>{
   if(busy||running||suspended||sourceDirty||!$('ack').checked||images.length<2||document.hidden)return;
   try{liveConfig=config();if(window.innerWidth<liveConfig.width+32||window.innerHeight<liveConfig.height+90)throw Error('Enlarge the viewport to show the full selected display surface and controls, or choose smaller display dimensions.');
     canvas.width=liveConfig.width;canvas.height=liveConfig.height;canvas.style.width=`${liveConfig.width}px`;canvas.style.height=`${liveConfig.height}px`;
-    plan=schedule(images.length,3,liveConfig.rate,liveConfig.seed);liveLog=[];running=true;update();$('setup').hidden=true;$('stage').hidden=false;window.scrollTo(0,0);$('live-state').textContent='Running · Escape to stop';$('halt').focus();started=performance.now();tick(started);timer=setTimeout(()=>stop('three-second limit'),3000);
+    plan=schedule(images.length,3,liveConfig.rate,liveConfig.seed);liveLog=[];running=true;update();$('setup').hidden=true;$('stage').hidden=false;window.scrollTo(0,0);$('live-state').textContent='Running · Escape to stop';$('halt').focus();started=null;tick();timer=setTimeout(()=>stop('three-second limit'),3000);
   }catch(e){$('result').textContent=e.message;}
 });
 $('halt').addEventListener('click',()=>stop('Stop'));document.addEventListener('keydown',e=>{if(e.key==='Escape')stop('Escape');});

@@ -2,6 +2,8 @@
 
 October 16, 2026. **FAIL: one unresolved actionable defect; additional native coverage remains incomplete.** Tested production commit `b363d88b6b176426c7ac4e2c4c283960adaffbb3`, build `flash-review-0.4.1-20261016`. Production code was not repaired during this independent verification.
 
+Repair update: the subsequently authorized 0.4.2 repair and startup regressions pass all nine scripts. Fresh native tab-hide/resize retest is pending; see [NF01_REPAIR.md](NF01_REPAIR.md). The failure evidence below remains the original 0.4.1 finding, not a claim that the same defect was reproduced in 0.4.2.
+
 ## P2 — NF-01: negative and backwards elapsed callback timestamps
 
 Location: `dist/image-sequences-page.mjs`, lines 112–114 (`tick`) and line 120 (startup).
@@ -36,8 +38,8 @@ These are real Chrome playback exports following user-performed native actions. 
 
 ## Remediation checklist
 
-- [ ] Use one consistent elapsed-time clock for immediate and scheduled draws; ensure startup and all later exported callback times are nonnegative/nondecreasing. Do not invent presented-frame timestamps or force artificial unique times.
-- [ ] Retain the two native counterexamples and add a production-path regression where the first supplied animation callback timestamp precedes startup. Cover ordinary startup, same-frame callbacks and repeated playback as well.
+- [x] Use one consistent elapsed-time clock for immediate and scheduled draws; ensure startup and all later exported callback times are nonnegative/nondecreasing. Do not invent presented-frame timestamps or force artificial unique times.
+- [x] Retain the two native counterexamples and add a production-path regression where the first supplied animation callback timestamp precedes startup. Cover ordinary startup, same-frame callbacks and repeated playback as well.
 - [ ] Rerun independent original-log checks against new native exports, including tab hiding and actual resizing; retain the failing originals unchanged.
 - [ ] Rerun the nine existing scripts after the repair, then independently retest the fix before clearing NF-01.
 - [ ] Complete the remaining native matrix in `NATIVE_RESULTS.md`. Passing this fix alone cannot close that coverage gate or establish WCAG conformance.

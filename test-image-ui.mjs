@@ -66,4 +66,39 @@ $('urls').value='';$('files').files=[file('a.jpg',0),file('b.jpg',255)];await $(
 const oldAnalysis=$('pairs').fire('click');winEvents.pagehide({persisted:true});winEvents.pageshow({persisted:true});
 await $('load').fire('click');await oldAnalysis;assert.equal($('download').disabled,true);assert.equal($('rows').children.length,0);
 assert.equal($('pairs').disabled,false);await $('shuffle').fire('click');assert.equal($('download').disabled,false);
+// NF-01: the first native animation timestamp can precede the immediate draw.
+// Supply separate callback timestamps and monotonic entry-clock readings; the
+// exported elapsed times must follow the entry clock on every repeated run.
+const originalPerformance=Object.getOwnPropertyDescriptor(globalThis,'performance');
+let entryClock=0;
+Object.defineProperty(globalThis,'performance',{configurable:true,value:{now:()=>entryClock}});
+try{
+  for(const [runIndex,firstOffset] of [-3.3999999985,-1.7799999956,0,16.6667].entries()){
+    const origin=1000+runIndex*10000;entryClock=origin;
+    $('ack').checked=true;$('ack').fire('change');$('play').fire('click');
+    assert.equal($('stage').hidden,false);
+    const firstCallback=raf;
+    $('play').fire('click');assert.equal(raf,firstCallback,'Repeated Start must not create a second callback chain');
+    const offsets=[0,1,50,50,150,2999];
+    for(const [index,offset] of offsets.entries()){
+      entryClock=origin+offset;const callback=raf;raf=null;
+      callback(origin+firstOffset+index*16.6667);
+    }
+    entryClock=origin+3000;const callback=raf;callback(origin+100);
+    assert.equal($('stage').hidden,true);assert.equal(raf,null);assert.equal(timer,null);
+    $('download').fire('click');const live=JSON.parse(await download.text());
+    const expected=[0,0,.001,.05,.05,.15,2.999];
+    assert.equal(live.drawCallbacks.length,expected.length);
+    live.drawCallbacks.forEach((entry,index)=>{
+      assert.ok(Math.abs(entry.time-expected[index])<1e-12,`NF-01: callback ${index} must use elapsed entry time, not the supplied animation timestamp`);
+      assert.ok(entry.time>=0&&entry.time<3);
+      if(index)assert.ok(entry.time>=live.drawCallbacks[index-1].time);
+      const expectedImage=live.plan.filter(step=>step.time<=expected[index]).at(-1).image;
+      assert.equal(entry.image,expectedImage,'Drawn image follows the same elapsed clock at schedule boundaries');
+    });
+    assert.equal(live.observedSeconds,3);assert.equal(live.endedBecause,'three-second limit');
+    assert.ok(live.note.includes('not proof of displayed or captured frames'));
+  }
+}finally{Object.defineProperty(globalThis,'performance',originalPerformance);}
 console.log('Image input/playback contracts and AI-02 history restoration, late decoding, aborted network loading and interrupted analysis regressions passed.');
+console.log('NF-01 startup-clock regressions passed: earlier/same/later animation timestamps, repeated Start/replay, duplicate entry times, schedule boundaries and duration cap (mock browser APIs).');

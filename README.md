@@ -2,9 +2,11 @@
 
 Standalone browser screening prototype for WCAG 2.2 SC 2.3.1. No packages, accounts, or capture upload required. Source is in `dist/`.
 
+Build 0.4.2 repairs NF-01's mixed playback clocks and adds startup-timing regressions. All nine scripts pass; native tab-hide/resize retest is pending. [Repair and verification status](docs/NF01_REPAIR.md). The detector algorithm remains 0.4.1 and the overall native coverage gate stays open.
+
 ## Run locally
 
-AI agents: start with [AGENTS.md](AGENTS.md) and [the implementation/verification plan](docs/AGENT_PLAN.md). The 0.4.1 repairs passed independent targeted retest; the current gate is FAIL because native verification found negative/backwards callback timestamps (NF-01), with other coverage incomplete. [Native verification is the next active task](docs/NATIVE_VERIFICATION.md).
+AI agents: start with [AGENTS.md](AGENTS.md) and [the implementation/verification plan](docs/AGENT_PLAN.md). The 0.4.1 repairs passed independent targeted retest; the current gate is BLOCKED pending native retest of the 0.4.2 clock repair and other coverage. [Native verification is the next active task](docs/NATIVE_VERIFICATION.md).
 
 From this directory run `python -m http.server 8765 --bind 127.0.0.1 --directory dist`, then open http://127.0.0.1:8765 in desktop Chrome or Edge. HTTPS is required when hosted off localhost. A normal browser tab is recommended because embedded browsers may block display capture.
 
@@ -50,4 +52,4 @@ See [the coverage roadmap](TODO.md) and [input/size testing guide](docs/INPUTS_A
 
 ### Version 0.4.1 audit repairs
 
-Both nonoverlapping transition-pairing phases are evaluated independently so an old unmatched transition cannot hide a later four-flash burst. Phase counts are never summed. Image-page navigation now clears released bitmap state and invalidates pending asynchronous work; restored pages require loading again. Standalone exports retain common scenario, calibration, identity and coverage metadata. Empty CSVs contain an explicit metadata record, with blank measurement fields. CSV readers must inspect `record_type` and use an RFC-compatible parser because JSON context fields contain quotes and commas. `node test-audit-repairs.mjs` retains AI-01/AI-03 counterexamples, and `node test-image-ui.mjs` includes AI-02 restoration and late-load regressions. The repair archive remains local at repair-verification-2026-10-16/README.md (excluded from Git). The three repairs passed independent targeted retest; the current gate is FAIL on native timing-log defect NF-01, with other coverage incomplete. See [the published verification status](docs/VERIFICATION_STATUS.md).
+Both nonoverlapping transition-pairing phases are evaluated independently so an old unmatched transition cannot hide a later four-flash burst. Phase counts are never summed. Image-page navigation now clears released bitmap state and invalidates pending asynchronous work; restored pages require loading again. Standalone exports retain common scenario, calibration, identity and coverage metadata. Empty CSVs contain an explicit metadata record, with blank measurement fields. CSV readers must inspect `record_type` and use an RFC-compatible parser because JSON context fields contain quotes and commas. `node test-audit-repairs.mjs` retains AI-01/AI-03 counterexamples, and `node test-image-ui.mjs` includes AI-02 restoration and late-load regressions. The repair archive remains local at repair-verification-2026-10-16/README.md (excluded from Git). The three repairs passed independent targeted retest; NF-01 has an implemented 0.4.2 clock repair awaiting native retest, with other coverage incomplete. See [the published verification status](docs/VERIFICATION_STATUS.md).
