@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash Review · Presentation matrix target</title>
+<style>
+html,body{margin:0;background:#b0b0b0;color:#111;font:16px/1.4 system-ui}
+#surface{position:fixed;inset:0;background:#b0b0b0}
+#surface:fullscreen{background:#b0b0b0}
+#panel{position:absolute;top:12px;left:12px;max-width:680px;max-height:70vh;overflow:auto;padding:12px;border:2px solid #333;box-sizing:border-box}
+h1{font-size:22px;margin:0 0 8px}p{margin:8px 0}button,select,input{font:inherit;padding:6px}input{width:70px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#readout{font:700 19px/1.4 ui-monospace,monospace;white-space:pre-wrap;margin:10px 0}
+@media(max-width:600px){#panel{left:8px;top:8px;right:8px;padding:8px}h1{font-size:18px}.controls{display:grid;grid-template-columns:1fr}#readout{font-size:16px}}
+</style>
+<div id="surface"><section id="panel">
+<h1>Presentation matrix · static gray</h1>
+<p>This target has no animation or video. Geometry records do not verify flash detection, capture timing or conformance.</p>
+<div class="controls">
+<label>Reviewer scenario <select id="scenario"><option value="default">Normal/restored window</option><option value="maximized">Maximized window</option><option value="browser-fullscreen">Browser fullscreen (F11)</option><option value="content-fullscreen">Content fullscreen</option><option value="responsive-small">Smaller layout</option></select></label>
+<label>Browser zoom (%) <input id="zoom" type="number" value="100" min="25" max="500"></label>
+<button id="fullscreen" type="button">Enter content fullscreen</button>
+<button id="save" type="button">Save geometry JSON</button>
+</div>
+<pre id="readout" aria-label="Current capture-target geometry"></pre>
+<p id="identity"></p>
+<p id="status" role="status">Use native window controls for maximize/F11. Scenario and zoom are reviewer reports, not automatically verified.</p>
+</section></div>
+<script>
+'use strict';
+const sessionId=crypto.randomUUID();
+const surface=document.getElementById('surface');
+const events=[];
+let droppedEvents=0;
+function sample(reason){
+  const rect=surface.getBoundingClientRect();
+  const zoom=Number(document.getElementById('zoom').value);
+  const state={
+    sessionId,recordedAt:new Date().toISOString(),reason,
+    reviewerScenario:document.getElementById('scenario').value,
+    reviewerZoomPercent:Number.isFinite(zoom)&&zoom>=25&&zoom<=500?zoom:null,
+    viewportCss:{width:innerWidth,height:innerHeight},
+    contentRectCss:{x:rect.x,y:rect.y,width:rect.width,height:rect.height},
+    devicePixelRatio,
+    contentFullscreenActive:document.fullscreenElement===surface,
+    documentHidden:document.hidden,
+    layout:innerWidth<=600?'compact':'wide',
+    source:{kind:'static-css-target',rgb:[176,176,176],encodedPixels:null},
+    browserUserAgent:navigator.userAgent
+  };
+  events.push(state);if(events.length>128){events.shift();droppedEvents++;}
+  document.getElementById('readout').textContent=
+    `Viewport CSS: ${state.viewportCss.width} × ${state.viewportCss.height}\n`+
+    `Content CSS: ${rect.width.toFixed(2)} × ${rect.height.toFixed(2)} at ${rect.x}, ${rect.y}\n`+
+    `DPR: ${devicePixelRatio} · layout: ${state.layout}\n`+
+    `Content fullscreen API: ${state.contentFullscreenActive?'ACTIVE':'off'}\n`+
+    `Reviewer scenario: ${state.reviewerScenario} · reported zoom: ${state.reviewerZoomPercent??'unknown'}%`;
+  document.getElementById('identity').textContent=`Target session: ${sessionId}`;
+  return state;
+}
+for(const kind of ['resize','pageshow'])addEventListener(kind,()=>sample(kind));
+document.addEventListener('visibilitychange',()=>sample('visibilitychange'));
+document.getElementById('scenario').addEventListener('change',()=>sample('scenario-change'));
+document.getElementById('zoom').addEventListener('change',()=>sample('reported-zoom-change'));
+document.addEventListener('fullscreenchange',()=>{
+  document.getElementById('fullscreen').textContent=document.fullscreenElement===surface?'Exit content fullscreen':'Enter content fullscreen';
+  sample('fullscreenchange');
+});
+document.getElementById('fullscreen').addEventListener('click',async()=>{
+  try{
+    if(document.fullscreenElement===surface)await document.exitFullscreen();
+    else await surface.requestFullscreen();
+    document.getElementById('status').textContent='Content fullscreen uses the page API. Browser F11 is a separate scenario.';
+  }catch(error){
+    document.getElementById('status').textContent=`Content fullscreen unavailable: ${error.name}: ${error.message}`;
+    sample('fullscreen-request-denied');
+  }
+});
+document.getElementById('save').addEventListener('click',()=>{
+  const state=sample('manual-save');
+  const payload={kind:'presentation-geometry-observation',targetVersion:1,current:state,events:[...events],droppedEvents,
+    limitations:['Static DOM geometry only, not native pixel analysis or presented-frame proof.',
+      'Scenario and browser zoom are reviewer supplied. F11/maximized state is not inferred from dimensions.',
+      'Content fullscreen API state is separate from browser fullscreen. No video/player coverage.',
+      'Sharing can change viewport geometry; compare resize records and original captured readout.',
+      'DPR and encoded pixel sizes do not establish CSS calibration or physical viewing geometry.']};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+  const link=document.createElement('a');link.href=url;link.download=`flash-matrix-${state.reviewerScenario}-${sessionId}.json`;link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  document.getElementById('status').textContent='Geometry saved. Keep the original capture exports separately.';
+});
+sample('initial');
+</script>
+</html>
