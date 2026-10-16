@@ -10,7 +10,17 @@ From this directory run `python -m http.server 8765 --bind 127.0.0.1 --directory
 2. Enter its reference and planned interactions. Select capture duration and analysis detail.
 3. Click **Share a tab & start capture** and select the target tab in the native sharing picker.
 4. Exercise page content. Avoid scrolling during an individual animation test where practical: moving content can create false positives. Repeat at different states, sizes and positions.
-5. Return to the tool after automatic stop, review the timestamps, and download JSON or plain text notes. No video recording is retained. Save a separate source recording if needed for subsequent specialist analysis.
+5. Return to the tool after automatic stop, review the timestamps, and download the HTML screenshot report, per-frame CSV, JSON, or plain text notes. No video recording is retained. Save a separate source recording if needed for subsequent specialist analysis.
+
+## Luminance evidence and examples
+
+Set the measurement point as percentages of the captured surface (50/50 is the center). Detection still checks all analysis pixels. Relative luminance is computed from the uncompressed, reduced-resolution sRGB pixels, linearizing channels before applying Y=0.2126R+0.7152G+0.0722B. Y is dimensionless, not nits or contrast ratio. Each frame records the selected point's RGB, Y, change from the prior frame, red saturation and chromaticity, plus spatial frame Y minimum/mean/maximum. Capture-wide probe range is not a flash amplitude; unrelated states can define its extrema.
+
+Up to four screenshots are retained in memory: initial, darkest probe, brightest probe and first flagged frame. Screenshots are resized to at most 1280 pixels per dimension and JPEG encoded; numerical values are measured before screenshot compression. The yellow ring indicates the selected probe. Screenshot retention can be disabled. Images are never uploaded and are displayed only as separate static images in a collapsed section after a notice. HTML and JSON exports embed the retained images and can contain private page content; CSV and text exports do not embed images.
+
+Five fixtures offer synthetic analysis with no visible playback: static gray; 2 Hz black/white; 4 Hz low-amplitude gray; 4 Hz black/white; 4 Hz red/cyan. The two expected failures assume an area above the normative flash-area threshold; synthetic results do not measure viewing geometry. Synthetic reports identify generated frames rather than webpage screenshots.
+
+Separate live fixture pages always start at a warning, require acknowledgment and an explicit Start, run at most five seconds, and stop on Escape, Stop, or tab hiding. Failing fixtures intentionally exceed flash-frequency thresholds. Brief duration and stop controls do not make them safe. Their nominal frequencies depend on browser/display timing and must be verified from capture. The warning is shown before any playback, including for pass fixtures.
 
 ## Interpretation
 
@@ -22,6 +32,6 @@ Confirm findings using an established flash-analysis tool and review all page st
 
 ## Checks
 
-`node test.mjs` verifies synthetic in-memory static frames, transitions, three/four flash boundaries, contrast, luminance, smooth ramps, red candidates, slow pairs, timestamps and independent spatial regions. No flashing test content is displayed.
+`node test.mjs` verifies synthetic in-memory static frames, transitions, three/four flash boundaries, contrast, luminance, smooth ramps, red candidates, slow pairs, timestamps, independent spatial regions, all five fixtures, evidence measurements, screenshot retention and report escaping. `node test-ui.mjs` verifies the capture-to-evidence flow and live-example warning gates with mock browser APIs. These tests display no flashing content and do not replace real browser capture, visual QA, or device timing validation.
 
 Sources: [SC 2.3.1 understanding](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html), [threshold definitions](https://www.w3.org/TR/WCAG22/#dfn-general-flash-and-red-flash-thresholds).

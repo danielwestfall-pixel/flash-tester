@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import {Analyzer,color} from './dist/analyzer.mjs';
+import {Evidence,csv,chart,reportHtml} from './dist/evidence.mjs';
+import {examples,exampleValues,syntheticExample} from './dist/examples.mjs';
 function series(fn,duration=2,fps=120){const a=new Analyzer(1,1);for(let i=0;i<=duration*fps;i++)a.push([...fn(i/fps),255],i/fps);return a.report();}
 const gray=v=>[v,v,v];
 assert.equal(series(()=>gray(100)).peakGeneral,0,'Static frames');
@@ -24,3 +26,28 @@ assert.throws(()=>a.push([],1),/Frame size/);
 const b=new Analyzer(2,1);for(let i=0;i<=120;i++){const v=i%20<10?0:255;b.push([v,v,v,255,255-v,255-v,255-v,255],i/120);}
 assert.ok(b.report().peakGeneral>3,'Opposing regions remain detectable');
 console.log('Analyzer checks passed');
+for(const example of examples){
+  const report=syntheticExample(example,()=> 'data:image/png;base64,TEST');
+  assert.equal(report.windows.length>0,example.fail,`${example.id}: expected candidate detection`);
+  assert.equal(report.evidence.trace.length,361,'Every synthetic frame measured');
+  assert.ok(report.evidence.screenshots.length>=3,'Initial/darkest/brightest images retained');
+  assert.ok(report.evidence.screenshots.length<=4,'Bounded screenshot retention');
+  assert.ok(Math.abs(report.evidence.range-exampleValues(example).delta)<1e-9,'Probe Y range matches known colors');
+  assert.equal(report.synthetic,true);
+  const html=reportHtml({...report,reference:'<script>alert("x")</script>'});
+  assert.ok(html.includes('&lt;script&gt;'),'Reviewer input escaped in HTML');
+  assert.ok(!html.includes('<script>'),'Report is script-free');
+  assert.ok(html.includes('data:image/png;base64,TEST'),'Report embeds screenshots');
+  assert.ok(html.includes('<details>'),'Screenshot evidence starts collapsed');
+  assert.equal(csv(report.evidence).split('\n').length,362,'CSV header plus every frame');
+  assert.ok(chart(report.evidence).includes('<polyline'),'Luminance trace drawn');
+}
+const e=new Evidence(2,1,100,100);assert.equal(e.x,1);assert.equal(e.y,0);
+const measure=new Analyzer(2,1),raw=[0,0,0,255,255,255,255,255];
+const f=measure.push(raw,0);assert.equal(f.luminanceMin,0);assert.equal(f.luminanceMax,1);assert.equal(f.luminanceMean,.5);
+e.push(new Uint8ClampedArray(raw),0,f,()=>null);assert.equal(e.report().screenshots.length,0,'Screenshot opt-out');
+assert.equal(e.report().maximum,1,'Probe reads selected pixel');
+assert.equal(e.report().trace[0].uPrime!==null,true,'White chromaticity defined');
+assert.equal(color(255,0,0).saturation,1);
+assert.equal(new Evidence(1,1).report().minimum,null,'Empty evidence remains unknown');
+console.log('Example expectations, luminance evidence, exports, escaping and screenshot controls passed');

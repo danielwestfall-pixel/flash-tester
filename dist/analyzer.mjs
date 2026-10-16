@@ -10,13 +10,13 @@ export function color(r,g,b) {
   const d=X+15*Y+3*Z;
   // Black has no chromaticity: red/black changes are covered by luminance.
   return {y:.2126*R+.7152*G+.0722*B,u:d?4*X/d:0,v:d?9*Y/d:0,
-    valid:d>1e-8,red:R+G+B>0&&R/(R+G+B)>=.8};
+    valid:d>1e-8,saturation:R+G+B>0?R/(R+G+B):0,red:R+G+B>0&&R/(R+G+B)>=.8};
 }
 class Pixel {
   constructor(c,t) {
     this.extreme=c.y; this.extremeTime=t; this.direction=0;
     this.pending=null; this.general=[]; this.red=[];
-    this.previous=c; this.redPending=null;
+    this.previous=c; this.previousTime=t; this.redPending=null;
   }
   update(c,t) {
     const delta=c.y-this.extreme, direction=Math.sign(delta);
@@ -56,13 +56,16 @@ export class Analyzer {
     if(this.last!==null)this.maxGap=Math.max(this.maxGap,t-this.last);
     this.last=t;this.frames++;
     let general=0,red=0,flagged=0,minX=this.width,minY=this.height,maxX=-1,maxY=-1;
+    let luminanceMin=1,luminanceMax=0,luminanceSum=0,witness=null;
     for(let i=0;i<this.width*this.height;i++) {
       const k=i*4,c=color(rgba[k],rgba[k+1],rgba[k+2]);
+      luminanceMin=Math.min(luminanceMin,c.y);luminanceMax=Math.max(luminanceMax,c.y);luminanceSum+=c.y;
       if(!this.pixels[i]) {this.pixels[i]=new Pixel(c,t);continue;}
       const [g,r]=this.pixels[i].update(c,t);
       general=Math.max(general,g);red=Math.max(red,r);
       if(g>3||r>3) {
         flagged++;const x=i%this.width,y=Math.floor(i/this.width);
+        if(!witness)witness={x,y,rgb:[rgba[k],rgba[k+1],rgba[k+2]],luminance:c.y,general:g,red:r};
         minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
       }
     }
@@ -77,12 +80,12 @@ export class Analyzer {
       if(prev?.bin===bin) {if(event.fraction>prev.fraction)this.windows[this.windows.length-1]=event;}
       else this.windows.push(event);
     }
-    return {general,red,fraction};
+    return {general,red,fraction,witness,luminanceMin,luminanceMax,luminanceMean:luminanceSum/(this.width*this.height)};
   }
   report() {
     const duration=this.last===null?0:this.last-this.start;
     const fps=duration?(this.frames-1)/duration:0;
-    return {algorithm:'flash-screen-0.1',outcome:this.frames<2?'Insufficient capture':
+    return {algorithm:'flash-screen-0.2',outcome:this.frames<2?'Insufficient capture':
       this.windows.length?'Potential flashing — review required':'No rapid flashing detected in sampled capture — review required',
       duration,frames:this.frames,observedFps:fps,maxFrameGapSeconds:this.maxGap,
       analysisResolution:{width:this.width,height:this.height},peakGeneral:this.peakGeneral,
