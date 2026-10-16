@@ -11,8 +11,9 @@ Do not advance to another implementation item until the red-team retest passes. 
 - [x] AI-03: share presentation/calibration/build/coverage metadata across HTML, text and both CSVs, including metadata-only empty files. Actual export handlers are tested with mocked capture; standalone HTML was rendered in Chrome.
 - [x] Independent targeted red-team retest of all three repairs: AI-01/02/03 PASS within tested conditions; nine scripts, independent numerical/CSV checks and real Chrome decoded-image/Back checks. Overall gate remains BLOCKED on native coverage. See `retest-0.4.1-2026-10-16/audit.html` locally and `docs/AGENT_PLAN.md` for the published handoff.
 - [ ] Native tab-hide and window-resize playback verification, calibrated fullscreen capture, and original downloaded exports from that real capture. Mocked handlers and viewport labels do not satisfy these checks.
+- [ ] NF-01 (P2): repair negative/backwards callback elapsed times observed in two original native playback exports, add startup-clock regressions, and independently retest. See `docs/NATIVE_FINDINGS.md`. Current gate is FAIL; no production repair was made during independent verification.
 
-Native verification is in progress: real Chrome Stop/Escape/cap and one calibrated default static capture/export check completed within their limits; overall gate remains open. Original native downloads and independent image/CSV checks are retained locally. See `docs/NATIVE_RESULTS.md` and `docs/NATIVE_VERIFICATION.md`. Agent handoff: `AGENTS.md` and `docs/AGENT_PLAN.md`.
+Native verification observed real Chrome Stop/Escape/cap, native tab-hide/window-resize stop behavior and one calibrated default static capture/export check. Independent validation found NF-01 in both native action logs, so the gate is FAIL despite functioning stop controls. Original downloads and independent image/CSV checks are retained locally. See `docs/NATIVE_RESULTS.md` and `docs/NATIVE_VERIFICATION.md`. Agent handoff: `AGENTS.md` and `docs/AGENT_PLAN.md`.
 
 ## 1. Calibrated area measurement (first implementation)
 

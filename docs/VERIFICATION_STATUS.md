@@ -12,4 +12,4 @@ The new static target was opened in real Chrome over loopback; its geometry read
 
 Follow [NATIVE_VERIFICATION.md](NATIVE_VERIFICATION.md) next. Do not infer coverage from fixture preparation, scenario names, mocked APIs or a denied fullscreen request.
 
-Subsequent native execution is recorded in [NATIVE_RESULTS.md](NATIVE_RESULTS.md): real Chrome Stop/Escape/cap and default static calibrated capture/export checks have now run. The initial-publication limitations above remain historical; the current overall gate is still open.
+Subsequent native execution is recorded in [NATIVE_RESULTS.md](NATIVE_RESULTS.md): real Chrome Stop/Escape/cap, tab-hide/window-resize stop behavior and default static calibrated capture/export checks have now run. The current gate is **FAIL** because independent validation found negative/backwards callback timestamps in two native exports; see [NF-01](NATIVE_FINDINGS.md). The initial-publication limitations above remain historical; other coverage is still incomplete.

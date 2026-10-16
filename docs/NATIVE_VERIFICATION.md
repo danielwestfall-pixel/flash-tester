@@ -1,6 +1,6 @@
 # Native browser verification: next gate
 
-Status: **IN PROGRESS — real Chrome controls and default static capture executed; full gate remains open.** October 16, 2026. See [current results](NATIVE_RESULTS.md).
+Status: **FAIL — native timing-log defect NF-01 remains unresolved; other coverage remains incomplete.** October 16, 2026. Native stop behaviors and default static capture/export checks ran; see [current results](NATIVE_RESULTS.md) and [the finding](NATIVE_FINDINGS.md).
 
 The available automation cannot operate native OS windows or sharing pickers. A person must perform those actions. DOM events, viewport overrides and mocked capture are not substitutes. Retest 0.4.1 already established the three targeted repairs; this run closes only the native cases actually observed.
 
