@@ -1,0 +1,482 @@
+{
+  "spec": {
+    "width": 1024,
+    "height": 768,
+    "fps": 120,
+    "seconds": 3,
+    "source": "https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html",
+    "fieldWidth": 341,
+    "fieldHeight": 256,
+    "areaLimit": 21824
+  },
+  "fixtures": [
+    {
+      "id": "full-5",
+      "title": "Full-frame black/white · 5 Hz",
+      "hz": 5,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        255,
+        255,
+        255
+      ],
+      "zone": "full",
+      "expected": "fail",
+      "candidates": true,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 10,
+      "luminanceA": 0,
+      "luminanceB": 1,
+      "deltaY": 1,
+      "chromaDistance": null,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "candidates-detected",
+      "redExpected": 0
+    },
+    {
+      "id": "full-10",
+      "title": "Full-frame black/white · 10 Hz",
+      "hz": 10,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        255,
+        255,
+        255
+      ],
+      "zone": "full",
+      "expected": "fail",
+      "candidates": true,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 20,
+      "luminanceA": 0,
+      "luminanceB": 1,
+      "deltaY": 1,
+      "chromaDistance": null,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "candidates-detected",
+      "redExpected": 0
+    },
+    {
+      "id": "full-15",
+      "title": "Full-frame black/white · 15 Hz",
+      "hz": 15,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        255,
+        255,
+        255
+      ],
+      "zone": "full",
+      "expected": "fail",
+      "candidates": true,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 30,
+      "luminanceA": 0,
+      "luminanceB": 1,
+      "deltaY": 1,
+      "chromaDistance": null,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "candidates-detected",
+      "redExpected": 0
+    },
+    {
+      "id": "red-black",
+      "title": "Saturated red / black · 10 Hz",
+      "hz": 10,
+      "a": [
+        255,
+        0,
+        0
+      ],
+      "b": [
+        0,
+        0,
+        0
+      ],
+      "zone": "full",
+      "expected": "fail",
+      "candidates": true,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 20,
+      "luminanceA": 0.2126,
+      "luminanceB": 0,
+      "deltaY": 0.2126,
+      "chromaDistance": null,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "candidates-detected",
+      "redExpected": 0
+    },
+    {
+      "id": "red-blue",
+      "title": "Saturated red / blue · 10 Hz",
+      "hz": 10,
+      "a": [
+        255,
+        0,
+        0
+      ],
+      "b": [
+        0,
+        0,
+        255
+      ],
+      "zone": "full",
+      "expected": "fail",
+      "candidates": true,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 20,
+      "luminanceA": 0.2126,
+      "luminanceB": 0.0722,
+      "deltaY": 0.14040000000000002,
+      "chromaDistance": 0.4571549928661824,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "candidates-detected",
+      "redExpected": 10
+    },
+    {
+      "id": "large-zone",
+      "title": "Large 36% flashing zone · 4 Hz",
+      "hz": 4,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        255,
+        255,
+        255
+      ],
+      "zone": "large",
+      "expected": "fail",
+      "candidates": true,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 205,
+        "y": 153,
+        "width": 614,
+        "height": 461
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 8,
+      "luminanceA": 0,
+      "luminanceB": 1,
+      "deltaY": 1,
+      "chromaDistance": null,
+      "screenFraction": 0.35992177327473956,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "candidates-detected",
+      "redExpected": 0
+    },
+    {
+      "id": "two-hz",
+      "title": "Sub-threshold black/white · 2 Hz",
+      "hz": 2,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        255,
+        255,
+        255
+      ],
+      "zone": "full",
+      "expected": "pass",
+      "candidates": false,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 4,
+      "luminanceA": 0,
+      "luminanceB": 1,
+      "deltaY": 1,
+      "chromaDistance": null,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "inconclusive-no-candidates",
+      "redExpected": 0
+    },
+    {
+      "id": "three-hz",
+      "title": "Frequency boundary · 3 Hz",
+      "hz": 3,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        255,
+        255,
+        255
+      ],
+      "zone": "full",
+      "expected": "pass",
+      "candidates": false,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 6,
+      "luminanceA": 0,
+      "luminanceB": 1,
+      "deltaY": 1,
+      "chromaDistance": null,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "inconclusive-no-candidates",
+      "redExpected": 0
+    },
+    {
+      "id": "requested-grays",
+      "title": "Requested #E0E0E0 / #B0B0B0 · 10 Hz",
+      "hz": 10,
+      "a": [
+        224,
+        224,
+        224
+      ],
+      "b": [
+        176,
+        176,
+        176
+      ],
+      "zone": "full",
+      "expected": "fail",
+      "candidates": true,
+      "note": "Correction: linear-sRGB ΔY is about 0.253, above 0.10; darker Y is below 0.80. This is a failing full-field input.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 20,
+      "luminanceA": 0.7454042095403874,
+      "luminanceB": 0.43415363617474895,
+      "deltaY": 0.3112505733656385,
+      "chromaDistance": 5.551115123125783e-17,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "candidates-detected",
+      "redExpected": 0
+    },
+    {
+      "id": "soft-gray",
+      "title": "Corrected soft gray #B0B0B0 / #B8B8B8 · 10 Hz",
+      "hz": 10,
+      "a": [
+        176,
+        176,
+        176
+      ],
+      "b": [
+        184,
+        184,
+        184
+      ],
+      "zone": "full",
+      "expected": "pass",
+      "candidates": false,
+      "note": "Corrected pass: linear-sRGB ΔY is below 0.10; neither state is saturated red.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 20,
+      "luminanceA": 0.43415363617474895,
+      "luminanceB": 0.47932018310082675,
+      "deltaY": 0.0451665469260778,
+      "chromaDistance": 7.850462293418876e-17,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "inconclusive-no-candidates",
+      "redExpected": 0
+    },
+    {
+      "id": "small-zone",
+      "title": "Small 64 × 64 white flash · 10 Hz",
+      "hz": 10,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        255,
+        255,
+        255
+      ],
+      "zone": "small",
+      "expected": "pass",
+      "candidates": true,
+      "note": "Area-based pass only at reference geometry: 4,096 pixels, below 21,824 in any 341 × 256 field. Calibrated area screening reports this separately; the app still flags frequency candidates and does not certify a pass. Do not enlarge this surface.",
+      "rect": {
+        "x": 480,
+        "y": 352,
+        "width": 64,
+        "height": 64
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 20,
+      "luminanceA": 0,
+      "luminanceB": 1,
+      "deltaY": 1,
+      "chromaDistance": null,
+      "screenFraction": 0.005208333333333333,
+      "maxConcurrentPixelsInReferenceField": 4096,
+      "appExpected": "candidates-detected",
+      "redExpected": 0
+    },
+    {
+      "id": "area-trap",
+      "title": "24% of screen is still too large · 10 Hz",
+      "hz": 10,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        255,
+        255,
+        255
+      ],
+      "zone": "trap",
+      "expected": "fail",
+      "candidates": true,
+      "note": "A 492 × 384 contiguous zone covers only 24.02% of the screen but can fill a whole 341 × 256 visual field. Expected failure at reference geometry.",
+      "rect": {
+        "x": 266,
+        "y": 192,
+        "width": 492,
+        "height": 384
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 20,
+      "luminanceA": 0,
+      "luminanceB": 1,
+      "deltaY": 1,
+      "chromaDistance": null,
+      "screenFraction": 0.240234375,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "candidates-detected",
+      "redExpected": 0
+    },
+    {
+      "id": "static-control",
+      "title": "Static black control",
+      "hz": 0,
+      "a": [
+        0,
+        0,
+        0
+      ],
+      "b": [
+        0,
+        0,
+        0
+      ],
+      "zone": "full",
+      "expected": "pass",
+      "candidates": false,
+      "note": "Area expectation assumes the 1024 × 768 reference surface at its intended viewing size.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "fps": 120,
+      "seconds": 3,
+      "transitionsPerSecond": 0,
+      "luminanceA": 0,
+      "luminanceB": 0,
+      "deltaY": 0,
+      "chromaDistance": null,
+      "screenFraction": 1,
+      "maxConcurrentPixelsInReferenceField": 87296,
+      "appExpected": "inconclusive-no-candidates",
+      "redExpected": 0
+    }
+  ]
+}

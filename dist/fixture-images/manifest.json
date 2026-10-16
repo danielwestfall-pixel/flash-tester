@@ -1,0 +1,67 @@
+{
+  "size": [
+    1024,
+    768
+  ],
+  "files": [
+    "black.png",
+    "white.png",
+    "red.png",
+    "blue.png",
+    "gray-b0.png",
+    "gray-b8.png",
+    "gray-e0.png",
+    "small-white.png"
+  ],
+  "pairExpectations": [
+    {
+      "images": [
+        "black",
+        "white"
+      ],
+      "changesPerSecond": 20,
+      "reference": "failure"
+    },
+    {
+      "images": [
+        "black",
+        "white"
+      ],
+      "changesPerSecond": 4,
+      "reference": "frequency pass"
+    },
+    {
+      "images": [
+        "gray-b0",
+        "gray-b8"
+      ],
+      "changesPerSecond": 20,
+      "reference": "low-delta pass"
+    },
+    {
+      "images": [
+        "gray-b0",
+        "gray-e0"
+      ],
+      "changesPerSecond": 20,
+      "reference": "failure"
+    },
+    {
+      "images": [
+        "black",
+        "small-white"
+      ],
+      "changesPerSecond": 20,
+      "reference": "area pass ONLY at unscaled reference geometry; app still flags candidates"
+    },
+    {
+      "images": [
+        "red",
+        "blue"
+      ],
+      "changesPerSecond": 20,
+      "reference": "general and red failure"
+    }
+  ],
+  "note": "Static fixtures only. Expectations assume alternating pairs at the stated rate, size and reference geometry; not arbitrary sequences."
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash Review · Static native verification target</title>
+<style>
+html,body{margin:0;background:#b0b0b0;color:#111;font:16px/1.5 system-ui}
+main{padding:24px;max-width:850px}button{font:inherit;padding:10px}pre{white-space:pre-wrap}
+#surface{background:#b0b0b0;min-height:100vh;width:100%;box-sizing:border-box}
+#surface:fullscreen{overflow:auto;background:#b0b0b0}
+@media(max-width:600px){main{padding:12px}}
+</style>
+<div id="surface"><main>
+<h1>Static native verification target</h1>
+<p>This page has no animation. It measures the target geometry; it does not verify capture, display timing or WCAG conformance.</p>
+<button id="fullscreen" type="button">Enter content fullscreen</button>
+<p>Browser fullscreen uses the browser's F11/equivalent separately. Exit content fullscreen with Escape.</p>
+<pre id="geometry" aria-label="Current target geometry"></pre>
+<p id="status" role="status"></p>
+</main></div>
+<script>
+const surface=document.getElementById('surface');
+function measure(){
+  const r=surface.getBoundingClientRect();
+  document.getElementById('geometry').textContent=JSON.stringify({
+    viewportCss:{width:innerWidth,height:innerHeight},
+    contentRectCss:{x:r.x,y:r.y,width:r.width,height:r.height},
+    devicePixelRatio,
+    contentFullscreen:document.fullscreenElement===surface,
+    browserFullscreen:'Record actual F11/browser state manually; geometry cannot establish it.',
+    browserZoom:'Record browser UI value manually; DPR does not establish zoom.',
+    source:'static CSS #b0b0b0, no video source'
+  },null,2);
+}
+document.getElementById('fullscreen').addEventListener('click',async()=>{
+  try{if(document.fullscreenElement)await document.exitFullscreen();else await surface.requestFullscreen();}
+  catch(error){document.getElementById('status').textContent=`Fullscreen unavailable: ${error.message}`;}
+});
+addEventListener('resize',measure);
+document.addEventListener('fullscreenchange',()=>{
+  document.getElementById('fullscreen').textContent=document.fullscreenElement?'Exit content fullscreen':'Enter content fullscreen';measure();
+});
+measure();
+</script>
+</html>

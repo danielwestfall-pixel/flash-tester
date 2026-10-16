@@ -1,0 +1,115 @@
+{
+  "source": "Generated raw RGBA frames; no browser capture",
+  "resolution": {
+    "width": 64,
+    "height": 48
+  },
+  "fps": 120,
+  "seconds": 3,
+  "results": [
+    {
+      "id": "full-5",
+      "referenceInput": "fail",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 5,
+      "peakRed": 0,
+      "flaggedFraction": 1
+    },
+    {
+      "id": "full-10",
+      "referenceInput": "fail",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 10,
+      "peakRed": 0,
+      "flaggedFraction": 1
+    },
+    {
+      "id": "full-15",
+      "referenceInput": "fail",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 15,
+      "peakRed": 0,
+      "flaggedFraction": 1
+    },
+    {
+      "id": "red-black",
+      "referenceInput": "fail",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 10,
+      "peakRed": 0,
+      "flaggedFraction": 1
+    },
+    {
+      "id": "red-blue",
+      "referenceInput": "fail",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 10,
+      "peakRed": 10,
+      "flaggedFraction": 1
+    },
+    {
+      "id": "large-zone",
+      "referenceInput": "fail",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 4,
+      "peakRed": 0,
+      "flaggedFraction": 0.3463541666666667
+    },
+    {
+      "id": "two-hz",
+      "referenceInput": "pass",
+      "appStatus": "inconclusive-no-candidates",
+      "peakGeneral": 2,
+      "peakRed": 0,
+      "flaggedFraction": 0
+    },
+    {
+      "id": "three-hz",
+      "referenceInput": "pass",
+      "appStatus": "inconclusive-no-candidates",
+      "peakGeneral": 3,
+      "peakRed": 0,
+      "flaggedFraction": 0
+    },
+    {
+      "id": "requested-grays",
+      "referenceInput": "fail",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 10,
+      "peakRed": 0,
+      "flaggedFraction": 1
+    },
+    {
+      "id": "soft-gray",
+      "referenceInput": "pass",
+      "appStatus": "inconclusive-no-candidates",
+      "peakGeneral": 0,
+      "peakRed": 0,
+      "flaggedFraction": 0
+    },
+    {
+      "id": "small-zone",
+      "referenceInput": "pass",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 10,
+      "peakRed": 0,
+      "flaggedFraction": 0.005208333333333333
+    },
+    {
+      "id": "area-trap",
+      "referenceInput": "fail",
+      "appStatus": "candidates-detected",
+      "peakGeneral": 10,
+      "peakRed": 0,
+      "flaggedFraction": 0.234375
+    },
+    {
+      "id": "static-control",
+      "referenceInput": "pass",
+      "appStatus": "inconclusive-no-candidates",
+      "peakGeneral": 0,
+      "peakRed": 0,
+      "flaggedFraction": 0
+    }
+  ]
+}

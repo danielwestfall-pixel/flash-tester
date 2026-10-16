@@ -34,6 +34,14 @@ await $('stop').fire('click');assert.equal(stopped,1,'Capture sharing stopped');
 assert.ok($('luminance-evidence').innerHTML.includes('Highest Y: 1.00000'),'Measured Y reaches output');
 assert.ok($('luminance-evidence').innerHTML.includes('data:image/png;base64,TEST'),'Captured screenshot reaches output');
 assert.equal($('start').disabled,false);
+$('area-enabled').checked=true;$('css-width').value='1';$('css-height').value='1';$('presentation').value='content-fullscreen';
+await $('setup').fire('submit');
+for(let i=0;i<=120;i++){gray=Math.floor(i/6)%2?255:0;frameCallback(i*1000/120,{mediaTime:i/120});}
+await $('stop').fire('click');
+assert.ok($('quality').textContent.includes('Calibration 1 × 1'),'Calibrated area reaches capture UI');
+$('css-width').value='2';await $('setup').fire('submit');frameCallback(0,{mediaTime:0});
+assert.equal($('stop').hidden,true);assert.ok($('quality').textContent.includes('aspect ratio'),'Wrong calibration is rejected before measurement');
+$('area-enabled').checked=false;
 const failButton=$('examples').children[3].children.find(x=>x.dataset.example);
 await failButton.fire('click');assert.ok($('quality').textContent.startsWith('Synthetic example:'));
 assert.equal($('general').textContent,4,'Failing fixture measured through UI');

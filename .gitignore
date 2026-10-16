@@ -2,3 +2,9 @@
 .openai/local/
 audit-2026-10-16/
 verification-0.3/
+audit-area-images-2026-10-16/
+audit-redteam-2026-10-16-v03/
+repair-verification-2026-10-16/
+retest-0.4.1-2026-10-16/
+dist/repair-checks/
+native-verification-*/

@@ -1,0 +1,23 @@
+{
+  "status": "NOT RUN",
+  "evidenceKind": "native-browser",
+  "build": "flash-review-0.4.1-20261016",
+  "commit": null,
+  "date": null,
+  "browserVersion": null,
+  "osVersion": null,
+  "scenario": null,
+  "contentKind": null,
+  "viewportCss": null,
+  "contentRectCss": null,
+  "sourcePixels": null,
+  "devicePixelRatio": null,
+  "browserZoomPercent": null,
+  "fullscreenKind": null,
+  "steps": [],
+  "expected": null,
+  "actual": null,
+  "originalDownloads": [],
+  "limitations": ["Static controls do not validate flashing timing or positive witness correspondence."],
+  "reviewedBy": null
+}

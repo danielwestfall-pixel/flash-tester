@@ -2,6 +2,7 @@ import {Analyzer} from './analyzer.mjs';
 import {Evidence,evidenceMarkup,csv,witnessCsv,reportHtml} from './evidence.mjs';
 import {stampReport,reviewText} from './report.mjs';
 import {examples,exampleValues,syntheticExample} from './examples.mjs';
+import {areaSummary} from './area.mjs';
 const $=id=>document.getElementById(id);
 let stream=null,analyzer=null,active=false,pending=false,report=null,callback=null,timer=null;
 let frameStart=null,lastMedia=null,startedAt=0,meta=null,settings=null,run=0;
@@ -9,7 +10,7 @@ let evidence=null;
 let startupTimer=null;
 const video=$('source'),canvas=$('pixels'),ctx=canvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
 function message(headline,body,state){$('headline').textContent=headline;$('status').textContent=body;$('state').textContent=state;}
-function lock(value){for(const id of ['target','notes','duration','resolution','start','probe-x','probe-y','keep-shots'])$(id).disabled=value;document.querySelectorAll('[data-example]').forEach(el=>el.disabled=value);$('stop').hidden=!active;}
+function lock(value){for(const id of ['target','notes','duration','resolution','start','probe-x','probe-y','keep-shots','area-enabled','css-width','css-height','presentation'])$(id).disabled=value;document.querySelectorAll('[data-example]').forEach(el=>el.disabled=value);$('stop').hidden=!active;}
 function stats(r){$('seconds').textContent=r.duration.toFixed(1);$('fps').textContent=r.observedFps.toFixed(1);$('general').textContent=r.peakGeneral;$('red').textContent=r.peakRedHeuristic;}
 function requestNextFrame(){const generation=run;return video.requestVideoFrameCallback((now,info)=>{if(generation===run)frame(now,info);});}
 function cleanup(){
@@ -31,14 +32,14 @@ function finish(reason){
 function renderReport(reason){
   stats(report);$('progress').value=100;
   message(report.status==='insufficient-observation'?'Insufficient observation — inconclusive':report.windows.length?'Potential flashing detected':'No candidates — conformance inconclusive',
-    'General screening only. Red evaluation is experimental and incomplete; flash area is not evaluated. No result establishes a WCAG pass or failure.', 'Inconclusive / review');
+    'General screening only. '+areaSummary(report.area)+' No result establishes a WCAG pass or failure.', 'Inconclusive / review');
   const quality=[];
   if(report.duration<1)quality.push('Less than one second was sampled.');
   if(report.observedFps<30)quality.push('Observed sampling was below 30 frames/sec.');
   if(report.maxFrameGapSeconds>.1)quality.push(`Capture gap reached ${report.maxFrameGapSeconds.toFixed(3)} seconds.`);
   if(reason!=='Time limit reached')quality.push(`Capture ended: ${reason}.`);
   quality.push(...(report.observation?.reasons??[]));
-  quality.push('Sampling can miss flashing even at higher frame rates. Red evaluation remains incomplete; flash area is not evaluated.');
+  quality.push('Sampling can miss flashing even at higher frame rates. '+areaSummary(report.area));
   $('quality').textContent=quality.join(' ');
   if(report.synthetic)$('quality').textContent=`Synthetic example: ${report.interactions} Generated frames do not validate actual tab capture, display timing, or physical flash area.`;
   $('provenance').textContent=`Report ${report.reportId} · ${report.buildId} · Source: ${report.sourceType} · Result: ${report.status}`;
@@ -59,9 +60,10 @@ function frame(now,info){
     if(lastMedia!==null&&info.mediaTime<=lastMedia){callback=requestNextFrame();return;}
     lastMedia=info.mediaTime;
     if(!analyzer){
+      if(meta.calibration&&Math.abs((video.videoWidth/video.videoHeight)/(meta.calibration.cssWidth/meta.calibration.cssHeight)-1)>.02){finish('Area calibration aspect ratio does not match the shared surface; correct CSS dimensions and start a new capture');return;}
       const scale=Math.min(meta.width/video.videoWidth,640/video.videoHeight,1);
       canvas.width=Math.max(1,Math.round(video.videoWidth*scale));canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
-      analyzer=new Analyzer(canvas.width,canvas.height);
+      analyzer=new Analyzer(canvas.width,canvas.height,{calibration:meta.calibration});
       evidence=new Evidence(canvas.width,canvas.height,meta.probeX,meta.probeY);
       meta.viewport={width:video.videoWidth,height:video.videoHeight};
     }
@@ -96,12 +98,15 @@ $('setup').addEventListener('submit',async event=>{
   // A canceled or blocked new capture must not leave a prior report exportable.
   report=null;evidence=null;$('report').hidden=true;$('luminance-evidence').innerHTML='';
   meta={reference:$('target').value.trim(),interactions:$('notes').value.trim(),seconds:Number($('duration').value),width:Number($('resolution').value),probeX:Number($('probe-x').value),probeY:Number($('probe-y').value),keepShots:$('keep-shots').checked};
+  meta.calibration=$('area-enabled').checked?{cssWidth:Number($('css-width').value),cssHeight:Number($('css-height').value)}:null;
+  if(meta.calibration&&(!Number.isFinite(meta.calibration.cssWidth)||!Number.isFinite(meta.calibration.cssHeight)||meta.calibration.cssWidth<=0||meta.calibration.cssHeight<=0||meta.calibration.cssWidth>100000||meta.calibration.cssHeight>100000)){message('Calibration required','Enter valid displayed CSS dimensions for the entire shared surface.','Ready');return;}
+  meta.presentation=$('presentation').value||'unspecified';
   pending=true;lock(true);message('Choose your target tab','Select the webpage tab in the browser’s sharing picker. Then exercise its video, animations, and interactions.','Choosing tab');
   try{
     const selected=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:{ideal:60}},audio:false,preferCurrentTab:false});
     if(token!==run){selected.getTracks().forEach(t=>t.stop());return;}
     stream=selected;const track=stream.getVideoTracks()[0];const raw=track.getSettings();
-    settings={width:raw.width,height:raw.height,frameRate:raw.frameRate,displaySurface:raw.displaySurface};
+    settings={width:raw.width,height:raw.height,frameRate:raw.frameRate,displaySurface:raw.displaySurface,presentation:meta.presentation,calibration:meta.calibration};
     // Do not export device IDs or the browser-provided tab/window title.
     active=true;pending=false;analyzer=null;evidence=null;frameStart=null;lastMedia=null;report=null;
     $('report').hidden=true;$('progress').value=0;lock(true);

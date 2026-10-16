@@ -4,6 +4,8 @@ Standalone browser screening prototype for WCAG 2.2 SC 2.3.1. No packages, accou
 
 ## Run locally
 
+AI agents: start with [AGENTS.md](AGENTS.md) and [the implementation/verification plan](docs/AGENT_PLAN.md). The 0.4.1 repairs passed independent targeted retest; the full gate remains blocked on native browser evidence. [Native verification is the next active task](docs/NATIVE_VERIFICATION.md).
+
 From this directory run `python -m http.server 8765 --bind 127.0.0.1 --directory dist`, then open http://127.0.0.1:8765 in desktop Chrome or Edge. HTTPS is required when hosted off localhost. A normal browser tab is recommended because embedded browsers may block display capture.
 
 1. Open the webpage under review in another tab.
@@ -26,11 +28,13 @@ Separate live fixture pages always start at a warning, require acknowledgment an
 
 This is an unvalidated screening prototype, not a compliance or seizure-safety certification. It never assigns a WCAG pass/fail or VPAT support level. General-flash candidates use linear-sRGB luminance excursions, while red candidates use an experimental accumulated chromaticity-excursion model. Red evaluation remains incomplete and unvalidated. Complete non-overlapping transition pairs must fit in a rolling second at one sampled pixel. More than three pairs flags a review interval.
 
-Spatial reduction, temporal sampling/aliasing, browser throttling, moving regions and different spatial phases can hide events. The 640 px setting improves spatial detail but can reduce capture throughput. The tool does not measure concurrent flash area against the 0.006 steradian threshold within a 10-degree visual field, implement the fine-pattern exception, or establish complete red evaluation, including curved color paths and black chromaticity. Percentages and bounding boxes are screening locations only. A URL field labels the report; it does not navigate, crawl or prove page identity.
+Spatial reduction, temporal sampling/aliasing, browser throttling, moving regions and different spatial phases can hide events. The 640 px setting improves spatial detail but can reduce capture throughput. Optional area calibration now measures sample-aligned pair completions and a conservative rolling spatial envelope within a moving reference visual field. Complete temporal overlap, physical viewing geometry, fine-pattern exceptions and full red evaluation remain unvalidated. Percentages and bounding boxes are screening locations only. A URL field labels the report; it does not navigate, crawl or prove page identity.
 
 Confirm findings using an established flash-analysis tool and review all page states before reporting conformance. Test coverage and actual browser capture must be validated on the target device. Incompatible capture APIs and canceled sharing are handled without producing a pass result.
 
 ## Checks
+
+The [parameter fixture suite](fixtures/README.md) adds 13 inputs covering 5–15 Hz full-frame flashes, saturated red, a large region, 2/3 Hz frequency boundaries, requested and corrected gray pairs, and small-area cases. Open `http://127.0.0.1:8765/fixtures.html` after starting the server above. Run `node test-fixtures.mjs --write` to verify the generated inputs and refresh the manifest and synthetic results. This suite keeps reference input expectations separate from the app's screening output, including optional calibrated area screening and its remaining limitations.
 
 `node test.mjs` verifies synthetic in-memory static frames, transitions, three/four flash boundaries, contrast, luminance, smooth ramps, red candidates, slow pairs, timestamps, independent spatial regions, all five fixtures, evidence measurements, screenshot retention and report escaping. `node test-ui.mjs` verifies the capture-to-evidence flow and live-example warning gates with mock browser APIs. These tests display no flashing content and do not replace real browser capture, visual QA, or device timing validation.
 
@@ -39,3 +43,11 @@ Sources: [SC 2.3.1 understanding](https://www.w3.org/WAI/WCAG22/Understanding/th
 ## Version 0.3 remediation
 
 See `FIX_VERIFICATION.txt` for the six audit findings and their remedies, and `RED_TEAM_PROMPT.txt` for a fresh independent audit. Run `node test-regressions.mjs` for the remediation checks. The original audit artifacts remain local and are excluded from source publication. Reports distinguish inadequate observation from no candidates, and every no-candidate result remains conformance inconclusive. All exports use a common report ID and explicit generated-frame or shared-surface provenance.
+
+## Version 0.4: area screening and image inputs
+
+See [the coverage roadmap](TODO.md) and [input/size testing guide](docs/INPUTS_AND_SIZE_TESTING.md). `dist/image-sequences.html` accepts multiple local static images or newline-separated image URLs, with finite ordered-pair screening and reproducible shuffled schedules. `generate-image-fixtures.py` regenerates eight deterministic PNG inputs. `test-area.mjs`, `test-image-sequence.mjs` and `test-image-ui.mjs` cover the new measurements, scheduling and input controls. The capture form records default/maximized/browser-fullscreen/content-fullscreen/responsive scenarios. Run a separate capture after each presentation-size change.
+
+### Version 0.4.1 audit repairs
+
+Both nonoverlapping transition-pairing phases are evaluated independently so an old unmatched transition cannot hide a later four-flash burst. Phase counts are never summed. Image-page navigation now clears released bitmap state and invalidates pending asynchronous work; restored pages require loading again. Standalone exports retain common scenario, calibration, identity and coverage metadata. Empty CSVs contain an explicit metadata record, with blank measurement fields. CSV readers must inspect `record_type` and use an RFC-compatible parser because JSON context fields contain quotes and commas. `node test-audit-repairs.mjs` retains AI-01/AI-03 counterexamples, and `node test-image-ui.mjs` includes AI-02 restoration and late-load regressions. See [repair verification](repair-verification-2026-10-16/README.md); full audit approval remains pending.

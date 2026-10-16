@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {imageUrls,orderedPairs,sequence,schedule,imageAt,rasterKind,containRect} from './dist/image-sequence.mjs';
+assert.deepEqual(imageUrls('https://example.com/a.png\n\nhttps://example.com/a.png\nhttp://localhost/b.jpg'),['https://example.com/a.png','http://localhost/b.jpg']);
+for(const url of ['javascript:alert(1)','file:///test.png','https://user:pass@example.com/a'])assert.throws(()=>imageUrls(url));
+assert.throws(()=>imageUrls(Array.from({length:33},(_,i)=>`https://example.com/${i}`).join('\n')));
+assert.equal(orderedPairs(4).length,12);assert.deepEqual(orderedPairs(2),[[0,1],[1,0]]);assert.throws(()=>orderedPairs(13));
+const a=sequence(5,100,1234),b=sequence(5,100,1234);assert.deepEqual(a,b);assert.notDeepEqual(a,sequence(5,100,1235));
+for(let i=1;i<a.length;i++)assert.notEqual(a[i],a[i-1],'No consecutive repeats, including shuffle boundaries');
+const plan=schedule(4,3,20,1);assert.equal(plan.length,61);assert.equal(plan.at(-1).time,3);
+for(let i=0;i<60;i++){assert.equal(imageAt(plan,i/20),plan[i].image);assert.equal(imageAt(plan,i/20+.001),plan[i].image);}
+assert.equal(imageAt(plan,3),plan.at(-1).image);assert.throws(()=>schedule(3,3,100,0));
+assert.deepEqual(containRect(200,100,100,100),{x:0,y:25,width:100,height:50});
+assert.equal(rasterKind(new Uint8Array([255,216,255,0])),'jpeg');
+assert.throws(()=>rasterKind(new TextEncoder().encode('GIF89a')),/static/);
+const png=new Uint8Array(20);png.set([137,80,78,71,13,10,26,10]);png.set(new TextEncoder().encode('acTL'),12);assert.throws(()=>rasterKind(png),/Animated PNG/);
+const webp=new Uint8Array(20);webp.set(new TextEncoder().encode('RIFF'),0);webp.set(new TextEncoder().encode('WEBPANIM'),8);assert.throws(()=>rasterKind(webp),/Animated WebP/);
+console.log('Image URL validation, finite pair coverage, reproducible shuffles, schedule boundaries, sizing and animated-format rejection passed.');
