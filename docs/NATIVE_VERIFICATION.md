@@ -1,6 +1,6 @@
 # Native browser verification: next gate
 
-Status: **STARTED — preparation complete; native execution pending.** October 16, 2026.
+Status: **IN PROGRESS — real Chrome controls and default static capture executed; full gate remains open.** October 16, 2026. See [current results](NATIVE_RESULTS.md).
 
 The available automation cannot operate native OS windows or sharing pickers. A person must perform those actions. DOM events, viewport overrides and mocked capture are not substitutes. Retest 0.4.1 already established the three targeted repairs; this run closes only the native cases actually observed.
 
@@ -34,13 +34,15 @@ Use the static target at port 8772. Enter each presentation mode before capture 
 
 | Scenario | Action | Current result |
 | --- | --- | --- |
-| default | Initial browser window | NOT RUN |
+| default | Initial browser window | Static calibration/export plumbing verified; insufficient observation for temporal validation |
 | maximized | Native maximize | NOT RUN |
 | browser-fullscreen | Native F11/equivalent | NOT RUN |
 | content-fullscreen | Target's explicit fullscreen button | NOT RUN |
 | responsive-small | Resize to a layout-changing width | NOT RUN |
 
 The static target verifies scenario/calibration/export plumbing only. Its content fullscreen is a content API test, not a real video player's fullscreen test. Actual video/player and browser-animation state matrices remain separate coverage obligations.
+
+Before accepting calibration, verify the CSS geometry **during sharing**. In the first native run, the same target read 1264 × 502 before sharing and 1264 × 445 in the original captured image. A pre-share calibration was correctly rejected. A diagnostic capture with calibration off exposed the changed readout; the next run used 1264 × 445 and its screenshot confirmed that mapping. Do not derive CSS dimensions by dividing encoded pixels by DPR. Keep rejected attempts as evidence and recheck geometry after entering any new presentation mode. Track settings captured at stream startup can differ from the actual first sampled video dimensions; retain both and use the sampled viewport plus observed CSS geometry for calibration checks.
 
 Download original JSON, HTML, text and both CSVs. Check shared report/build identity, scenario, calibration, reference field, coverage and limitations. Parse CSV with an RFC-compatible parser. Empty detection-witness CSV must contain a metadata record, not invented observations. Confirm static no-candidate results remain inconclusive. Open standalone HTML and decode each embedded image; compare screenshot pixels at numeric probe/witness coordinates, accounting for overlays and JPEG compression. Empty witness evidence must stay explicitly empty. A static target cannot exercise a positive witness: retain that as untested until an appropriate separately reviewed capture is available.
 

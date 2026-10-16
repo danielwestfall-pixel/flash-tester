@@ -11,3 +11,5 @@ The next gate has started with a native runbook, a per-run JSON template and a s
 The new static target was opened in real Chrome over loopback; its geometry readout rendered. Its explicit content-fullscreen request was denied with `Fullscreen unavailable: not granted`. This verifies the helper's error display only. Native F11, maximize, tab-hide/resize playback, calibrated capture and saved real-capture exports were not performed in this publication step. In-app browser automation was unavailable; Chrome was accessed through the alternative browser connection. Native OS controls and sharing pickers remain unavailable to automation.
 
 Follow [NATIVE_VERIFICATION.md](NATIVE_VERIFICATION.md) next. Do not infer coverage from fixture preparation, scenario names, mocked APIs or a denied fullscreen request.
+
+Subsequent native execution is recorded in [NATIVE_RESULTS.md](NATIVE_RESULTS.md): real Chrome Stop/Escape/cap and default static calibrated capture/export checks have now run. The initial-publication limitations above remain historical; the current overall gate is still open.

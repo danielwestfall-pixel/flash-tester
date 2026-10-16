@@ -12,7 +12,7 @@ Do not advance to another implementation item until the red-team retest passes. 
 - [x] Independent targeted red-team retest of all three repairs: AI-01/02/03 PASS within tested conditions; nine scripts, independent numerical/CSV checks and real Chrome decoded-image/Back checks. Overall gate remains BLOCKED on native coverage. See `retest-0.4.1-2026-10-16/audit.html` locally and `docs/AGENT_PLAN.md` for the published handoff.
 - [ ] Native tab-hide and window-resize playback verification, calibrated fullscreen capture, and original downloaded exports from that real capture. Mocked handlers and viewport labels do not satisfy these checks.
 
-Next action started: native runbook, static target and evidence template prepared; native execution still pending. See `docs/NATIVE_VERIFICATION.md`. Agent handoff: `AGENTS.md` and `docs/AGENT_PLAN.md`.
+Native verification is in progress: real Chrome Stop/Escape/cap and one calibrated default static capture/export check completed within their limits; overall gate remains open. Original native downloads and independent image/CSV checks are retained locally. See `docs/NATIVE_RESULTS.md` and `docs/NATIVE_VERIFICATION.md`. Agent handoff: `AGENTS.md` and `docs/AGENT_PLAN.md`.
 
 ## 1. Calibrated area measurement (first implementation)
 
