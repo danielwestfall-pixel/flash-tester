@@ -17,7 +17,7 @@ assert.ok(series(t=>Math.floor(t*10)%2?[255,0,0]:[0,255,0]).peakRedHeuristic>3,'
 assert.equal(series(t=>Math.floor(t*10)%2?[0,0,255]:[0,255,0]).peakRedHeuristic,0,'Non-red transitions');
 assert.equal(series(pulse(.5),4).peakGeneral,0,'Slow opposing transitions do not fit a second');
 assert.ok(Math.abs(color(255,255,255).y-1)<1e-9,'Linear sRGB luminance');
-assert.equal(new Analyzer(1,1).report().outcome,'Insufficient capture');
+assert.equal(new Analyzer(1,1).report().status,'insufficient-observation');
 const a=new Analyzer(1,1);a.push([0,0,0,255],0);a.push([255,255,255,255],.2);a.push([0,0,0,255],.2);
 assert.equal(a.frames,2,'Duplicate timestamps ignored');
 assert.ok(Math.abs(a.report().maxFrameGapSeconds-.2)<1e-9,'Gaps recorded');
@@ -32,7 +32,7 @@ for(const example of examples){
   assert.equal(report.evidence.trace.length,361,'Every synthetic frame measured');
   assert.ok(report.evidence.screenshots.length>=3,'Initial/darkest/brightest images retained');
   assert.ok(report.evidence.screenshots.length<=4,'Bounded screenshot retention');
-  assert.ok(Math.abs(report.evidence.range-exampleValues(example).delta)<1e-9,'Probe Y range matches known colors');
+  if(!example.smooth)assert.ok(Math.abs(report.evidence.range-exampleValues(example).delta)<1e-9,'Probe Y range matches known colors');
   assert.equal(report.synthetic,true);
   const html=reportHtml({...report,reference:'<script>alert("x")</script>'});
   assert.ok(html.includes('&lt;script&gt;'),'Reviewer input escaped in HTML');

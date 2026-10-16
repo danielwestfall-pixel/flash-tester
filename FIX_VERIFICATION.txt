@@ -1,0 +1,26 @@
+Flash Review 0.3 remediation record — October 16, 2026
+
+Historical baseline: 3196bf0b935dce4cb651aae21a547c52831f0c03, audited in audit-2026-10-16/audit.html. The historical audit and its original artifacts are preserved locally. The new-chat instructions are in RED_TEAM_PROMPT.txt.
+
+F1: Plateaus now advance their last-observed extreme timestamp. The delayed four-flash burst is counted as four. Regression coverage includes both polarities, several duty cycles, initial phases, long holds, and the three/four frequency boundary.
+
+F2: Red candidates now accumulate chromaticity excursions between extrema rather than requiring a single-frame jump. The nearly constant-luminance smooth red fixture produces four red candidates and zero general candidates. This is still an unvalidated trajectory model: red evaluation remains explicitly experimental-incomplete in structured reports and UI. Curved paths, black chromaticity, temporal sampling, and display coverage still need independent evaluation. No red-clearance result is offered.
+
+F3: A shared report formatter labels generated frames and real shared-surface captures separately. Generated runs do not generate real-page VPAT observations. HTML, TXT, JSON and both CSV files retain the same report ID, source type and build/algorithm identity. Filenames use that report ID.
+
+F4: Selected-probe measurements are labeled independently of frame-wide candidate maxima. The first detected pixel gets its own retained time series, coordinates, rolling pair starts, latest complete-pair states and up to three event-linked analysis-frame screenshots. Probe and detection-witness CSVs are separate. A bounded 1.25-second frame history (48 MiB maximum) supports retrospective evidence; incomplete histories are explicitly marked. The tool retains at most four probe screenshots plus three witness screenshots. No video is uploaded or saved.
+
+F5: Observation status is structured. Less than a second, fewer than two frames, low observed fps or large gaps yield insufficient-observation when there are no candidates. Adequate no-candidate runs remain inconclusive-no-candidates. Positive findings remain review candidates with independent adequacy information. Red and area evaluation never become a conformance pass. A startup watchdog covers stalled video playback, and new attempts clear prior report exports before the sharing picker opens.
+
+F6: At the evidence row limit, the entire retained evidence span freezes: trace, extrema, witness and probe images. Detector coverage may continue and is explicitly distinguished. A separate previous-input state keeps adjacent differences correct, with coverage times and dropped-row counts reported.
+
+Validation commands:
+  node test.mjs
+  node test-ui.mjs
+  node test-regressions.mjs
+
+test-ui uses mocked browser APIs. It does not validate native sharing permission, actual frame callbacks, platform throttling or real capture image correspondence. Real shared-tab capture remains an independent browser/OS validation task; see the fresh-chat prompt. The original synthetic examples and the two new regression examples can also be checked through actual Chrome UI without playing flashes.
+
+Unchanged scope limits: no physical-area conformance computation, no full-page/state coverage guarantee, no elimination of temporal aliasing or downsampling losses, no complete HDR/protected-media evaluation, and no conformance or seizure-safety certification.
+
+Actual Chrome verification on the local 0.3 source: the delayed fixture reports general/red 4/0; the gradual-red fixture reports 0/4 with an explicit incomplete-red status. The latter generated 361 selected-probe rows and 115 witness rows, with a complete first-detection window and three witness images. HTML, JSON, TXT and both CSVs downloaded successfully with matching report IDs; TXT correctly states no webpage was captured. Local artifacts are in verification-0.3/ and are excluded from publication. Real shared-tab capture remains unverified.

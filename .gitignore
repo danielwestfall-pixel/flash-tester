@@ -1,2 +1,4 @@
 *.tar.gz
 .openai/local/
+audit-2026-10-16/
+verification-0.3/
