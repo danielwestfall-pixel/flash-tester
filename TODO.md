@@ -4,6 +4,13 @@ Scope: SC 2.3.1 for browser animations, video and displayed image sequences; sep
 
 ## Current gate: area/image audit remediation
 
+**Paused at the user's request on October 16, 2026.** Resume from [the presentation matrix handoff](docs/PRESENTATION_MATRIX.md). Restored-window diagnostic/calibrated exports were checked; both captures remained insufficient-observation. The maximized diagnostic stopped on a source-size change; its calibrated retry was rejected before sampling. F11 setup was requested but no completion or capture was verified. Do not repeat completed NF-01 checks or advance to the next implementation item.
+
+- [ ] NF-02 (P2): rejected supplied calibration is incorrectly reported as dimensions "not supplied." Preserve mismatch status/reason and attempted geometry consistently in UI/exports; independently retest. See `docs/NATIVE_FINDINGS.md`.
+- [ ] NF-03 (P3): both CSV download buttons remain enabled but silently do nothing when a capture ends before evidence is initialized. Export metadata-only records or visibly disable/explain unavailable downloads; independently retest.
+
+Current disposition: **FAIL for these unresolved actionable reporting/export defects; BLOCKED for the incomplete native presentation matrix.** Production was not modified during this verification. Original captures remain local; source fixtures and this handoff are published.
+
 Do not advance to another implementation item until the red-team retest passes. Original audit: `audit-area-images-2026-10-16/audit.html`. Repair evidence: `repair-verification-2026-10-16/README.md`.
 
 - [x] AI-01: evaluate both nonoverlapping pairing phases; retain the exact 32-image/seed-1 regression, inverted polarity, orphan plateaus and three/four boundaries. Real Chrome decoded-image retest now flags four flashes.

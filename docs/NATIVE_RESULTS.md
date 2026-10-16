@@ -1,5 +1,7 @@
 # Native verification progress
 
+Paused by the user on October 16, 2026 after the maximized calibration rejection. The rejection exposed unresolved NF-02/NF-03 in reporting/CSV controls; implemented reporting/export scope is currently FAIL, while uncompleted native coverage remains BLOCKED. See [the exact resume point](PRESENTATION_MATRIX.md) and [findings](NATIVE_FINDINGS.md). No production repair was made during this verification.
+
 The new 0.4.2 [presentation matrix](PRESENTATION_MATRIX.md) now retains restored-window diagnostic and calibrated captures with all five original export formats independently checked. Both remain insufficient-observation. Maximized/F11/content-fullscreen/smaller layouts and actual animation/video coverage remain open.
 
 October 16, 2026. The historical native verification below tested `b363d88b6b176426c7ac4e2c4c283960adaffbb3`, build `flash-review-0.4.1-20261016`, and found NF-01 without modifying production. The subsequently authorized 0.4.2 repair now passes all nine scripts and targeted native duration/resize/visibility-hidden log checks. **Current gate: BLOCKED on the remaining presentation/video/device matrix and positive witness coverage.** See [repair status](NF01_REPAIR.md) and [the historical finding](NATIVE_FINDINGS.md).

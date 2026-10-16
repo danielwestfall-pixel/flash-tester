@@ -1,6 +1,6 @@
 # Presentation matrix progress
 
-October 16, 2026. Production build `flash-review-0.4.2-20261016`, algorithm `flash-screen-0.4.1`, source baseline `617251cadb3791d5029541d5c1c52c0f8edd4518`. Production code was unchanged. **Overall gate: BLOCKED.**
+October 16, 2026. Production build `flash-review-0.4.2-20261016`, algorithm `flash-screen-0.4.1`, source baseline `617251cadb3791d5029541d5c1c52c0f8edd4518`. Production code was unchanged. **Paused at the user's request. Native coverage: BLOCKED. Reporting/export scope: FAIL on unresolved NF-02/NF-03.**
 
 The new [static target](../fixtures/presentation-matrix/README.md) records DOM geometry and reviewer scenario labels. The reviewer operates its separate native Chrome window; browser automation operates only the analyzer. This stage checks capture/calibration/export plumbing. It does not establish animation/video coverage, positive detection witnesses, physical viewing geometry or frame presentation timing.
 
@@ -25,6 +25,14 @@ Local evidence and validators: `native-verification-2026-10-16/presentation-matr
 
 ## Remaining work
 
-The reviewer has been asked to maximize the same target window, label it and save fresh geometry. No maximized capture is claimed yet. Browser F11, content fullscreen and smaller-layout static captures remain open, followed by actual browser-animation/video states, positive witness correspondence/opt-out and broader browser/device coverage. Native mode labels require reviewer action; dimensions alone do not prove maximize/F11. Content-fullscreen API state is recorded separately from browser fullscreen.
+The reviewer maximized the same target window and saved pre-sharing geometry (1264 × 502 CSS px). The first maximized diagnostic, report `fb068e09-1ea1-45bc-9a41-c8b0a88fac0f`, stopped with `Shared surface dimensions changed; start a new capture`. It retained one frame at 1922 × 762 source pixels, zero sampled duration and an inconclusive status. Its original screenshot readout shows a transient 1264 × 501 CSS viewport (fractional content height 501.32), so the pre-sharing dimensions cannot establish stable capture geometry. All five original exports independently passed context/numeric/empty-witness checks, and three retained gray-probe image roles matched numeric RGB 176. This establishes the observed dimension-change stop, not completion of the maximized scenario.
+
+The subsequent original source history directly recorded 502 → 501 → 445 CSS-pixel heights during sharing, then a return to 502 after the stop. The calibrated retry used 1264 × 445 from that history. Report `83227c50-cbd7-4896-b3d2-8a44a680e69a` rejected the initial aspect ratio before collecting any frames. It has no sampled viewport or luminance evidence. Do not infer the rejected frame's exact size from initial track settings or nearby DOM events. Its source history again records transitional resizing; the final saved geometry was 1264 × 558 after sharing.
+
+Three original downloads (JSON/HTML/text) were retained and hashed. Both CSV controls were clicked but produced no files because the handlers guard on absent `report.evidence`; the controls remain enabled. The zero-frame report correctly remains inconclusive, but its area reason falsely says dimensions were not supplied despite retained calibration and an explicit mismatch stop reason. These are unresolved NF-02/NF-03, documented with reproduction and source locations in [native findings](NATIVE_FINDINGS.md). The first validation attempt expected CSV metadata records and failed on missing files; no CSV validation pass is claimed for this rejection.
+
+At pause, F11 setup had been requested but not verified. Resume by checking actual source window/scenario and collecting fresh geometry. Do not assume it is still maximized or already in F11, and do not keep retrying the maximized transition without a defined approach to stable geometry. No additional production changes were authorized or made as part of these findings.
+
+Browser F11, content fullscreen and smaller-layout static captures remain open, followed by actual browser-animation/video states, positive witness correspondence/opt-out and broader browser/device coverage. Native mode labels require reviewer action; dimensions alone do not prove maximize/F11. Content-fullscreen API state is recorded separately from browser fullscreen.
 
 Do not advance the implementation TODO or describe the matrix as a full audit PASS.
