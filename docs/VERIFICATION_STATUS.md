@@ -14,4 +14,4 @@ Follow [NATIVE_VERIFICATION.md](NATIVE_VERIFICATION.md) next. Do not infer cover
 
 Subsequent native execution is recorded in [NATIVE_RESULTS.md](NATIVE_RESULTS.md): real Chrome Stop/Escape/cap, tab-hide/window-resize stop behavior and default static calibrated capture/export checks have now run. That 0.4.1 verification failed because independent validation found negative/backwards callback timestamps in two native exports; see [NF-01](NATIVE_FINDINGS.md). The initial-publication limitations above remain historical; other coverage is still incomplete.
 
-The subsequent authorized 0.4.2 NF-01 clock repair passes all nine scripts; fresh native hide/resize retest remains pending. Current repair details are in [NF01_REPAIR.md](NF01_REPAIR.md).
+The subsequent authorized 0.4.2 NF-01 clock repair passes all nine scripts; targeted native duration/resize/visibility-hidden log checks pass. Current repair details are in [NF01_REPAIR.md](NF01_REPAIR.md).

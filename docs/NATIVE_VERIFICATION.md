@@ -1,6 +1,6 @@
 # Native browser verification: next gate
 
-Status: **BLOCKED — 0.4.2 clock repair passes regressions but still awaits fresh native hide/resize retest; other coverage remains incomplete.** October 16, 2026. See [repair status](NF01_REPAIR.md), [native results](NATIVE_RESULTS.md) and [the original finding](NATIVE_FINDINGS.md).
+Status: **BLOCKED on remaining presentation/video/device coverage. NF-01 passes targeted 0.4.2 regression and native duration/resize/visibility-hidden timing checks.** October 16, 2026. See [repair status](NF01_REPAIR.md), [native results](NATIVE_RESULTS.md) and [the historical finding](NATIVE_FINDINGS.md). Native visibility was established by manual window minimization; direct tab switching and the isolated window's post-stop DOM remain separate missing cases.
 
 The available automation cannot operate native OS windows or sharing pickers. A person must perform those actions. DOM events, viewport overrides and mocked capture are not substitutes. Retest 0.4.1 already established the three targeted repairs; this run closes only the native cases actually observed.
 
