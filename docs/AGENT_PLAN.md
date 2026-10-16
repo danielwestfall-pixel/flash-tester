@@ -45,6 +45,6 @@ For every new evidence run record build/commit, browser and OS, exact steps, exp
 
 Push source, tests, deterministic fixtures and these reference documents to the dedicated repository using a `codex/` branch. Audit archives and `dist/repair-checks/` are local verification artifacts. GitHub publication does not deploy the hosted Site. Never overwrite original audit evidence or force-push remote history.
 
-Publication is currently blocked by GitHub write authorization on both Git and the connected integration. See [PUBLICATION.md](PUBLICATION.md) for exact failures and the prepared retry. Do not describe local commits as already pushed.
+Publication succeeded after repository write access was granted on October 16, 2026. Both `main` and `codex/area-image-plan-0.4.1` were verified at the source publication commit. See [PUBLICATION.md](PUBLICATION.md). Native verification remains the active gate.
 
 End each work session with the current gate, changed files, executed checks, next concrete step and blockers. Update this plan when scope or evidence changes.

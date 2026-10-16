@@ -1,16 +1,16 @@
 # GitHub publication handoff
 
-October 16, 2026. **BLOCKED — no files published.**
+October 16, 2026. **PUBLISHED — source and agent plan pushed successfully.**
 
 Destination: https://github.com/danielwestfall-pixel/flash-tester.git
 
-Local branch: `codex/area-image-plan-0.4.1`. Source, tests, fixtures, agent plan and native verification preparation are committed. The source publication commit was `f20abee`; later documentation records this access blocker. All nine test scripts passed before publication; no production code was changed by the publication step.
+Local branch: `codex/area-image-plan-0.4.1`. Source, tests, fixtures, agent plan and native verification preparation are committed. Initial publication pushed commit `4255ee021985185bfd01dc9c07ded880f1fc16c6` to both `main` and `codex/area-image-plan-0.4.1`; both remote refs were independently read back and matched. This follow-up documentation records the successful retry. All nine test scripts passed before publication; no production code was changed by the publication step.
 
-The repository was empty when checked. The command-line push was rejected with HTTP 403: permission denied to Git's cached account `danielwestfall`. The connected GitHub integration identifies as `danielwestfall-pixel` and reports repository push permission, but its actual contents write was also rejected with HTTP 403, `Resource not accessible by integration`. No remote initialization succeeded and no pull request was created.
+The repository was empty when checked. The first command-line push was rejected with HTTP 403: permission denied to Git's cached account `danielwestfall`. The connected GitHub integration also rejected its contents write with HTTP 403, `Resource not accessible by integration`. After the user granted repository access and replied ready, the normal Git push succeeded. No pull request was needed for this initial repository publication.
 
-To unblock, grant the existing Git account repository write access or sign Git in using an account authorized to write this repository. Alternatively repair the connected integration's contents-write access. Do not paste tokens into chat or change repository visibility.
+The command-line authorization blocker is resolved. The connected integration's write access was not retested because Git publication succeeded. Do not paste tokens into chat or change repository visibility.
 
-After access is fixed, inspect remote refs and retry without force:
+For subsequent authorized publication from the recorded branch, inspect remote refs and push without force:
 
 ```powershell
 git ls-remote origin
