@@ -10,13 +10,14 @@ export function exportMetadata(report={},evidence=report.evidence){
     calibration_status:report.area?.status??'not-evaluated',
     calibration_css_width:calibration?.cssWidth??null,calibration_css_height:calibration?.cssHeight??null,
     reference_field_css_width:FIELD.width,reference_field_css_height:FIELD.height,reference_area_limit_css_px:FIELD.limit,
-    area_method:report.area?.method??'Not evaluated',
+    area_method:report.area?.method??'Not evaluated',area_reason:report.area?.reason??'',
+    area_observed_source_pixels_json:JSON.stringify(report.area?.observedSourcePixels??null),
     evaluation_coverage_json:JSON.stringify(report.evaluation??{conformance:'not-determined'}),
     observation_coverage_json:JSON.stringify(report.observation??null),
-    evidence_coverage_json:JSON.stringify(evidence?.coverage??null),
+    evidence_coverage_json:JSON.stringify(evidence?.coverage??{status:'not-collected',reason:'Capture ended before luminance evidence was initialized; no measurement rows exist.'}),
     area_limitations_json:JSON.stringify(report.area?.limitations??[]),
     screening_limitations_json:JSON.stringify(report.limitations??[]),
-    capture_settings_json:JSON.stringify(report.captureSettings??null),captured_viewport_json:JSON.stringify(report.viewport??null)
+    capture_settings_json:JSON.stringify(report.captureSettings??null),startup_settling_json:JSON.stringify(report.startupSettling??null),captured_viewport_json:JSON.stringify(report.viewport??null)
   };
 }
 export function csvCell(value){

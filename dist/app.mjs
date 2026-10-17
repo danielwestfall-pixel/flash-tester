@@ -2,12 +2,16 @@ import {Analyzer} from './analyzer.mjs';
 import {Evidence,evidenceMarkup,csv,witnessCsv,reportHtml} from './evidence.mjs';
 import {stampReport,reviewText} from './report.mjs';
 import {examples,exampleValues,syntheticExample} from './examples.mjs';
-import {areaSummary} from './area.mjs';
+import {areaSummary,unappliedArea} from './area.mjs';
 const $=id=>document.getElementById(id);
 let stream=null,analyzer=null,active=false,pending=false,report=null,callback=null,timer=null;
 let frameStart=null,lastMedia=null,startedAt=0,meta=null,settings=null,run=0;
 let evidence=null;
-let startupTimer=null;
+let startupTimer=null,rejectedSurface=null,settle=null;
+// Sharing UI (e.g. Chrome's sharing infobar) animates the shared viewport for a
+// few hundred ms. Geometry is locked only after it is stable; skipped startup
+// frames are reported as unanalyzed coverage, never silently dropped.
+const SETTLE_SECONDS=.5;
 const video=$('source'),canvas=$('pixels'),ctx=canvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
 function message(headline,body,state){$('headline').textContent=headline;$('status').textContent=body;$('state').textContent=state;}
 function lock(value){for(const id of ['target','notes','duration','resolution','start','probe-x','probe-y','keep-shots','area-enabled','css-width','css-height','presentation'])$(id).disabled=value;document.querySelectorAll('[data-example]').forEach(el=>el.disabled=value);$('stop').hidden=!active;}
@@ -22,9 +26,17 @@ function cleanup(){
 function finish(reason){
   if(!active)return;active=false;cleanup();lock(false);
   const result=analyzer?analyzer.report():new Analyzer(0,0).report();
+  const startupSettling=settle&&{requiredStableSeconds:SETTLE_SECONDS,settled:settle.settledAt!==undefined,discardedFrames:settle.discarded,
+    discardedMediaSeconds:(settle.settledAt??lastMedia??settle.firstTime)-settle.firstTime,sourceSizes:settle.sizes};
+  if(settle?.discarded)result.limitations=[...result.limitations,`${settle.discarded} startup frame(s) were discarded while the shared surface size settled; that interval was not analyzed.`];
+  if(settle&&!analyzer&&!rejectedSurface)result.observation={...result.observation,reasons:[...result.observation.reasons,`Shared surface size did not stay unchanged for ${SETTLE_SECONDS} s before the capture ended`]};
+  if(!analyzer&&meta.calibration){
+    result.area=unappliedArea(meta.calibration,rejectedSurface?reason+'.':settle?`Shared surface size did not stay unchanged for ${SETTLE_SECONDS} s before the capture ended; no frames were analyzed.`:'No frames were analyzed before the capture ended.',rejectedSurface);
+    result.evaluation={...result.evaluation,area:result.area.status};
+  }
   report=stampReport({...result,createdAt:new Date().toISOString(),criterion:'WCAG 2.2 SC 2.3.1 (Level A)',
     reference:meta.reference,interactions:meta.interactions,requestedSeconds:meta.seconds,
-    captureSettings:settings,endedBecause:reason,viewport:meta.viewport,evidence:evidence?.report(),
+    captureSettings:settings,endedBecause:reason,viewport:meta.viewport,startupSettling,evidence:evidence?.report(),
     scope:'Shared surface only; reference URL and interactions are supplied by the reviewer.'});
   evidence?.releaseHistory();
   renderReport(reason);
@@ -56,11 +68,18 @@ function renderReport(reason){
 function frame(now,info){
   if(!active)return;
   try{
-    if(frameStart===null)frameStart=info.mediaTime;
     if(lastMedia!==null&&info.mediaTime<=lastMedia){callback=requestNextFrame();return;}
     lastMedia=info.mediaTime;
     if(!analyzer){
-      if(meta.calibration&&Math.abs((video.videoWidth/video.videoHeight)/(meta.calibration.cssWidth/meta.calibration.cssHeight)-1)>.02){finish('Area calibration aspect ratio does not match the shared surface; correct CSS dimensions and start a new capture');return;}
+      const w=video.videoWidth,h=video.videoHeight;
+      if(!settle)settle={firstTime:info.mediaTime,discarded:0,sizes:[]};
+      if(settle.width!==w||settle.height!==h){
+        Object.assign(settle,{width:w,height:h,since:info.mediaTime});
+        if(settle.sizes.length<32)settle.sizes.push({width:w,height:h,mediaSeconds:info.mediaTime-settle.firstTime});
+      }
+      if(info.mediaTime-settle.since<SETTLE_SECONDS){settle.discarded++;callback=requestNextFrame();return;}
+      settle.settledAt=info.mediaTime;frameStart=info.mediaTime;
+      if(meta.calibration&&Math.abs((video.videoWidth/video.videoHeight)/(meta.calibration.cssWidth/meta.calibration.cssHeight)-1)>.02){rejectedSurface={width:video.videoWidth,height:video.videoHeight};finish('Area calibration aspect ratio does not match the shared surface; correct CSS dimensions and start a new capture');return;}
       const scale=Math.min(meta.width/video.videoWidth,640/video.videoHeight,1);
       canvas.width=Math.max(1,Math.round(video.videoWidth*scale));canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
       analyzer=new Analyzer(canvas.width,canvas.height,{calibration:meta.calibration});
@@ -108,7 +127,7 @@ $('setup').addEventListener('submit',async event=>{
     stream=selected;const track=stream.getVideoTracks()[0];const raw=track.getSettings();
     settings={width:raw.width,height:raw.height,frameRate:raw.frameRate,displaySurface:raw.displaySurface,presentation:meta.presentation,calibration:meta.calibration};
     // Do not export device IDs or the browser-provided tab/window title.
-    active=true;pending=false;analyzer=null;evidence=null;frameStart=null;lastMedia=null;report=null;
+    active=true;pending=false;analyzer=null;evidence=null;rejectedSurface=null;settle=null;frameStart=null;lastMedia=null;report=null;
     $('report').hidden=true;$('progress').value=0;lock(true);
     track.addEventListener('ended',()=>finish('Sharing stopped by reviewer'),{once:true});
     startupTimer=setTimeout(()=>finish('Video startup timed out'),10000);
@@ -129,8 +148,9 @@ window.addEventListener('pagehide',()=>{run++;active=false;cleanup();});
 function download(text,type,extension,suffix=''){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=`flash-review-${report.reportId}${suffix}.${extension}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('json').addEventListener('click',()=>{if(report)download(JSON.stringify(report,null,2),'application/json','json');});
 $('html-report').addEventListener('click',()=>{if(report)download(reportHtml(report),'text/html','html');});
-$('csv').addEventListener('click',()=>{if(report?.evidence)download(csv(report.evidence,report),'text/csv','csv','-selected-probe');});
-$('witness-csv').addEventListener('click',()=>{if(report?.evidence)download(witnessCsv(report.evidence,report),'text/csv','csv','-detection-witness');});
+// Captures that end before evidence exists still export metadata-only records.
+$('csv').addEventListener('click',()=>{if(report)download(csv(report.evidence,report),'text/csv','csv','-selected-probe');});
+$('witness-csv').addEventListener('click',()=>{if(report)download(witnessCsv(report.evidence,report),'text/csv','csv','-detection-witness');});
 $('text').addEventListener('click',()=>{if(report)download(reviewText(report),'text/plain','txt');});
 for(const example of examples){
   const card=document.createElement('article');card.className='example-card';

@@ -1,6 +1,6 @@
 # Presentation matrix progress
 
-October 16, 2026. Production build `flash-review-0.4.2-20261016`, algorithm `flash-screen-0.4.1`, source baseline `617251cadb3791d5029541d5c1c52c0f8edd4518`. Production code was unchanged. **Paused at the user's request. Native coverage: BLOCKED. Reporting/export scope: FAIL on unresolved NF-02/NF-03.**
+October 16, 2026. Production build `flash-review-0.4.2-20261016`, algorithm `flash-screen-0.4.1`, source baseline `617251cadb3791d5029541d5c1c52c0f8edd4518`. Production code was unchanged. **Native coverage: BLOCKED. NF-02/NF-03 repaired in 0.4.3; native retest PENDING ([repair](NF02_NF03_REPAIR.md)).** The rows below were recorded on 0.4.2.
 
 The new [static target](../fixtures/presentation-matrix/README.md) records DOM geometry and reviewer scenario labels. The reviewer operates its separate native Chrome window; browser automation operates only the analyzer. This stage checks capture/calibration/export plumbing. It does not establish animation/video coverage, positive detection witnesses, physical viewing geometry or frame presentation timing.
 

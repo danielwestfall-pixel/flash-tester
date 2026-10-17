@@ -11,7 +11,7 @@ class Element {
   setAttribute(name,value){this[name]=value;}
   focus(){}
   click(){}
-  getContext(){return {drawImage(){drawCalls++;},putImageData(){},fillRect(){},getImageData(){return {data:new Uint8ClampedArray([gray,gray,gray,255])};}};}
+  getContext(){return {drawImage(){drawCalls++;},putImageData(){},fillRect(){},getImageData(x,y,w=1,h=1){return {data:new Uint8ClampedArray(w*h*4).map((_,i)=>i%4===3?255:gray)};}};}
   toDataURL(){return 'data:image/png;base64,TEST';}
 }
 const html=fs.readFileSync(new URL('./dist/index.html',import.meta.url),'utf8');
@@ -39,9 +39,69 @@ await $('setup').fire('submit');
 for(let i=0;i<=120;i++){gray=Math.floor(i/6)%2?255:0;frameCallback(i*1000/120,{mediaTime:i/120});}
 await $('stop').fire('click');
 assert.ok($('quality').textContent.includes('Calibration 1 × 1'),'Calibrated area reaches capture UI');
-$('css-width').value='2';await $('setup').fire('submit');frameCallback(0,{mediaTime:0});
+$('css-width').value='2';await $('setup').fire('submit');for(let i=0;i<=60&&!$('stop').hidden;i++)frameCallback(i*1000/120,{mediaTime:i/120});
 assert.equal($('stop').hidden,true);assert.ok($('quality').textContent.includes('aspect ratio'),'Wrong calibration is rejected before measurement');
+// NF-02/NF-03: zero-frame exits keep supplied calibration distinct from absent
+// calibration, and every export control produces a file. Independent reader below.
+function parseCsv(text){const rows=[];let row=[],cell='',quoted=false;
+  for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}
+    else if(c===','&&!quoted){row.push(cell);cell='';}else if(c==='\n'&&!quoted){row.push(cell);rows.push(row);row=[];cell='';}else cell+=c;}
+  row.push(cell);rows.push(row);assert.equal(quoted,false);return rows;}
+const realObjectURL=URL.createObjectURL,realRevoke=URL.revokeObjectURL;let downloads=[];
+URL.createObjectURL=blob=>{downloads.push(blob);return 'blob:test';};URL.revokeObjectURL=()=>{};
+async function exportAll(){downloads=[];for(const id of ['json','csv','witness-csv','html-report','text'])await $(id).fire('click');
+  assert.equal(downloads.length,5,'All five export controls create a file');return Promise.all(downloads.map(b=>b.text()));}
+function checkZeroFrame(files,status,reasonPart,observed){
+  const [jsonText,probe,witness,htmlOut,text]=files,r=JSON.parse(jsonText);
+  assert.equal(r.frames,0);assert.equal(r.status,'insufficient-observation');assert.equal(r.evidence,undefined);
+  assert.equal(r.area.status,status);assert.equal(r.evaluation.area,status);assert.equal(r.evaluation.conformance,'not-determined');
+  assert.deepEqual(r.area.calibration,{cssWidth:2,cssHeight:1});assert.deepEqual(r.captureSettings.calibration,{cssWidth:2,cssHeight:1});
+  assert.ok(r.area.reason.includes(reasonPart),r.area.reason);assert.deepEqual(r.area.observedSourcePixels,observed);
+  for(const [label,out] of [['UI',$('quality').textContent],['HTML',htmlOut],['text',text]]){
+    assert.ok(!out.includes('dimensions were not supplied'),`${label} must not call supplied calibration missing`);
+    assert.ok(out.includes('supplied calibration 2 × 1 CSS pixels was '+(status==='calibration-rejected'?'rejected':'not applied')),label);}
+  for(const content of [probe,witness]){
+    const [header,...rows]=parseCsv(content),row=Object.fromEntries(header.map((k,i)=>[k,rows[0][i]]));
+    assert.equal(rows.length,1,'One metadata-only record');assert.equal(row.record_type,'metadata');assert.equal(row.time_seconds,'','No invented measurements');
+    assert.equal(row.report_id,r.reportId);assert.equal(row.build_id,r.buildId);assert.equal(row.calibration_status,status);
+    assert.equal(row.calibration_css_width,'2');assert.equal(row.calibration_css_height,'1');assert.ok(row.area_reason.includes(reasonPart));
+    assert.deepEqual(JSON.parse(row.area_observed_source_pixels_json),observed);
+    assert.equal(JSON.parse(row.evidence_coverage_json).status,'not-collected');}
+}
+checkZeroFrame(await exportAll(),'calibration-rejected','aspect ratio',{width:1,height:1});
+// Calibrated capture stopped before its first frame: input retained, not applied, no rejected geometry.
+await $('setup').fire('submit');await $('stop').fire('click');
+checkZeroFrame(await exportAll(),'not-evaluated','No frames were analyzed',null);
 $('area-enabled').checked=false;
+await $('setup').fire('submit');await $('stop').fire('click');
+assert.ok($('quality').textContent.includes('displayed CSS dimensions were not supplied'),'Absent calibration wording unchanged');
+const [plainJson]=await exportAll();assert.equal(JSON.parse(plainJson).area.status,'not-evaluated');assert.equal(JSON.parse(plainJson).area.calibration,undefined);
+// NF-04: sharing UI animates the shared surface at startup. Transitional sizes
+// are discarded and reported; geometry locks only after 0.5 s of stability, and
+// a later change still stops the capture. Times are exact binary fractions.
+$('area-enabled').checked=true;$('css-width').value='2';$('css-height').value='1';
+await $('setup').fire('submit');
+for(let i=0;i<=260&&!$('stop').hidden;i++){const t=i/128;
+  [video.videoWidth,video.videoHeight]=t<.0625?[1,1]:t<.125?[3,2]:i<200?[2,1]:[4,2];
+  gray=Math.floor(i/8)%2?255:0;frameCallback(t*1000,{mediaTime:t});}
+assert.equal($('stop').hidden,true,'Post-settle size change still stops');
+const settledReport=JSON.parse((await exportAll())[0]);
+assert.equal(settledReport.area.status,'calibrated-screening','Transitional startup frames do not reject valid calibration');
+assert.deepEqual(settledReport.viewport,{width:2,height:1});
+assert.equal(settledReport.startupSettling.discardedFrames,80,'Frames before 0.125+0.5 s discarded');
+assert.equal(settledReport.startupSettling.discardedMediaSeconds,.625);assert.equal(settledReport.startupSettling.settled,true);
+assert.deepEqual(settledReport.startupSettling.sourceSizes.map(x=>[x.width,x.height]),[[1,1],[3,2],[2,1]]);
+assert.equal(settledReport.frames,120,'Frames 80..199 analyzed');assert.ok(settledReport.endedBecause.includes('dimensions changed'));
+assert.ok(settledReport.limitations.some(x=>x.includes('80 startup frame(s) were discarded')));
+// Size never settles: reported as unsettled, calibration not applied, not "not supplied".
+await $('setup').fire('submit');
+for(let i=0;i<40;i++){[video.videoWidth,video.videoHeight]=i%2?[2,1]:[4,1];frameCallback(i*1000/128,{mediaTime:i/128});}
+await $('stop').fire('click');
+const unsettled=JSON.parse((await exportAll())[0]);
+assert.equal(unsettled.frames,0);assert.equal(unsettled.startupSettling.settled,false);assert.equal(unsettled.area.status,'not-evaluated');
+assert.ok(unsettled.area.reason.includes('did not stay unchanged'));assert.ok(unsettled.observation.reasons.some(x=>x.includes('did not stay unchanged')));
+video.videoWidth=1;video.videoHeight=1;$('area-enabled').checked=false;
+URL.createObjectURL=realObjectURL;URL.revokeObjectURL=realRevoke;
 const failButton=$('examples').children[3].children.find(x=>x.dataset.example);
 await failButton.fire('click');assert.ok($('quality').textContent.startsWith('Synthetic example:'));
 assert.equal($('general').textContent,4,'Failing fixture measured through UI');

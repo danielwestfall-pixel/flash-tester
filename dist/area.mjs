@@ -1,6 +1,15 @@
 // Conservative spatial screening in the WCAG reference viewing geometry.
 export const FIELD={width:341,height:256,limit:21824};
+// Supplied calibration that was never applied (rejected geometry, or no
+// analyzed frames) must not be reported as missing input.
+export function unappliedArea(calibration,reason,observedSourcePixels=null){
+  return {status:observedSourcePixels?'calibration-rejected':'not-evaluated',calibration:{cssWidth:calibration.cssWidth,cssHeight:calibration.cssHeight},
+    reason,observedSourcePixels,referenceField:FIELD,peakCompletion:null,peakEnvelope:null,
+    limitations:['Supplied calibration was retained for provenance only; no area was measured.']};
+}
 export function areaSummary(area){
+  if(area?.status==='calibration-rejected')return `Flash area not evaluated: supplied calibration ${area.calibration.cssWidth} × ${area.calibration.cssHeight} CSS pixels was rejected. ${area.reason}`;
+  if(area?.status!=='calibrated-screening'&&area?.calibration)return `Flash area not evaluated: supplied calibration ${area.calibration.cssWidth} × ${area.calibration.cssHeight} CSS pixels was not applied. ${area.reason}`;
   if(area?.status!=='calibrated-screening')return 'Flash area not evaluated: displayed CSS dimensions were not supplied.';
   const completion=area.peakCompletion?.cssPixelsUpperBound??0,envelope=area.peakEnvelope?.cssPixelsUpperBound??0;
   return `Calibrated sampled area: largest same-sample pair completion ≤ ${completion.toFixed(1)} CSS px²; rolling spatial envelope ≤ ${envelope.toFixed(1)} CSS px² within the reference field (limit ${FIELD.limit}). ${envelope>FIELD.limit?'The envelope exceeds the reference limit; this alone is not a concurrent-area failure.':'The observed envelope does not exceed the reference limit; missed events and untested states remain inconclusive.'} Calibration ${area.calibration.cssWidth} × ${area.calibration.cssHeight} CSS pixels. Red evaluation, temporal overlap and fine-pattern exceptions remain incomplete.`;

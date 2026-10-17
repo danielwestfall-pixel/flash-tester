@@ -75,10 +75,10 @@ export const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<'
 const n=(v,d=5)=>v==null?'—':Number(v).toFixed(d);
 export function csv(e,report={}){
   const columns='time_seconds,selected_probe_R_8bit,selected_probe_G_8bit,selected_probe_B_8bit,selected_probe_Y,selected_probe_deltaY_from_previous,selected_probe_red_saturation,selected_probe_u_prime,selected_probe_v_prime,selected_probe_chroma_distance_from_previous,frame_min_Y,frame_mean_Y,frame_max_Y,frame_wide_max_general_pairs_rolling_second,frame_wide_max_red_candidates_rolling_second,flagged_sample_fraction,completion_area_css_px_upper_bound,envelope_area_css_px_upper_bound'.split(',');
-  return metadataCsv(exportMetadata(report,e),columns,e.trace.map(r=>[r.time,...r.rgb,r.luminance,r.deltaYFromPrevious,r.redSaturation,r.uPrime,r.vPrime,r.chromaDistanceFromPrevious,r.frameMin,r.frameMean,r.frameMax,r.general,r.red,r.flaggedFraction,r.completionAreaCssUpperBound,r.envelopeAreaCssUpperBound]));
+  return metadataCsv(exportMetadata(report,e),columns,(e?.trace??[]).map(r=>[r.time,...r.rgb,r.luminance,r.deltaYFromPrevious,r.redSaturation,r.uPrime,r.vPrime,r.chromaDistanceFromPrevious,r.frameMin,r.frameMean,r.frameMax,r.general,r.red,r.flaggedFraction,r.completionAreaCssUpperBound,r.envelopeAreaCssUpperBound]));
 }
 export function witnessCsv(e,report={}){
-  const w=e.witness;
+  const w=e?.witness;
   return metadataCsv(exportMetadata(report,e),'witness_x_analysis_pixel,witness_y_analysis_pixel,time_seconds,witness_R_8bit,witness_G_8bit,witness_B_8bit,witness_Y,witness_red_saturation,witness_u_prime,witness_v_prime'.split(','),
     (w?.trace??[]).map(r=>[w.x,w.y,r.time,...r.rgb,r.luminance,r.redSaturation,r.uPrime,r.vPrime]));
 }

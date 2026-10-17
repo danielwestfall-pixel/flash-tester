@@ -4,12 +4,15 @@ Scope: SC 2.3.1 for browser animations, video and displayed image sequences; sep
 
 ## Current gate: area/image audit remediation
 
-**Paused at the user's request on October 16, 2026.** Resume from [the presentation matrix handoff](docs/PRESENTATION_MATRIX.md). Restored-window diagnostic/calibrated exports were checked; both captures remained insufficient-observation. The maximized diagnostic stopped on a source-size change; its calibrated retry was rejected before sampling. F11 setup was requested but no completion or capture was verified. Do not repeat completed NF-01 checks or advance to the next implementation item.
+**Resumed at the user's request on October 16, 2026** (previously paused). Resume from [the presentation matrix handoff](docs/PRESENTATION_MATRIX.md). Restored-window diagnostic/calibrated exports were checked; both captures remained insufficient-observation. The maximized diagnostic stopped on a source-size change; its calibrated retry was rejected before sampling. F11 setup was requested but no completion or capture was verified. Do not repeat completed NF-01 checks or advance to the next implementation item.
 
-- [ ] NF-02 (P2): rejected supplied calibration is incorrectly reported as dimensions "not supplied." Preserve mismatch status/reason and attempted geometry consistently in UI/exports; independently retest. See `docs/NATIVE_FINDINGS.md`.
-- [ ] NF-03 (P3): both CSV download buttons remain enabled but silently do nothing when a capture ends before evidence is initialized. Export metadata-only records or visibly disable/explain unavailable downloads; independently retest.
+- [ ] NF-02 (P2): rejected supplied calibration is incorrectly reported as dimensions "not supplied." **Repaired in 0.4.3** (`calibration-rejected` status, retained input/reason/rejected source pixels across UI and all exports; mocked regression passes). Independent native retest PENDING. See `docs/NF02_NF03_REPAIR.md`.
+- [ ] NF-03 (P3): both CSV download buttons silently did nothing when a capture ended before evidence was initialized. **Repaired in 0.4.3** (metadata-only CSVs with `evidence_coverage_json` status `not-collected`; mocked regression passes). Independent native retest PENDING.
 
-Current disposition: **FAIL for these unresolved actionable reporting/export defects; BLOCKED for the incomplete native presentation matrix.** Production was not modified during this verification. Original captures remain local; source fixtures and this handoff are published.
+- [ ] NF-04 (P2): first-frame geometry lock raced the sharing-infobar animation (4/5 calibrated captures rejected on macOS). **Repaired in 0.4.4** with startup settling; 5/5 natively on macOS. Windows retest PENDING.
+- [x] macOS native set (automated CDP + headless witness): NF-02/03 retest, full static presentation matrix, playback stop paths including a direct same-window tab switch, and positive witness/opt-out. See `docs/MAC_NATIVE_RESULTS.md` for limits.
+
+Current disposition: **NF-02/03/04 repaired; macOS automated retest PASS; Windows and reviewer-operated retests PENDING; BLOCKED for the incomplete native presentation matrix.** Original captures remain local; source fixtures and this handoff are published.
 
 Do not advance to another implementation item until the red-team retest passes. Original audit: `audit-area-images-2026-10-16/audit.html`. Repair evidence: `repair-verification-2026-10-16/README.md`.
 

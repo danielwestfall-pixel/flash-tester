@@ -2,7 +2,7 @@
 
 Standalone browser screening prototype for WCAG 2.2 SC 2.3.1. No packages, accounts, or capture upload required. Source is in `dist/`.
 
-Build 0.4.2 repairs NF-01's mixed playback clocks and adds startup-timing regressions. All nine scripts pass; targeted native duration/resize/visibility-hidden log checks pass. [Repair and verification status](docs/NF01_REPAIR.md). The detector algorithm remains 0.4.1 and the overall native coverage gate stays open.
+Build 0.4.4 waits for the shared surface size to settle before locking capture geometry (NF-04), with discarded startup frames reported. [macOS native results](docs/MAC_NATIVE_RESULTS.md). Build 0.4.3 repaired NF-02/NF-03: rejected calibration is reported as rejected rather than missing, and CSV exports always produce metadata-only records when no evidence was collected ([repair status](docs/NF02_NF03_REPAIR.md); native retest pending). Build 0.4.2 repaired NF-01's mixed playback clocks and adds startup-timing regressions. All nine scripts pass; targeted native duration/resize/visibility-hidden log checks pass. [Repair and verification status](docs/NF01_REPAIR.md). The detector algorithm remains 0.4.1 and the overall native coverage gate stays open.
 
 ## Run locally
 

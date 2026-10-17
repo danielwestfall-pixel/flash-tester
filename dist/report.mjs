@@ -1,6 +1,6 @@
 import {areaSummary} from './area.mjs';
 import {exportMetadata} from './export-metadata.mjs';
-export const BUILD_ID='flash-review-0.4.2-20261016';
+export const BUILD_ID='flash-review-0.4.4-20261016';
 export function stampReport(report){
   return {...report,reportId:globalThis.crypto?.randomUUID?.()??`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
     buildId:BUILD_ID,sourceType:report.synthetic?'generated-frames':'shared-surface-capture'};
