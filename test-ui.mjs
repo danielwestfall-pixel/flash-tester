@@ -100,6 +100,15 @@ await $('stop').fire('click');
 const unsettled=JSON.parse((await exportAll())[0]);
 assert.equal(unsettled.frames,0);assert.equal(unsettled.startupSettling.settled,false);assert.equal(unsettled.area.status,'not-evaluated');
 assert.ok(unsettled.area.reason.includes('did not stay unchanged'));assert.ok(unsettled.observation.reasons.some(x=>x.includes('did not stay unchanged')));
+assert.ok(unsettled.area.reason.includes('kept changing'));
+// NF-07: one frame at a constant size, then nothing (static content). Unconfirmed, not unstable.
+await $('setup').fire('submit');
+[video.videoWidth,video.videoHeight]=[2,1];frameCallback(0,{mediaTime:0});
+await $('stop').fire('click');
+const single=JSON.parse((await exportAll())[0]);
+assert.equal(single.frames,0);assert.equal(single.startupSettling.discardedFrames,1);
+assert.ok(single.area.reason.includes('Only one frame size was observed')&&!single.area.reason.includes('kept changing'),single.area.reason);
+assert.ok(single.observation.reasons.some(x=>x.includes('no later frame arrived')));
 video.videoWidth=1;video.videoHeight=1;$('area-enabled').checked=false;
 URL.createObjectURL=realObjectURL;URL.revokeObjectURL=realRevoke;
 const failButton=$('examples').children[3].children.find(x=>x.dataset.example);

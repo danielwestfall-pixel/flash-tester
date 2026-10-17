@@ -60,3 +60,6 @@ assert.equal(capped.report().coverage.end,2/60);assert.equal(capped.report().cov
 assert.equal(capped.report().traceTruncated,true);
 assert.throws(()=>new Analyzer(1,1).push([0,0,0,255],NaN),/timestamp/);
 console.log('All six audit findings: regression checks passed; aliasing remains explicitly inconclusive');
+// NF-08: measurement modules carry their algorithm version; a stale cached module is reported, not mixed silently.
+{const {ALGORITHM}=await import('./dist/analyzer.mjs'),{AREA_ALGORITHM}=await import('./dist/area.mjs'),rep=await import('./dist/report.mjs');
+assert.equal(ALGORITHM,rep.EXPECTED_ALGORITHM);assert.equal(AREA_ALGORITHM,rep.EXPECTED_ALGORITHM);assert.equal(rep.moduleVersionProblem(),null,'Current files are consistent');}

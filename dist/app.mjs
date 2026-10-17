@@ -1,6 +1,6 @@
 import {Analyzer} from './analyzer.mjs';
 import {Evidence,evidenceMarkup,csv,witnessCsv,reportHtml} from './evidence.mjs';
-import {stampReport,reviewText} from './report.mjs';
+import {stampReport,reviewText,moduleVersionProblem} from './report.mjs';
 import {examples,exampleValues,syntheticExample} from './examples.mjs';
 import {areaSummary,unappliedArea} from './area.mjs';
 const $=id=>document.getElementById(id);
@@ -29,9 +29,12 @@ function finish(reason){
   const startupSettling=settle&&{requiredStableSeconds:SETTLE_SECONDS,settled:settle.settledAt!==undefined,discardedFrames:settle.discarded,
     discardedMediaSeconds:(settle.settledAt??lastMedia??settle.firstTime)-settle.firstTime,sourceSizes:settle.sizes};
   if(settle?.discarded)result.limitations=[...result.limitations,`${settle.discarded} startup frame(s) were discarded while the shared surface size settled; that interval was not analyzed.`];
-  if(settle&&!analyzer&&!rejectedSurface)result.observation={...result.observation,reasons:[...result.observation.reasons,`Shared surface size did not stay unchanged for ${SETTLE_SECONDS} s before the capture ended`]};
+  // A static page may deliver one frame and nothing more; that is unconfirmed, not unstable.
+  const unsettled=settle&&(settle.sizes.length>1?`Shared surface size kept changing and did not stay unchanged for ${SETTLE_SECONDS} s before the capture ended`:
+    `Only one frame size was observed, and no later frame arrived at least ${SETTLE_SECONDS} s after it to confirm the size was stable (static content produces few frames)`);
+  if(settle&&!analyzer&&!rejectedSurface)result.observation={...result.observation,reasons:[...result.observation.reasons,unsettled]};
   if(!analyzer&&meta.calibration){
-    result.area=unappliedArea(meta.calibration,rejectedSurface?reason+'.':settle?`Shared surface size did not stay unchanged for ${SETTLE_SECONDS} s before the capture ended; no frames were analyzed.`:'No frames were analyzed before the capture ended.',rejectedSurface);
+    result.area=unappliedArea(meta.calibration,rejectedSurface?reason+'.':settle?`${unsettled}; no frames were analyzed.`:'No frames were analyzed before the capture ended.',rejectedSurface);
     result.evaluation={...result.evaluation,area:result.area.status};
   }
   report=stampReport({...result,createdAt:new Date().toISOString(),criterion:'WCAG 2.2 SC 2.3.1 (Level A)',
@@ -112,6 +115,7 @@ function frame(now,info){
 }
 $('setup').addEventListener('submit',async event=>{
   event.preventDefault();if(active||pending)return;
+  const versionProblem=moduleVersionProblem();if(versionProblem){message('Reload required',versionProblem,'Unavailable');return;}
   if(!navigator.mediaDevices?.getDisplayMedia||!video.requestVideoFrameCallback){message('Capture unavailable','Open this tool in desktop Chrome or Edge over HTTPS or localhost. This browser does not provide the required tab-capture APIs.','Unavailable');return;}
   const token=++run;
   // A canceled or blocked new capture must not leave a prior report exportable.
@@ -170,4 +174,5 @@ for(const example of examples){
   const link=document.createElement('a');link.href=`example.html?case=${example.id}`;link.target='_blank';link.rel='noopener';link.textContent=example.fail?'Open warning for live fail example ↗':'Open live example (manual start) ↗';
   card.append(heading,description,values,button,link,result);$('examples').append(card);
 }
-if(!navigator.mediaDevices?.getDisplayMedia||!video.requestVideoFrameCallback)$('support').textContent='Capture APIs are unavailable here. Open this tool in desktop Chrome or Edge over HTTPS or localhost.';
+if(moduleVersionProblem())$('support').textContent=moduleVersionProblem();
+else if(!navigator.mediaDevices?.getDisplayMedia||!video.requestVideoFrameCallback)$('support').textContent='Capture APIs are unavailable here. Open this tool in desktop Chrome or Edge over HTTPS or localhost.';

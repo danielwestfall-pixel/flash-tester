@@ -10,7 +10,8 @@ Scope: SC 2.3.1 for browser animations, video and displayed image sequences; sep
 - [ ] NF-03 (P3): both CSV download buttons silently did nothing when a capture ended before evidence was initialized. **Repaired in 0.4.3** (metadata-only CSVs with `evidence_coverage_json` status `not-collected`; mocked regression passes). Independent native retest PENDING.
 
 - [ ] NF-04 (P2): first-frame geometry lock raced the sharing-infobar animation (4/5 calibrated captures rejected on macOS). **Repaired in 0.4.4** with startup settling; 5/5 natively on macOS. Windows retest PENDING.
-- [ ] NF-06 (P2): calibrated area `cssPixelsUpperBound` can undercount at reduced resolution (edge cells); a 148 × 148 CSS px region reports 21,422 < 21,824. Define area semantics, then fix (e.g. one-cell dilation) with regressions. See `docs/MAC_NATIVE_RESULTS.md`.
+- [x] NF-06 (P2): calibrated area upper bound could undercount at reduced resolution. Repaired in 0.4.5 / algorithm 0.4.2 (dilated upper bound plus lit-cell value); mocked sweep and native retest pass. See `docs/NF06_NF08_REPAIR.md`.
+- [x] NF-07 (P3): one-frame settling reason clarified. NF-08 (P2): stale cached modules are detected and capture is refused. Both repaired in 0.4.5.
 - [x] macOS native set (automated CDP + headless witness): NF-02/03 retest, full static presentation matrix, playback stop paths including a direct same-window tab switch, and positive witness/opt-out. See `docs/MAC_NATIVE_RESULTS.md` for limits.
 
 Current disposition: **NF-02/03/04 repaired; macOS automated retest PASS; Windows and reviewer-operated retests PENDING; BLOCKED for the incomplete native presentation matrix.** Original captures remain local; source fixtures and this handoff are published.

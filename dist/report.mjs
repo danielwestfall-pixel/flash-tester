@@ -1,6 +1,16 @@
 import {areaSummary} from './area.mjs';
 import {exportMetadata} from './export-metadata.mjs';
-export const BUILD_ID='flash-review-0.4.4-20261016';
+import * as analyzerModule from './analyzer.mjs';
+import * as areaModule from './area.mjs';
+export const BUILD_ID='flash-review-0.4.5-20261017';
+export const EXPECTED_ALGORITHM='flash-screen-0.4.2';
+// Browsers can cache modules independently after an update. Namespace imports keep a
+// stale module from breaking linking, so a mismatch is detected and reported instead.
+export function moduleVersionProblem(){
+  const found={analyzer:analyzerModule.ALGORITHM,area:areaModule.AREA_ALGORITHM};
+  const stale=Object.entries(found).filter(([,v])=>v!==EXPECTED_ALGORITHM);
+  return stale.length?`Mixed Flash Review files are loaded (${stale.map(([k,v])=>`${k} ${v??'unversioned'}`).join(', ')}; expected ${EXPECTED_ALGORITHM} for ${BUILD_ID}). Hard-reload this page (Shift + Reload) before testing.`:null;
+}
 export function stampReport(report){
   return {...report,reportId:globalThis.crypto?.randomUUID?.()??`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
     buildId:BUILD_ID,sourceType:report.synthetic?'generated-frames':'shared-surface-capture'};

@@ -1,5 +1,5 @@
 import {Analyzer} from './analyzer.mjs';
-import {stampReport,BUILD_ID} from './report.mjs';
+import {stampReport,BUILD_ID,moduleVersionProblem} from './report.mjs';
 import {imageUrls,orderedPairs,schedule,imageAt,rasterKind,containRect} from './image-sequence.mjs';
 const $=id=>document.getElementById(id),canvas=$('surface'),context=canvas.getContext('2d',{colorSpace:'srgb'});
 let images=[],failures=[],busy=false,sourceDirty=false,output=null,running=false,raf=null,timer=null,started=null,plan=[],liveLog=[],liveConfig=null;
@@ -41,6 +41,7 @@ async function decode(blob,name){
   return {name,bitmap};
 }
 $('load').addEventListener('click',async()=>{
+  const versionProblem=moduleVersionProblem();if(versionProblem){$('load-status').textContent=versionProblem;return;}
   if(busy||running||suspended)return;
   let urls,files=Array.from($('files').files??[]);
   try{urls=imageUrls($('urls').value);if(files.length+urls.length>32)throw Error('Load at most 32 images in total.');if(!files.length&&!urls.length)throw Error('Choose files or paste image URLs first.');}

@@ -1,5 +1,6 @@
 // Screening only. Spatially reduced captures cannot establish WCAG conformance.
 import {AreaMeter} from './area.mjs';
+export const ALGORITHM='flash-screen-0.4.2';
 const linear = Array.from({length:256}, (_,i) => {
   const v=i/255; return v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4;
 });
@@ -144,7 +145,7 @@ export class Analyzer {
     if(fps<30)reasons.push('Observed frame rate below 30 fps');
     if(this.maxGap>.1)reasons.push('A frame gap exceeded 0.1 seconds');
     const status=this.windows.length?'candidates-detected':reasons.length?'insufficient-observation':'inconclusive-no-candidates';
-    return {algorithm:'flash-screen-0.4.1',status,outcome:status==='candidates-detected'?'Potential flashing — review required':
+    return {algorithm:ALGORITHM,status,outcome:status==='candidates-detected'?'Potential flashing — review required':
       status==='insufficient-observation'?'Insufficient observation — inconclusive':'No candidates in sampled data — conformance inconclusive',
       observation:{meetsScreeningMinimum:!reasons.length,reasons,warning:'Minimum sampling checks do not rule out aliasing or establish page coverage.'},
       evaluation:{general:'screening-only',red:'experimental-incomplete',area:this.area?'calibrated-screening':'not-evaluated',conformance:'not-determined'},

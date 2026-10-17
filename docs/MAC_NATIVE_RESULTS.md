@@ -134,7 +134,7 @@ Each capture played a fixture in `fixtures/video/index.html` and was shared to t
 
 Original exports pass the same independent validators (`video/capture-validation.txt` in the local evidence). V0 was an invalid harness attempt that captured the wrong tab; it is retained and excluded.
 
-### NF-06 (new, P2): calibrated area "upper bound" can undercount
+### NF-06 (P2): calibrated area "upper bound" could undercount — **repaired in 0.4.5**, see [NF06_NF08_REPAIR.md](NF06_NF08_REPAIR.md)
 
 The small-zone capture reported 1,140.8 CSS px² for a fully visible 35.6 × 35.6 CSS px region (1,267 px²). The losslessly retained witness image shows Chrome's canvas downscale lit exactly 9 × 9 analysis cells, with no partial edge cells above threshold, while the region spans about 9.5 cells per side. Because flagged cells are counted only at their own area, the value labelled `cssPixelsUpperBound` was 10% low.
 
@@ -149,7 +149,7 @@ The large-zone run initially looked like an undercount, but the region extended 
 - Reviewer-operated runs: native picker, physical Ctrl+Cmd+F / green-button fullscreen, the macOS menu bar/notch area.
 - Headful animated captures at real frame rates. These need consent, since the fixtures flash on screen.
 - A player-fullscreen video run that meets the sampling minimum (see the controls gap above); third-party or real-world video.
-- NF-06 area repair and an independent temporal/area reference.
+- An independent temporal/area reference. NF-06 is repaired (conservative dilated bound); NF-07/NF-08 are repaired with mocked and native checks.
 - Zoom other than 100%, external monitors and other DPRs.
 - An independent retest of NF-02/03/04 by a different reviewer.
 - The Windows rerun on 0.4.4.
