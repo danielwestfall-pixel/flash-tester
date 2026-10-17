@@ -2,30 +2,44 @@
 
 Scope: SC 2.3.1 for browser animations, video and displayed image sequences; separate SC 2.3.2 and 2.3.3 reviews. A completed fixture/test does not certify the detector or a webpage.
 
-## Current gate: area/image audit remediation
+## Current gate: native verification and repair retest
 
-**Resumed at the user's request on October 16, 2026** (previously paused). Resume from [the presentation matrix handoff](docs/PRESENTATION_MATRIX.md). Restored-window diagnostic/calibrated exports were checked; both captures remained insufficient-observation. The maximized diagnostic stopped on a source-size change; its calibrated retry was rejected before sampling. F11 setup was requested but no completion or capture was verified. Do not repeat completed NF-01 checks or advance to the next implementation item.
+Updated October 17, 2026. Build `flash-review-0.4.5-20261017`, algorithm `flash-screen-0.4.2`. Branch `claude/nf02-nf04-mac-native`.
 
-- [ ] NF-02 (P2): rejected supplied calibration is incorrectly reported as dimensions "not supplied." **Repaired in 0.4.3** (`calibration-rejected` status, retained input/reason/rejected source pixels across UI and all exports; mocked regression passes). Independent native retest PENDING. See `docs/NF02_NF03_REPAIR.md`.
-- [ ] NF-03 (P3): both CSV download buttons silently did nothing when a capture ended before evidence was initialized. **Repaired in 0.4.3** (metadata-only CSVs with `evidence_coverage_json` status `not-collected`; mocked regression passes). Independent native retest PENDING.
+**Disposition: repairs NF-02 to NF-08 pass their tests here, but the agent that wrote them also checked them. An independent red-team retest is PENDING. The overall gate stays BLOCKED on that retest, the Windows rerun and reviewer-operated coverage.** Do not advance to another implementation item until the red-team retest passes. Original captures stay local; source, fixtures and this handoff are published.
 
-- [ ] NF-04 (P2): first-frame geometry lock raced the sharing-infobar animation (4/5 calibrated captures rejected on macOS). **Repaired in 0.4.4** with startup settling; 5/5 natively on macOS. Windows retest PENDING.
-- [x] NF-06 (P2): calibrated area upper bound could undercount at reduced resolution. Repaired in 0.4.5 / algorithm 0.4.2 (dilated upper bound plus lit-cell value); mocked sweep and native retest pass. See `docs/NF06_NF08_REPAIR.md`.
-- [x] NF-07 (P3): one-frame settling reason clarified. NF-08 (P2): stale cached modules are detected and capture is refused. Both repaired in 0.4.5.
-- [x] macOS native set (automated CDP + headless witness): NF-02/03 retest, full static presentation matrix, playback stop paths including a direct same-window tab switch, and positive witness/opt-out. See `docs/MAC_NATIVE_RESULTS.md` for limits.
+### Done in this round (self-verified)
 
-Current disposition: **NF-02/03/04 repaired; macOS automated retest PASS; Windows and reviewer-operated retests PENDING; BLOCKED for the incomplete native presentation matrix.** Original captures remain local; source fixtures and this handoff are published.
+- [x] NF-02 (P2): rejected calibration reported as "not supplied". Repaired in 0.4.3: `calibration-rejected` status with retained input, reason and rejected source pixels across the UI and all five exports. Mocked regression; automated macOS native retest PASS. `docs/NF02_NF03_REPAIR.md`.
+- [x] NF-03 (P3): CSV buttons silently did nothing without evidence. Repaired in 0.4.3: metadata-only CSVs, `evidence_coverage_json` status `not-collected`. Mocked regression; macOS native PASS.
+- [x] NF-04 (P2): the first-frame geometry lock raced the sharing-infobar animation (4/5 calibrated captures rejected). Repaired in 0.4.4: 0.5 s startup settling, discarded frames reported. 5/5 natively on macOS.
+- [x] NF-06 (P2): the calibrated area upper bound could undercount at reduced resolution. Repaired in 0.4.5 / algorithm 0.4.2: one-cell dilated upper bound plus a separate lit-cell value. Hand-computed cases, the counterexample and a 160-case sweep; native video retest. `docs/NF06_NF08_REPAIR.md`.
+- [x] NF-07 (P3): misleading reason when only one frame arrives. Repaired in 0.4.5 (mocked regression only).
+- [x] NF-08 (P2): stale cached modules could mix builds silently. Repaired in 0.4.5: the module version guard refuses capture/load. Native stale-module check.
+- [x] macOS native set (CDP automation, Chrome 155): static presentation matrix (default, maximized, macOS fullscreen, content fullscreen, small layout), screenshot opt-out, resize stop, seven playback stop paths including a direct same-window tab switch, and headless positive witness/opt-out. `docs/MAC_NATIVE_RESULTS.md`.
+- [x] Video fixtures:
+  - A: 24 ffmpeg-encoded H.264/VP9 files with Gray-coded frame index, decoded and verified by `test-video-fixtures.py`.
+  - B: 40 browser-encoded files (VP9/VP8/H.264/AV1). One VP8 red/cyan colour FAIL is retained as an encoder finding.
+  - Native-player target page.
+- [x] Video capture on macOS: safe moving bar headful in five presentations (40–52 fps), and all flashing fixtures headless (44–60 fps). All 21 runs meeting the sampling minimum matched the expected flash counts and flag decisions.
 
-Do not advance to another implementation item until the red-team retest passes. Original audit: `audit-area-images-2026-10-16/audit.html`. Repair evidence: `repair-verification-2026-10-16/README.md`.
+### Still open for this gate
 
-- [x] AI-01: evaluate both nonoverlapping pairing phases; retain the exact 32-image/seed-1 regression, inverted polarity, orphan plateaus and three/four boundaries. Real Chrome decoded-image retest now flags four flashes.
-- [x] AI-02: release/invalidate resources on navigation, require reload after restoration, abort old loads and reject late decoded images/results. Real Chrome Back navigation shows reload-required controls; asynchronous lifecycle contracts are tested separately with mocks.
-- [x] AI-03: share presentation/calibration/build/coverage metadata across HTML, text and both CSVs, including metadata-only empty files. Actual export handlers are tested with mocked capture; standalone HTML was rendered in Chrome.
-- [x] Independent targeted red-team retest of all three repairs: AI-01/02/03 PASS within tested conditions; nine scripts, independent numerical/CSV checks and real Chrome decoded-image/Back checks. Overall gate remains BLOCKED on native coverage. See `retest-0.4.1-2026-10-16/audit.html` locally and `docs/AGENT_PLAN.md` for the published handoff.
-- [ ] Native tab-hide and window-resize playback verification, calibrated fullscreen capture, and original downloaded exports from that real capture. Mocked handlers and viewport labels do not satisfy these checks.
-- [x] NF-01 (P2): 0.4.2 clock repair, startup regressions and all nine scripts pass. Independent original native duration/resize/visibility-hidden exports pass timestamp/plan checks. Visibility was triggered by minimization in a manual Incognito window; direct tab switching remains separate coverage. See `docs/NF01_REPAIR.md`. Overall gate remains BLOCKED on the remaining matrix.
+- [ ] Independent red-team retest of NF-02 to NF-08, the macOS evidence and the video fixtures (prompt kept with the handoff).
+- [ ] Windows rerun on 0.4.5: NF-02/03/04/06/08, static matrix including F11, playback stop paths, video capture. The earlier Windows rows were on 0.4.2.
+- [ ] Reviewer-operated runs: native sharing picker; physical Ctrl+Cmd+F / green button / F11; on-screen animated captures (they flash, so they need consent).
+- [ ] Player-fullscreen video capture that meets the sampling minimums. On macOS, Chrome's fullscreen media controls caused a ~0.25 s capture stall in every attempt.
+- [ ] Device coverage: zoom other than 100%, external monitors and other DPRs, Edge.
+- [ ] The macOS static matrix was recorded on 0.4.4. Rerun it on 0.4.5 if the red team requires current-build evidence; the area change affects only calibrated area values.
 
-Native 0.4.2 verification now passes the targeted NF-01 retest, running-navigation/Back cleanup and static probe/empty-witness screenshot opt-out. The broader presentation/video/device matrix, direct tab switching and positive witness cases remain open. Original failing downloads are preserved unchanged. See `docs/NF01_REPAIR.md`, `docs/NATIVE_RESULTS.md` and `docs/NATIVE_VERIFICATION.md`. Agent handoff: `AGENTS.md` and `docs/AGENT_PLAN.md`.
+### Earlier repairs
+
+- [x] AI-01: evaluate both nonoverlapping pairing phases; retain the exact 32-image/seed-1 regression, inverted polarity, orphan plateaus and three/four boundaries.
+- [x] AI-02: release/invalidate resources on navigation, require reload after restoration, abort old loads and reject late decoded images/results.
+- [x] AI-03: share presentation/calibration/build/coverage metadata across HTML, text and both CSVs, including metadata-only empty files.
+- [x] Independent targeted red-team retest of AI-01/02/03: PASS within tested conditions (`retest-0.4.1-2026-10-16/audit.html`, local).
+- [x] NF-01 (P2): 0.4.2 playback clock repair; independent native duration/resize/visibility-hidden checks pass. `docs/NF01_REPAIR.md`.
+- [x] Native tab-hide and window-resize playback verification with original exports (Windows 0.4.2, then macOS 0.4.4 including direct tab switching).
 
 ## 1. Calibrated area measurement (first implementation)
 
@@ -35,8 +49,8 @@ Native 0.4.2 verification now passes the targeted NF-01 retest, running-navigati
 - [x] Preserve candidate detection even for small areas; export geometry, algorithm scope, measurement bounds and incomplete coverage.
 - [x] Test below/equal/above threshold, window edges, nearby/separated regions, staggered timing, scaling and missing calibration.
 - [ ] Validate asynchronous/gradual/moving flash areas against an independent reference; support precise temporal overlap, not just sample-aligned completions.
-- [ ] Validate real tab capture at reference geometry and largest available presentation scale.
-- [ ] Automate/document full validation of the size matrix for BOTH video and browser animations: initial/default presentation, maximized browser, browser fullscreen (F11), and content/player fullscreen where supported. Record viewport CSS size, displayed content rectangle, source resolution, DPR, zoom and fullscreen kind for each run. F11 and player fullscreen are distinct scenarios.
+- [ ] Validate real tab capture at reference geometry and largest available presentation scale. macOS static and video captures cover maximized/fullscreen scales; reference viewing geometry is still not measured.
+- [ ] Automate/document full validation of the size matrix for BOTH video and browser animations (macOS: automated harness in local evidence covers static target and video; browser-animation states and Windows remain): initial/default presentation, maximized browser, browser fullscreen (F11), and content/player fullscreen where supported. Record viewport CSS size, displayed content rectangle, source resolution, DPR, zoom and fullscreen kind for each run. F11 and player fullscreen are distinct scenarios.
 - [ ] Include smaller responsive breakpoints when they change the animation, crop, layout or visible content; test all relevant states at standard zoom. Smaller viewports are coverage cases, not a universal WCAG-prescribed list of dimensions.
 
 ## 2. Inputs and image sequences
