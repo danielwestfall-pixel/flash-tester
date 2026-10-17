@@ -1,4 +1,5 @@
-import {examples,exampleValues,exampleState} from './examples.mjs';
+import {examples,exampleValues,exampleState} from './examples.mjs?v=0.5.0';
+export const MODULE_BUILD='flash-review-0.5.0-20261017';
 const $=id=>document.getElementById(id);
 const example=examples.find(x=>x.id===new URL(location.href).searchParams.get('case'))||examples[0];
 const values=exampleValues(example);
@@ -14,3 +15,5 @@ $('halt').addEventListener('click',()=>stop('reviewer pressed Stop'));
 document.addEventListener('keydown',event=>{if(event.key==='Escape')stop('Escape');});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop('tab became hidden');});
 window.addEventListener('pagehide',()=>stop('page closed'));
+
+globalThis.flashReviewReady=true;

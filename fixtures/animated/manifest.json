@@ -1,0 +1,857 @@
+{
+ "size": [
+  96,
+  54
+ ],
+ "tools": {
+  "ffmpeg": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+  "img2webp": "WebP Encoder version: 1.6.0\nWebP Mux version: 1.6.0\nlibsharpyuv: 0.4.2"
+ },
+ "note": "Expected flash counts come from the definitions (30 s, closed 1 s window, white background unless stated), not from the app. Most fixtures flash intentionally; nothing autoplays from this folder.",
+ "files": [
+  {
+   "file": "bw-4hz.gif",
+   "id": "bw-4hz",
+   "format": "image/gif",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "Full-frame black/white, 120 ms frames (4.17 flashes/s).",
+   "bytes": 47229,
+   "sha256": "0812ffd438be626e59ca90b1e293a15a6263524f83f22764111d7272260e2631"
+  },
+  {
+   "file": "bw-4hz.png",
+   "id": "bw-4hz",
+   "format": "image/png",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "Full-frame black/white, 120 ms frames (4.17 flashes/s).",
+   "bytes": 2501,
+   "sha256": "95676af24f11b547d4a1006bbb53709372a57e72b7a1b328c87bd29075548884"
+  },
+  {
+   "file": "bw-4hz.webp",
+   "id": "bw-4hz",
+   "format": "image/webp",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "Full-frame black/white, 120 ms frames (4.17 flashes/s).",
+   "bytes": 908,
+   "sha256": "67f8af6b0d24023692c01172853010ea72b4e4bd3e34f31085874af03d7b04cc"
+  },
+  {
+   "file": "bw-2hz.gif",
+   "id": "bw-2hz",
+   "format": "image/gif",
+   "frames": 8,
+   "frameDurationsMs": [
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 2,
+    "encoded": 2,
+    "displayOverBlack": 2
+   },
+   "note": "250 ms frames: 2 flashes/s, below the frequency limit.",
+   "bytes": 23637,
+   "sha256": "ca6481b3c875f396431fc933eca34a27e857e76473a6bfc80b4149071b0d97fa"
+  },
+  {
+   "file": "bw-2hz.png",
+   "id": "bw-2hz",
+   "format": "image/png",
+   "frames": 8,
+   "frameDurationsMs": [
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 2,
+    "encoded": 2,
+    "displayOverBlack": 2
+   },
+   "note": "250 ms frames: 2 flashes/s, below the frequency limit.",
+   "bytes": 1281,
+   "sha256": "b365e00cf95d0baa3018adc76b9c328340b36ab6e25c262fa64d97cc66d79141"
+  },
+  {
+   "file": "bw-2hz.webp",
+   "id": "bw-2hz",
+   "format": "image/webp",
+   "frames": 8,
+   "frameDurationsMs": [
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250,
+    250
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 2,
+    "encoded": 2,
+    "displayOverBlack": 2
+   },
+   "note": "250 ms frames: 2 flashes/s, below the frequency limit.",
+   "bytes": 476,
+   "sha256": "5fc3b95275de802f302d5b7e70d5463ef8f44dacf00ad928e80a875a09bb9102"
+  },
+  {
+   "file": "bw-3hz.gif",
+   "id": "bw-3hz",
+   "format": "image/gif",
+   "frames": 12,
+   "frameDurationsMs": [
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 3,
+    "encoded": 3,
+    "displayOverBlack": 3
+   },
+   "note": "170 ms frames: at most 3 flashes in any second.",
+   "bytes": 35433,
+   "sha256": "a936d7b57c58774328b4c202043fd1299497d8e585757d85beb851fdf066620d"
+  },
+  {
+   "file": "bw-3hz.png",
+   "id": "bw-3hz",
+   "format": "image/png",
+   "frames": 12,
+   "frameDurationsMs": [
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 3,
+    "encoded": 3,
+    "displayOverBlack": 3
+   },
+   "note": "170 ms frames: at most 3 flashes in any second.",
+   "bytes": 1891,
+   "sha256": "fcd80c3b696442f6653d446f9860dc0f928ca4b6545dc5e656145600a925375d"
+  },
+  {
+   "file": "bw-3hz.webp",
+   "id": "bw-3hz",
+   "format": "image/webp",
+   "frames": 12,
+   "frameDurationsMs": [
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170,
+    170
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 3,
+    "encoded": 3,
+    "displayOverBlack": 3
+   },
+   "note": "170 ms frames: at most 3 flashes in any second.",
+   "bytes": 692,
+   "sha256": "ad8ab7cbc37f1782b35788816b4a50bfd13257203e0802e7f2d87fb83e35377a"
+  },
+  {
+   "file": "seam-loop-4hz.gif",
+   "id": "seam-loop-4hz",
+   "format": "image/gif",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "Two frames. Flashing exists only across the loop seam.",
+   "bytes": 5943,
+   "sha256": "95a98c94bbeb747fb770397faf9e2d678c693d6cb5e4564b3c3caef1ef8725ed"
+  },
+  {
+   "file": "seam-loop-4hz.png",
+   "id": "seam-loop-4hz",
+   "format": "image/png",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "Two frames. Flashing exists only across the loop seam.",
+   "bytes": 366,
+   "sha256": "43893c8c4627aebf5565f9f9ca365c0fc7ad2042ab01f220259e3dbd3dbf8436"
+  },
+  {
+   "file": "seam-loop-4hz.webp",
+   "id": "seam-loop-4hz",
+   "format": "image/webp",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "Two frames. Flashing exists only across the loop seam.",
+   "bytes": 152,
+   "sha256": "abb8e3c16c8d896301019d26812c711703b0496a34c5bb4f42cb76f8dae13ac0"
+  },
+  {
+   "file": "seam-once-4hz.gif",
+   "id": "seam-once-4hz",
+   "format": "image/gif",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": 1,
+   "safe": false,
+   "expectedFlashes": {
+    "display": 0,
+    "encoded": 0,
+    "displayOverBlack": 0
+   },
+   "note": "Same two frames, played once: a single change, no flash.",
+   "bytes": 5924,
+   "sha256": "44961d2e96f3c3fd0598b72bdc34b8dbf01d50bdb2f2001a97cc5930af9dd071"
+  },
+  {
+   "file": "seam-once-4hz.png",
+   "id": "seam-once-4hz",
+   "format": "image/png",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": 1,
+   "safe": false,
+   "expectedFlashes": {
+    "display": 0,
+    "encoded": 0,
+    "displayOverBlack": 0
+   },
+   "note": "Same two frames, played once: a single change, no flash.",
+   "bytes": 366,
+   "sha256": "f33b1ed1e2572b2de3c7828c4c5d534302243c505ac93913a5b96a4d6fbb256f"
+  },
+  {
+   "file": "seam-once-4hz.webp",
+   "id": "seam-once-4hz",
+   "format": "image/webp",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": 1,
+   "safe": false,
+   "expectedFlashes": {
+    "display": 0,
+    "encoded": 0,
+    "displayOverBlack": 0
+   },
+   "note": "Same two frames, played once: a single change, no flash.",
+   "bytes": 152,
+   "sha256": "3548f26cb27963a570cb9b5816904a94aa78e30c078e7c9e54c5590f626efe94"
+  },
+  {
+   "file": "fast-10ms.gif",
+   "id": "fast-10ms",
+   "format": "image/gif",
+   "frames": 20,
+   "frameDurationsMs": [
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 5,
+    "encoded": 50,
+    "displayOverBlack": 5
+   },
+   "note": "10 ms frames. Browsers show them for 100 ms (5 flashes/s); as encoded, 50 flashes/s.",
+   "bytes": 59025,
+   "sha256": "6421205dbfc81ecfb65a64d50b7119315207cff85224f4df36ba4ee30e1317a2"
+  },
+  {
+   "file": "fast-10ms.png",
+   "id": "fast-10ms",
+   "format": "image/png",
+   "frames": 20,
+   "frameDurationsMs": [
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 5,
+    "encoded": 50,
+    "displayOverBlack": 5
+   },
+   "note": "10 ms frames. Browsers show them for 100 ms (5 flashes/s); as encoded, 50 flashes/s.",
+   "bytes": 3111,
+   "sha256": "ab9044a4b3b81d4f8c11fd8794e424cf742170fbf31b45f6ea14365fc9af1c4c"
+  },
+  {
+   "file": "fast-10ms.webp",
+   "id": "fast-10ms",
+   "format": "image/webp",
+   "frames": 20,
+   "frameDurationsMs": [
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 5,
+    "encoded": 50,
+    "displayOverBlack": 5
+   },
+   "note": "10 ms frames. Browsers show them for 100 ms (5 flashes/s); as encoded, 50 flashes/s.",
+   "bytes": 1124,
+   "sha256": "afd914ee5bba565ac7175a3bbdaab361f88eb50710b981adea93cdc7c2bd2f85"
+  },
+  {
+   "file": "low-contrast-4hz.gif",
+   "id": "low-contrast-4hz",
+   "format": "image/gif",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": true,
+   "expectedFlashes": {
+    "display": 0,
+    "encoded": 0,
+    "displayOverBlack": 0
+   },
+   "note": "Delta Y about 0.028: no general flashes. Safe to view.",
+   "bytes": 47229,
+   "sha256": "adafb00651f29a8e167ad57556a15c33d7d195cb12656e376695bdfd8dbbaebf"
+  },
+  {
+   "file": "low-contrast-4hz.png",
+   "id": "low-contrast-4hz",
+   "format": "image/png",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": true,
+   "expectedFlashes": {
+    "display": 0,
+    "encoded": 0,
+    "displayOverBlack": 0
+   },
+   "note": "Delta Y about 0.028: no general flashes. Safe to view.",
+   "bytes": 2541,
+   "sha256": "37a6a4b0d2a90f388c446fb1e70fde53b7f71ac8c7bcf7129f7256df24bf53df"
+  },
+  {
+   "file": "low-contrast-4hz.webp",
+   "id": "low-contrast-4hz",
+   "format": "image/webp",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": true,
+   "expectedFlashes": {
+    "display": 0,
+    "encoded": 0,
+    "displayOverBlack": 0
+   },
+   "note": "Delta Y about 0.028: no general flashes. Safe to view.",
+   "bytes": 940,
+   "sha256": "29774c97438bd61452c5e76ff9a3a77ec2c307581302dd753ea449cde2236398"
+  },
+  {
+   "file": "red-cyan-4hz.png",
+   "id": "red-cyan-4hz",
+   "format": "image/png",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "Saturated red/cyan: general and experimental red candidates.",
+   "bytes": 2509,
+   "sha256": "4a33a26f31942101b62828c18789cb3c8a00c5bab28fcd7ef3b23544623b297b"
+  },
+  {
+   "file": "red-cyan-4hz.webp",
+   "id": "red-cyan-4hz",
+   "format": "image/webp",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "Saturated red/cyan: general and experimental red candidates.",
+   "bytes": 908,
+   "sha256": "2f3a87e43631d58fcf4cd072f8c99dbcb3bd0028a017daf4d619b7ede166a82d"
+  },
+  {
+   "file": "small-zone-4hz.gif",
+   "id": "small-zone-4hz",
+   "format": "image/gif",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "8 x 8 white square on black. Area depends on the displayed size.",
+   "bytes": 47229,
+   "sha256": "6174d605e45f9a174e0d7cdaea1f14d54394b5168c3eb54f9e672a830cac89f5"
+  },
+  {
+   "file": "small-zone-4hz.png",
+   "id": "small-zone-4hz",
+   "format": "image/png",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "8 x 8 white square on black. Area depends on the displayed size.",
+   "bytes": 2581,
+   "sha256": "6faed7237c7e22c680a19b166052fb0e35ba99fa7a2cfaa53ceda9795e27df30"
+  },
+  {
+   "file": "small-zone-4hz.webp",
+   "id": "small-zone-4hz",
+   "format": "image/webp",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 4
+   },
+   "note": "8 x 8 white square on black. Area depends on the displayed size.",
+   "bytes": 862,
+   "sha256": "6441b20de6aadc9b635351640724af4f064b1cc7bdf740bd2f75a4a6dec251c5"
+  },
+  {
+   "file": "transparent-4hz.png",
+   "id": "transparent-4hz",
+   "format": "image/png",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 0
+   },
+   "note": "Alternates transparent and opaque black: flashes over a white background, not over black.",
+   "bytes": 2061,
+   "sha256": "e422f2753b637bcf2efdce8c1225c7283f01f42e377fe49928f1ebef5afaaa6b"
+  },
+  {
+   "file": "transparent-4hz.webp",
+   "id": "transparent-4hz",
+   "format": "image/webp",
+   "frames": 16,
+   "frameDurationsMs": [
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120,
+    120
+   ],
+   "loop": "infinite",
+   "safe": false,
+   "expectedFlashes": {
+    "display": 4,
+    "encoded": 4,
+    "displayOverBlack": 0
+   },
+   "note": "Alternates transparent and opaque black: flashes over a white background, not over black.",
+   "bytes": 828,
+   "sha256": "969fcf056d028822499759fff2b175265f8d238dfdcf73120e9d519e3de31535"
+  }
+ ]
+}

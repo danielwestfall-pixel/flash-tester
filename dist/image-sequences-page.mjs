@@ -1,6 +1,9 @@
-import {Analyzer} from './analyzer.mjs';
-import {stampReport,BUILD_ID,moduleVersionProblem} from './report.mjs';
-import {imageUrls,orderedPairs,schedule,imageAt,rasterKind,containRect} from './image-sequence.mjs';
+import {Analyzer} from './analyzer.mjs?v=0.5.0';
+import * as reportModule from './report.mjs?v=0.5.0';
+import * as sequenceModule from './image-sequence.mjs?v=0.5.0';
+export const MODULE_BUILD='flash-review-0.5.0-20261017';
+const {stampReport,BUILD_ID}=reportModule,{imageUrls,orderedPairs,schedule,imageAt,rasterKind,containRect}=sequenceModule;
+const moduleVersionProblem=()=>typeof reportModule.moduleVersionProblem==='function'?reportModule.moduleVersionProblem({'image-sequences-page':MODULE_BUILD,'image-sequence':sequenceModule.MODULE_BUILD}):'Mixed Flash Review files are loaded (report unversioned). Hard-reload this page (Shift + Reload) before testing.';
 const $=id=>document.getElementById(id),canvas=$('surface'),context=canvas.getContext('2d',{colorSpace:'srgb'});
 let images=[],failures=[],busy=false,sourceDirty=false,output=null,running=false,raf=null,timer=null,started=null,plan=[],liveLog=[],liveConfig=null;
 let generation=0,suspended=false,loadController=null;
@@ -137,3 +140,5 @@ window.addEventListener('pagehide',()=>{
 window.addEventListener('pageshow',()=>{suspended=false;update();});
 $('download').addEventListener('click',()=>{if(!output)return;const url=URL.createObjectURL(new Blob([JSON.stringify(output,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='flash-image-sequence-results.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 update();
+
+globalThis.flashReviewReady=true;

@@ -1,3 +1,4 @@
+export const MODULE_BUILD='flash-review-0.5.0-20261017';
 // Scheduling and finite pair enumeration, shared by playback and screening.
 export function imageUrls(text){
   const urls=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);

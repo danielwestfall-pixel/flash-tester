@@ -88,11 +88,17 @@ assert.equal($('stop').hidden,true,'Post-settle size change still stops');
 const settledReport=JSON.parse((await exportAll())[0]);
 assert.equal(settledReport.area.status,'calibrated-screening','Transitional startup frames do not reject valid calibration');
 assert.deepEqual(settledReport.viewport,{width:2,height:1});
-assert.equal(settledReport.startupSettling.discardedFrames,80,'Frames before 0.125+0.5 s discarded');
-assert.equal(settledReport.startupSettling.discardedMediaSeconds,.625);assert.equal(settledReport.startupSettling.settled,true);
+// Independent count: i<16 (t<0.125) are the two transitional sizes, so 16 frames are
+// discarded and 0.125 s is lost. The final 2 x 1 size starts at i=16 and is confirmed at
+// i=80 (t=0.625); frames 16..80 are buffered and analyzed, then 81..199 live: 184 frames.
+assert.equal(settledReport.startupSettling.discardedFrames,16,'Only transitional-size frames are discarded');
+assert.equal(settledReport.startupSettling.discardedMediaSeconds,.125);assert.equal(settledReport.startupSettling.settled,true);
+assert.equal(settledReport.startupSettling.analyzedStartupFrames,65,'Stable-size startup frames are analyzed, not discarded');
+assert.equal(settledReport.startupSettling.transitionalScreening.length,2,'Each transitional size is screened for frequency');
 assert.deepEqual(settledReport.startupSettling.sourceSizes.map(x=>[x.width,x.height]),[[1,1],[3,2],[2,1]]);
-assert.equal(settledReport.frames,120,'Frames 80..199 analyzed');assert.ok(settledReport.endedBecause.includes('dimensions changed'));
-assert.ok(settledReport.limitations.some(x=>x.includes('80 startup frame(s) were discarded')));
+assert.equal(settledReport.frames,184,'Frames 16..199 analyzed');assert.ok(settledReport.endedBecause.includes('dimensions changed'));
+assert.ok(settledReport.limitations.some(x=>x.includes('16 startup frame(s) at transitional or invalid sizes were discarded')));
+assert.ok($('quality').textContent.includes('Startup settling: 16 frame(s)'),'Discarded startup interval is shown in the capture UI');
 // Size never settles: reported as unsettled, calibration not applied, not "not supplied".
 await $('setup').fire('submit');
 for(let i=0;i<40;i++){[video.videoWidth,video.videoHeight]=i%2?[2,1]:[4,1];frameCallback(i*1000/128,{mediaTime:i/128});}
@@ -106,9 +112,11 @@ await $('setup').fire('submit');
 [video.videoWidth,video.videoHeight]=[2,1];frameCallback(0,{mediaTime:0});
 await $('stop').fire('click');
 const single=JSON.parse((await exportAll())[0]);
-assert.equal(single.frames,0);assert.equal(single.startupSettling.discardedFrames,1);
-assert.ok(single.area.reason.includes('Only one frame size was observed')&&!single.area.reason.includes('kept changing'),single.area.reason);
-assert.ok(single.observation.reasons.some(x=>x.includes('no later frame arrived')));
+// One frame at one size: analyzed as unconfirmed geometry, never reported as stable.
+assert.equal(single.frames,1);assert.equal(single.startupSettling.discardedFrames,0);assert.equal(single.startupSettling.geometryConfirmed,false);
+assert.ok(single.observation.reasons.some(x=>x.includes('Only one frame size was observed (1 frame(s))')&&!x.includes('kept changing')),JSON.stringify(single.observation.reasons));
+assert.equal(single.observation.meetsScreeningMinimum,false);assert.equal(single.area.status,'calibrated-screening');
+assert.ok(single.limitations.some(x=>x.includes('Geometry was not confirmed stable')));
 video.videoWidth=1;video.videoHeight=1;$('area-enabled').checked=false;
 URL.createObjectURL=realObjectURL;URL.revokeObjectURL=realRevoke;
 const failButton=$('examples').children[3].children.find(x=>x.dataset.example);

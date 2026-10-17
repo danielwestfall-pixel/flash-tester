@@ -1,5 +1,15 @@
-import {FIELD} from './area.mjs';
+import {FIELD} from './area.mjs?v=0.5.0';
+export const MODULE_BUILD='flash-review-0.5.0-20261017';
 // Shared context for standalone exports, including files with no numeric rows.
+// Shown in the capture UI and in every export: startup frames are never discarded silently.
+export function startupSummary(st){
+  if(!st)return '';
+  const parts=[`Startup settling: ${st.discardedFrames} frame(s) over ${st.discardedMediaSeconds.toFixed(2)} s at changing or invalid sizes were discarded for area`];
+  if(st.transitionalScreening.length)parts.push(`screened separately for flashing frequency (${st.transitionalScreening.length} segment(s)${st.transitionalCandidates?', CANDIDATES FOUND':', no candidates'})`);
+  parts.push(`${st.analyzedStartupFrames} startup frame(s) at the final size were analyzed${st.geometryConfirmed?'':' without confirmation that the size was stable'}`);
+  return parts.join('; ')+'.';
+}
+export function sc232Summary(s){return s?`SC 2.3.2 (Level AAA) strict screening, no area or brightness exception: ${s.outcome} (peak ${s.peakPairs} pairs per rolling second at one sampled pixel; ${s.windows.length} flagged interval(s)). Screening only.`:'SC 2.3.2 strict screening: not evaluated.';}
 export function exportMetadata(report={},evidence=report.evidence){
   const calibration=report.area?.calibration??report.captureSettings?.calibration;
   return {
@@ -17,6 +27,8 @@ export function exportMetadata(report={},evidence=report.evidence){
     evidence_coverage_json:JSON.stringify(evidence?.coverage??{status:'not-collected',reason:'Capture ended before luminance evidence was initialized; no measurement rows exist.'}),
     area_limitations_json:JSON.stringify(report.area?.limitations??[]),
     screening_limitations_json:JSON.stringify(report.limitations??[]),
+    sc232_status:report.sc232?.status??'not-evaluated',sc232_peak_pairs:report.sc232?.peakPairs??null,sc232_json:JSON.stringify(report.sc232?{...report.sc232,windows:report.sc232.windows.length}:null),
+    source_file_json:JSON.stringify(report.sourceFile??null),
     capture_settings_json:JSON.stringify(report.captureSettings??null),startup_settling_json:JSON.stringify(report.startupSettling??null),captured_viewport_json:JSON.stringify(report.viewport??null)
   };
 }

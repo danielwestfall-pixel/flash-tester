@@ -15,4 +15,4 @@
 <p id="result" role="status"></p><pre id="analysis"></pre>
 <p><a href="https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html">WCAG flash definitions and reference viewing geometry</a></p></main>
 <section id="stage" hidden aria-label="Running flash fixture"><button id="halt">Stop fixture (Escape)</button><span id="run-state" role="status"></span><canvas id="surface" width="1024" height="768" aria-label="Intentional flashing test surface"></canvas></section>
-<script type="module" src="fixtures-page.mjs"></script></body></html>
+<script>addEventListener('load',()=>{if(globalThis.flashReviewReady)return;const n=document.getElementById('result');if(n)n.textContent='Reload required: Flash Review files did not load together (a module failed to load or is from another build). Hard-reload this page (Shift + Reload). If this persists, the deployment is incomplete.';document.querySelectorAll('button').forEach(b=>b.disabled=true);});</script><script type="module" src="fixtures-page.mjs?v=0.5.0"></script></body></html>
