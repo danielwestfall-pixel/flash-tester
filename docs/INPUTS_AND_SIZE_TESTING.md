@@ -10,6 +10,10 @@ Start the server from `flash-tester`: `python -m http.server 8766 --bind 127.0.0
 - Failed loads make coverage incomplete. Unsupported animated formats are rejected. Reports omit remote source URLs; keep your original URL list separately if needed for traceability. Replacing an image at the same URL requires reloading and testing again.
 - [Tab capture](http://127.0.0.1:8766/) works with visible browser video and page animations. Enable area calibration only when you know the CSS dimensions of the **entire captured surface**. Encoded video resolution, device pixels and player dimensions are not interchangeable with that number. If you cannot establish this mapping, leave area calibration off.
 
+## Video fixtures
+
+`fixtures/video/` provides deterministic H.264/VP9 fixtures, a native-player target page (`python3 -m http.server 8775 --bind 127.0.0.1 --directory fixtures/video`) and a browser encoder. See [its README](../fixtures/video/README.md). Native controls auto-hiding can stall tab capture (macOS Chrome); record it, or disable controls for sampling-quality runs.
+
 ## Size matrix: one capture per scenario
 
 | Scenario | Video | Browser animations |

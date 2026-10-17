@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash Review · Browser video encoder</title>
+<style>html,body{margin:0;background:#f4f4f4;color:#111;font:15px/1.45 system-ui}main{max-width:820px;padding:16px}button,select{font:inherit;padding:5px}pre{white-space:pre-wrap;background:#fff;border:1px solid #ccc;padding:8px;font-size:13px}</style>
+<main>
+<h1>Browser-encoded video fixtures</h1>
+<p>Encodes the shared pattern definition (<code>patterns.json</code>) with this browser's MediaRecorder. Frames are drawn to a canvas that is never added to the page, so <strong>nothing is displayed</strong>. Output timing comes from the browser encoder and is expected to be variable; these files test uneven timing and browser codecs, not reference content. Verify them with <code>test-video-fixtures.py --browser-encoded</code>.</p>
+<p><label>Codec <select id="codec"></select></label> <label>Fixture <select id="fixture"><option value="all">All fixtures</option></select></label> <button id="go" type="button">Encode and download</button></p>
+<pre id="log" role="status"></pre>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),log=s=>{$('log').textContent+=s+'\n';};
+const CODECS=[['webm-vp9','video/webm;codecs=vp9'],['webm-vp8','video/webm;codecs=vp8'],['mp4-avc1','video/mp4;codecs=avc1.640028'],['webm-av1','video/webm;codecs=av01']];
+let spec;
+function draw(ctx,fx,n){
+  const {fps}=spec,[W,H]=spec.size,code=spec.code,fill=(rect,rgb)=>{ctx.fillStyle=`rgb(${rgb.join(',')})`;ctx.fillRect(...rect);};
+  fill([0,0,W,H],fx.base);
+  for(const r of fx.regions){
+    if('hz' in r)fill(r.rect,Math.floor((n/fps)*2*r.hz)%2?r.b:r.a);
+    else{const [x,y,w,h]=r.rect,pos=Math.floor(r.speed*n/fps)%(W+w)-w;fill([pos,y,w,h],r.rgb);}
+  }
+  fill(code.band.rect,code.band.rgb);
+  const g=n^(n>>1);
+  for(let b=0;b<code.bits;b++)fill([code.x+b*(code.block+code.gap),code.y,code.block,code.block],(g>>(code.bits-1-b))&1?code.one:code.zero);
+}
+async function encode(fx,[name,mime]){
+  const [W,H]=spec.size,N=spec.fps*spec.seconds,canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d',{colorSpace:'srgb',alpha:false}),stream=canvas.captureStream(0),track=stream.getVideoTracks()[0];
+  const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8e6}),chunks=[];
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  const done=new Promise(r=>rec.onstop=r);
+  draw(ctx,fx,0);rec.start();
+  const start=performance.now(),lateness=[];
+  for(let n=0;n<N;n++){
+    const due=start+n*1000/spec.fps,wait=due-performance.now();
+    if(wait>0)await new Promise(r=>setTimeout(r,wait));
+    lateness.push(performance.now()-due);draw(ctx,fx,n);track.requestFrame();
+  }
+  await new Promise(r=>setTimeout(r,1000/spec.fps));rec.stop();await done;track.stop();
+  const blob=new Blob(chunks,{type:mime.split(';')[0]}),ext=mime.startsWith('video/mp4')?'mp4':'webm';
+  const file=`${fx.id}.browser-${name}.${ext}`,url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=file;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
+  const sorted=[...lateness].sort((x,y)=>x-y);
+  return {file,bytes:blob.size,mime,framesRequested:N,scheduleLatenessMs:{median:sorted[N>>1],max:sorted.at(-1)}};
+}
+async function init(){
+  spec=await (await fetch('patterns.json')).json();
+  for(const [name,mime] of CODECS)if(MediaRecorder.isTypeSupported(mime)){const o=document.createElement('option');o.value=name;o.textContent=`${name} (${mime})`;$('codec').append(o);}
+  for(const f of spec.fixtures){const o=document.createElement('option');o.value=f.id;o.textContent=f.id;$('fixture').append(o);}
+  window.recorderReady=true;
+}
+window.encodeAll=async(codecName,which='all')=>{
+  const codec=CODECS.find(c=>c[0]===codecName),results=[];
+  for(const fx of spec.fixtures.filter(f=>which==='all'||f.id===which)){const r=await encode(fx,codec);results.push(r);log(JSON.stringify(r));}
+  window.lastResults={userAgent:navigator.userAgent,supported:CODECS.filter(c=>MediaRecorder.isTypeSupported(c[1])).map(c=>c[0]),results};
+  return window.lastResults;
+};
+$('go').addEventListener('click',()=>{$('go').disabled=true;encodeAll($('codec').value,$('fixture').value).finally(()=>$('go').disabled=false);});
+init();
+</script>
+</html>

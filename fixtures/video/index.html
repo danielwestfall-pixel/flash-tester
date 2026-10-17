@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash Review · Video matrix target</title>
+<style>
+html,body{margin:0;background:#b0b0b0;color:#111;font:15px/1.4 system-ui}
+main{padding:10px 12px}
+h1{font-size:20px;margin:0 0 6px}p{margin:6px 0}button,select,input{font:inherit;padding:5px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.warning{border:2px solid #7a1f1f;background:#f6e3e3;padding:8px}
+#player{display:block;width:100%;height:62vh;background:#b0b0b0;object-fit:contain;margin-top:8px}
+#player:fullscreen{height:100%}
+#readout{font:700 15px/1.35 ui-monospace,monospace;white-space:pre-wrap;margin:6px 0}
+@media(max-width:600px){main{padding:8px}.controls{display:grid;grid-template-columns:1fr}#player{height:45vh}#readout{font-size:13px}}
+</style>
+<main>
+<h1>Video matrix target</h1>
+<p>Plays generated fixture videos in a native player for capture testing. Nothing autoplays. Geometry and frame-callback records do not prove what was displayed or captured.</p>
+<div class="controls">
+<label>Fixture <select id="fixture"></select></label>
+<label>Format <select id="format"><option value="mp4">MP4 · H.264</option><option value="webm">WebM · VP9</option></select></label>
+<label>Scenario <select id="scenario"><option value="default">Default player</option><option value="maximized">Maximized window</option><option value="browser-fullscreen">Browser fullscreen</option><option value="content-fullscreen">Player fullscreen</option><option value="responsive-small">Smaller layout</option></select></label>
+<button id="load" type="button">Load (no playback)</button>
+<button id="fullscreen" type="button">Player fullscreen</button>
+<button id="save" type="button">Save geometry + frames JSON</button>
+</div>
+<div id="gate" class="warning" hidden>
+<p><strong>Warning: this fixture flashes intentionally</strong> and can exceed general or red flash thresholds. Do not continue if you may be affected by flashing. It plays once (about 4 seconds) and pauses when the tab is hidden or Escape is pressed.</p>
+<label><input id="ack" type="checkbox"> I understand and want to show the player for this fixture</label>
+</div>
+<pre id="readout" aria-label="Current video target geometry"></pre>
+<p id="status" role="status">Choose a fixture and Load. Safe fixtures are listed first.</p>
+<video id="player" controls muted playsinline preload="metadata" hidden></video>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),player=$('player'),sessionId=crypto.randomUUID();
+const events=[],frames=[];let droppedEvents=0,droppedFrames=0,manifest=null,current=null,rvfc=null;
+function contentRect(){
+  // Displayed video content inside the element with object-fit: contain (letterboxing excluded).
+  const r=player.getBoundingClientRect();if(!player.videoWidth)return null;
+  const s=Math.min(r.width/player.videoWidth,r.height/player.videoHeight),w=player.videoWidth*s,h=player.videoHeight*s;
+  return {x:r.x+(r.width-w)/2,y:r.y+(r.height-h)/2,width:w,height:h,scale:s};
+}
+function sample(reason){
+  const r=player.getBoundingClientRect();
+  const state={sessionId,recordedAt:new Date().toISOString(),reason,scenario:$('scenario').value,
+    fixture:current?.file??null,safe:current?.safe??null,viewportCss:{width:innerWidth,height:innerHeight},
+    videoElementCss:{x:r.x,y:r.y,width:r.width,height:r.height},displayedContentCss:contentRect(),
+    sourcePixels:player.videoWidth?{width:player.videoWidth,height:player.videoHeight}:null,devicePixelRatio,
+    playerFullscreen:document.fullscreenElement===player,documentFullscreen:!!document.fullscreenElement,
+    currentTime:player.currentTime,paused:player.paused,ended:player.ended,documentHidden:document.hidden,
+    layout:innerWidth<=600?'compact':'wide',browserUserAgent:navigator.userAgent};
+  events.push(state);if(events.length>256){events.shift();droppedEvents++;}
+  const c=state.displayedContentCss;
+  $('readout').textContent=`Viewport CSS: ${innerWidth} × ${innerHeight} · DPR ${devicePixelRatio} · ${state.layout}\n`+
+    `Video element CSS: ${r.width.toFixed(1)} × ${r.height.toFixed(1)} at ${r.x.toFixed(1)}, ${r.y.toFixed(1)}\n`+
+    `Displayed content CSS: ${c?`${c.width.toFixed(1)} × ${c.height.toFixed(1)} at ${c.x.toFixed(1)}, ${c.y.toFixed(1)}`:'n/a'}\n`+
+    `Source: ${state.sourcePixels?`${state.sourcePixels.width} × ${state.sourcePixels.height}`:'not loaded'} · ${current?.file??'no fixture'}\n`+
+    `Player fullscreen: ${state.playerFullscreen?'ACTIVE':'off'} · scenario ${state.scenario} · session ${sessionId.slice(0,8)}`;
+  return state;
+}
+function onFrame(now,meta){
+  frames.push({mediaTime:meta.mediaTime,presentedFrames:meta.presentedFrames,expectedDisplayTime:meta.expectedDisplayTime,width:meta.width,height:meta.height});
+  if(frames.length>4096){frames.shift();droppedFrames++;}
+  rvfc=player.requestVideoFrameCallback(onFrame);
+}
+function setGate(){
+  const unsafe=current&&!current.safe;
+  $('gate').hidden=!unsafe;player.hidden=!current||(unsafe&&!$('ack').checked);
+  player.loop=!!current?.safe;
+}
+async function init(){
+  manifest=await (await fetch('manifest.json')).json();
+  const ids=[...new Set(manifest.files.map(f=>f.id))];
+  const safe=id=>manifest.files.find(f=>f.id===id).safe;
+  for(const id of [...ids.filter(safe),...ids.filter(x=>!safe(x))]){
+    const o=document.createElement('option');o.value=id;o.textContent=safe(id)?id:`${id} — FLASHES`;$('fixture').append(o);}
+  const q=new URLSearchParams(location.search);
+  if(q.get('fixture'))$('fixture').value=q.get('fixture');if(q.get('format'))$('format').value=q.get('format');
+  sample('initial');
+}
+$('load').addEventListener('click',()=>{
+  current=manifest.files.find(f=>f.id===$('fixture').value&&f.container===$('format').value);
+  player.pause();$('ack').checked=false;frames.length=0;droppedFrames=0;
+  if(rvfc!==null)player.cancelVideoFrameCallback(rvfc);
+  player.src=current.file;player.load();setGate();
+  rvfc=player.requestVideoFrameCallback(onFrame);
+  $('status').textContent=current.safe?`Loaded ${current.file}. Use the player controls to play; it loops.`:`Loaded ${current.file}. Acknowledge the warning to show the player; it plays once.`;
+  sample('load');
+});
+$('ack').addEventListener('change',()=>{setGate();if(!$('ack').checked)player.pause();sample('ack-change');});
+$('fullscreen').addEventListener('click',async()=>{
+  try{if(document.fullscreenElement)await document.exitFullscreen();else{if(player.hidden)throw Error('player hidden');await player.requestFullscreen();}}
+  catch(e){$('status').textContent=`Player fullscreen unavailable: ${e.name}: ${e.message}`;sample('fullscreen-denied');}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&current&&!current.safe){player.pause();sample('escape-pause');}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&current&&!current.safe)player.pause();sample('visibilitychange');});
+for(const k of ['play','pause','ended','loadedmetadata','seeked'])player.addEventListener(k,()=>sample(k));
+addEventListener('resize',()=>sample('resize'));document.addEventListener('fullscreenchange',()=>sample('fullscreenchange'));
+$('scenario').addEventListener('change',()=>sample('scenario-change'));
+$('save').addEventListener('click',()=>{
+  const state=sample('manual-save');
+  const payload={kind:'video-target-observation',targetVersion:1,current:state,events:[...events],droppedEvents,
+    fixture:current,frameCallbacks:[...frames],droppedFrameCallbacks:droppedFrames,
+    limitations:['requestVideoFrameCallback reports frames the player composited, not what reached the display or a capture.',
+      'Displayed content rectangle is computed for object-fit: contain; it excludes letterboxing.',
+      'Scenario is reviewer supplied; window state is not inferred from dimensions.']};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download=`flash-video-target-${state.scenario}-${sessionId}.json`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+init();
+</script>
+</html>

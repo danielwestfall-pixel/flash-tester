@@ -10,6 +10,7 @@ Scope: SC 2.3.1 for browser animations, video and displayed image sequences; sep
 - [ ] NF-03 (P3): both CSV download buttons silently did nothing when a capture ended before evidence was initialized. **Repaired in 0.4.3** (metadata-only CSVs with `evidence_coverage_json` status `not-collected`; mocked regression passes). Independent native retest PENDING.
 
 - [ ] NF-04 (P2): first-frame geometry lock raced the sharing-infobar animation (4/5 calibrated captures rejected on macOS). **Repaired in 0.4.4** with startup settling; 5/5 natively on macOS. Windows retest PENDING.
+- [ ] NF-06 (P2): calibrated area `cssPixelsUpperBound` can undercount at reduced resolution (edge cells); a 148 × 148 CSS px region reports 21,422 < 21,824. Define area semantics, then fix (e.g. one-cell dilation) with regressions. See `docs/MAC_NATIVE_RESULTS.md`.
 - [x] macOS native set (automated CDP + headless witness): NF-02/03 retest, full static presentation matrix, playback stop paths including a direct same-window tab switch, and positive witness/opt-out. See `docs/MAC_NATIVE_RESULTS.md` for limits.
 
 Current disposition: **NF-02/03/04 repaired; macOS automated retest PASS; Windows and reviewer-operated retests PENDING; BLOCKED for the incomplete native presentation matrix.** Original captures remain local; source fixtures and this handoff are published.
@@ -52,9 +53,9 @@ Native 0.4.2 verification now passes the targeted NF-01 retest, running-navigati
 ## 3. Video
 
 - [ ] Accept local video files and CORS-enabled video URLs, decode without a flashing preview, retain frame timestamps and source metadata.
-- [ ] Add reproducible encoded video fixtures (frequency, contrast, red and area), validate decoded pixels/timestamps against source patterns.
-- [ ] Handle variable frame rate, duplicate/drop frames, decode errors, seeks, loop seams and short bursts.
-- [ ] Record displayed CSS size independently of encoded resolution, including fullscreen testing.
+- [x] Add reproducible encoded video fixtures (frequency, contrast, red and area), validate decoded pixels/timestamps against source patterns. `fixtures/video/`, `generate-video-fixtures.py`, `test-video-fixtures.py` (requires ffmpeg); browser-encoded variants via `fixtures/video/recorder.html`.
+- [ ] Handle variable frame rate, duplicate/drop frames, decode errors, seeks, loop seams and short bursts. Drop/dup/VFR fixtures exist and captured counts matched; direct decoding, decode errors and seeks remain.
+- [ ] Record displayed CSS size independently of encoded resolution, including fullscreen testing. Video target page records element/content rectangles and player fullscreen; macOS capture covered five presentations, but player fullscreen did not meet the sampling minimum.
 - [ ] Reject/mark unsupported HDR or wide-gamut inputs; add a validated color-management path before claiming coverage.
 
 ## 4. Detector boundaries and exceptions

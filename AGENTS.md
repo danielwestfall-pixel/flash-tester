@@ -1,6 +1,6 @@
 # Flash Review agent handoff
 
-Work resumed at the user's request on October 16, 2026. The user tests on both macOS and Windows. NF-02/NF-03 (0.4.3) and NF-04 (0.4.4, startup geometry settling) are repaired. An automated macOS native set passes (`docs/MAC_NATIVE_RESULTS.md`, harness in the local `native-verification-mac-2026-10-16/harness/`). Windows and reviewer-operated retests are PENDING. Maximized capture is incomplete; F11 setup/capture is unverified. Remaining native coverage BLOCKED. Native actions require the user operating Chrome; check the actual window state first.
+Work resumed at the user's request on October 16, 2026. The user tests on both macOS and Windows. NF-02/NF-03 (0.4.3) and NF-04 (0.4.4, startup geometry settling) are repaired. An automated macOS native set passes (`docs/MAC_NATIVE_RESULTS.md`, harness in the local `native-verification-mac-2026-10-16/harness/`). Windows and reviewer-operated retests are PENDING. Video fixtures (`fixtures/video/`, verify with `python3 test-video-fixtures.py`, needs ffmpeg) and video capture runs are recorded there too. NF-06 (area upper bound can undercount) is open and needs defined area semantics before an algorithm change. Maximized capture is incomplete; F11 setup/capture is unverified. Remaining native coverage BLOCKED. Native actions require the user operating Chrome; check the actual window state first.
 
 Read [the agent plan](docs/AGENT_PLAN.md), [TODO.md](TODO.md), and [the input/size guide](docs/INPUTS_AND_SIZE_TESTING.md) before starting work.
 

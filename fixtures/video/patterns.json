@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "size": [640, 360],
+  "fps": 60,
+  "seconds": 4,
+  "note": "Shared definition for ffmpeg-encoded fixtures (generate-video-fixtures.py) and browser-encoded fixtures (recorder.html). Square waves: state = floor(t * 2 * hz) mod 2 at frame time t = n / fps, state 0 shows a, state 1 shows b. Moving regions start at x = -w and advance speed CSS px/s, wrapping after leaving the frame.",
+  "code": {
+    "note": "12-bit Gray code of the source frame index, MSB first, in a low-contrast band. RGB 120 vs 132 is a relative-luminance change of about 0.043, below the 0.10 general-flash threshold, so the strip itself is not a flash.",
+    "band": {"rect": [0, 328, 640, 32], "rgb": [126, 126, 126]},
+    "x": 8, "y": 336, "block": 16, "gap": 4, "bits": 12,
+    "zero": [120, 120, 120], "one": [132, 132, 132]
+  },
+  "fixtures": [
+    {"id": "static-gray", "safe": true, "base": [176, 176, 176], "regions": [],
+     "reference": "No transitions. Safe to display."},
+    {"id": "low-contrast-4hz", "safe": true, "base": [100, 100, 100],
+     "regions": [{"rect": [0, 0, 640, 328], "a": [100, 100, 100], "b": [110, 110, 110], "hz": 4}],
+     "reference": "4 Hz but delta Y about 0.028, below the 0.10 threshold: no general flashes. Visible low-contrast flicker; not a seizure-safety claim."},
+    {"id": "moving-bar", "safe": true, "base": [110, 110, 110],
+     "regions": [{"rect": [0, 0, 80, 328], "rgb": [130, 130, 130], "speed": 160}],
+     "reference": "Smooth low-contrast motion (delta Y about 0.068). No flashes. Exercises real frame rates without flashing."},
+    {"id": "bw-2hz", "safe": false, "base": [0, 0, 0],
+     "regions": [{"rect": [0, 0, 640, 328], "a": [0, 0, 0], "b": [255, 255, 255], "hz": 2}],
+     "reference": "Full-field black/white, 2 flashes per second: frequency-branch pass."},
+    {"id": "bw-3hz", "safe": false, "base": [0, 0, 0],
+     "regions": [{"rect": [0, 0, 640, 328], "a": [0, 0, 0], "b": [255, 255, 255], "hz": 3}],
+     "reference": "3 flashes per second: boundary pass (not more than three)."},
+    {"id": "bw-4hz", "safe": false, "base": [0, 0, 0],
+     "regions": [{"rect": [0, 0, 640, 328], "a": [0, 0, 0], "b": [255, 255, 255], "hz": 4}],
+     "reference": "4 flashes per second over a large area: general-flash failure at reference geometry."},
+    {"id": "bw-10hz", "safe": false, "base": [0, 0, 0],
+     "regions": [{"rect": [0, 0, 640, 328], "a": [0, 0, 0], "b": [255, 255, 255], "hz": 10}],
+     "reference": "10 flashes per second: general-flash failure."},
+    {"id": "red-cyan-4hz", "safe": false, "base": [0, 0, 0],
+     "regions": [{"rect": [0, 0, 640, 328], "a": [255, 0, 0], "b": [0, 255, 255], "hz": 4}],
+     "reference": "Saturated red/cyan at 4 Hz: general and red-flash failure."},
+    {"id": "small-zone-10hz", "safe": false, "base": [0, 0, 0],
+     "regions": [{"rect": [304, 148, 32, 32], "a": [0, 0, 0], "b": [255, 255, 255], "hz": 10}],
+     "reference": "32 x 32 source-pixel square at 10 Hz. Frequency candidates expected; area pass only if displayed small enough at reference geometry."},
+    {"id": "large-zone-4hz", "safe": false, "base": [0, 0, 0],
+     "regions": [{"rect": [160, 44, 320, 240], "a": [0, 0, 0], "b": [255, 255, 255], "hz": 4}],
+     "reference": "320 x 240 source-pixel region at 4 Hz. Failure when displayed above the reference area."}
+  ],
+  "variants": [
+    {"id": "bw-4hz-drops", "from": "bw-4hz", "dropEvery": 7, "dropOffset": 3,
+     "reference": "Source frames with n mod 7 == 3 removed; remaining timestamps keep source times (variable frame rate)."},
+    {"id": "bw-4hz-dups", "from": "bw-4hz", "repeatEvery": 5, "repeatOffset": 4,
+     "reference": "Source frames with n mod 5 == 4 replaced by the previous frame (duplicate frame code); constant frame rate."}
+  ]
+}
