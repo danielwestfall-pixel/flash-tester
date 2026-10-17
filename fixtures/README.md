@@ -29,3 +29,5 @@ Synthetic frames sample the known source at pixel centers without filtering. The
 The full-field gray pair requested as a pass is preserved exactly, labeled as a failure, and accompanied by a corrected passing pair. Relative luminance uses linearized sRGB, rather than RGB byte differences. Source: [WCAG 2.2 SC 2.3.1 definitions and viewing assumptions](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html).
 
 Version 0.4 adds optional calibrated area screening. The fixture page enables reference calibration for generated frames and reports its conservative envelope separately. The original fixture runner still exercises the uncalibrated path; `node test-area.mjs` tests the calibrated path, including the 4,096-pixel small zone. Candidate detection is deliberately retained regardless of area. See [the size/input guide](../docs/INPUTS_AND_SIZE_TESTING.md).
+
+See also [video fixtures](video/README.md) and [animated-image fixtures](animated/README.md) for `file-analysis.html`.

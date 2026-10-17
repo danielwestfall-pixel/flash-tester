@@ -2,7 +2,14 @@
 
 Scope: SC 2.3.1 for browser animations, video and displayed image sequences; separate SC 2.3.2 and 2.3.3 reviews. A completed fixture/test does not certify the detector or a webpage.
 
-## Current gate: native verification and repair retest
+## Current: build 0.5.0 (October 17, 2026)
+
+See [RELEASE_0.5.0.md](docs/RELEASE_0.5.0.md), [PC_TODO.md](docs/PC_TODO.md) and [HUMAN_TODO.md](docs/HUMAN_TODO.md).
+- 0.5.0 repairs RT-01 to RT-10 from the 0.4.5 red-team retest.
+- It adds local video and animated-image analysis, SC 2.3.2 strict screening and an SC 2.3.3 review checklist.
+- **Gate: BLOCKED** on an independent retest of 0.5.0, the Windows rerun and reviewer-operated runs.
+
+## Previous gate (0.4.5): native verification and repair retest
 
 Updated October 17, 2026. Build `flash-review-0.4.5-20261017`, algorithm `flash-screen-0.4.2`. Branch `claude/nf02-nf04-mac-native`.
 
@@ -12,7 +19,7 @@ Updated October 17, 2026. Build `flash-review-0.4.5-20261017`, algorithm `flash-
 
 - [x] NF-02 (P2): rejected calibration reported as "not supplied". Repaired in 0.4.3: `calibration-rejected` status with retained input, reason and rejected source pixels across the UI and all five exports. Mocked regression; automated macOS native retest PASS. `docs/NF02_NF03_REPAIR.md`.
 - [x] NF-03 (P3): CSV buttons silently did nothing without evidence. Repaired in 0.4.3: metadata-only CSVs, `evidence_coverage_json` status `not-collected`. Mocked regression; macOS native PASS.
-- [x] NF-04 (P2): the first-frame geometry lock raced the sharing-infobar animation (4/5 calibrated captures rejected). Repaired in 0.4.4: 0.5 s startup settling, discarded frames reported. 5/5 natively on macOS.
+- [x] NF-04 (P2): the first-frame geometry lock raced the sharing-infobar animation (4/5 calibrated captures rejected). Repaired in 0.4.4: 0.5 s startup settling, discarded frames reported. The macOS 5/5 result was on 0.4.4 with a static target and one analyzed frame per capture; on 0.4.5, static targets often never settled (RT-04, repaired in 0.5.0). 5/5 natively on macOS.
 - [x] NF-06 (P2): the calibrated area upper bound could undercount at reduced resolution. Repaired in 0.4.5 / algorithm 0.4.2: one-cell dilated upper bound plus a separate lit-cell value. Hand-computed cases, the counterexample and a 160-case sweep; native video retest. `docs/NF06_NF08_REPAIR.md`.
 - [x] NF-07 (P3): misleading reason when only one frame arrives. Repaired in 0.4.5 (mocked regression only).
 - [x] NF-08 (P2): stale cached modules could mix builds silently. Repaired in 0.4.5: the module version guard refuses capture/load. Native stale-module check.
@@ -62,12 +69,13 @@ Updated October 17, 2026. Build `flash-review-0.4.5-20261017`, algorithm `flash-
 - [x] Provide downloadable deterministic PNG patterns for passing/failing/area/red cases; no automatic flashing preview.
 - [ ] Add sequence import/export, dwell times, fades, contain/cover/crop, background and responsive presentation settings.
 - [ ] Add ordered triples/multi-state trajectories, loop boundaries, adversarial sequence search and whole-sequence review. Pair screening/random samples cannot prove every possible combination passes.
-- [x] Reject GIF, APNG and animated WebP explicitly; full timeline decoding remains future work.
+- [x] Reject GIF, APNG and animated WebP explicitly on the image-sequence page.
+- [x] Decode animated GIF/APNG/WebP/AVIF timelines with loop seams, loop counts, the browser display timing model and transparency (0.5.0 `file-analysis.html`; 30/30 animated fixture cases natively).
 - [x] Download reports linking loaded image labels, sequence, rate, geometry and detector build; omit source URLs. Persistent history/content hashes remain future work.
 
 ## 3. Video
 
-- [ ] Accept local video files and CORS-enabled video URLs, decode without a flashing preview, retain frame timestamps and source metadata.
+- [x] Accept local video files and decode them without a flashing preview, keeping frame timestamps and source metadata (0.5.0 `file-analysis.html`; 24/24 video fixtures natively). CORS video URLs remain open.
 - [x] Add reproducible encoded video fixtures (frequency, contrast, red and area), validate decoded pixels/timestamps against source patterns. `fixtures/video/`, `generate-video-fixtures.py`, `test-video-fixtures.py` (requires ffmpeg); browser-encoded variants via `fixtures/video/recorder.html`.
 - [ ] Handle variable frame rate, duplicate/drop frames, decode errors, seeks, loop seams and short bursts. Drop/dup/VFR fixtures exist and captured counts matched; direct decoding, decode errors and seeks remain.
 - [ ] Record displayed CSS size independently of encoded resolution, including fullscreen testing. Video target page records element/content rectangles and player fullscreen; macOS capture covered five presentations, but player fullscreen did not meet the sampling minimum.
@@ -75,7 +83,7 @@ Updated October 17, 2026. Build `flash-review-0.4.5-20261017`, algorithm `flash-
 
 ## 4. Detector boundaries and exceptions
 
-- [ ] Luminance delta just below/at/above 0.10; darker-state luminance around 0.80; quantization and codec changes.
+- [x] Luminance delta just below/at/above 0.10; darker-state luminance around 0.80 (`test-thresholds.mjs`). Codec changes: covered for the video fixtures only.
 - [ ] Saturated-red ratio around 0.8 and chromaticity around 0.2; constant-luminance changes, black endpoints, curved trajectories, independent red validation.
 - [ ] Balanced fine patterns/checkerboards/noise below/at/above 0.1 degree, with geometry and antialiasing checks.
 - [ ] Extend rolling-second irregular burst, phase, duty cycle, gradual ramp, moving-region and mixed-frequency tests.
@@ -84,8 +92,8 @@ Updated October 17, 2026. Build `flash-review-0.4.5-20261017`, algorithm `flash-
 
 ## 5. Other criteria and reporting
 
-- [ ] SC 2.3.2 (AAA): separate strict three-flash evaluation; do not apply SC 2.3.1 area/brightness exceptions as a clearance.
-- [ ] SC 2.3.3 (AAA): manual interaction checklist, motion-disable controls, reduced-motion preference, essential-motion rationale and state coverage.
+- [x] SC 2.3.2 (AAA): separate strict three-flash screening with no area or 0.80 brightness exception (0.5.0 `sc232` channel). The 0.10 change floor is an interpretation; validation against a specialist tool remains open.
+- [x] SC 2.3.3 (AAA): manual interaction checklist covering the reduced-motion preference, site settings, essential-motion rationale and completeness checks (0.5.0 `motion-review.html`). Automated motion detection is not claimed.
 - [ ] Coverage matrix and exports separating measured results, assumptions, unsupported inputs and untested states. No automatic whole-page conformance verdict.
 
 Sources: [SC 2.3.1](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html), [SC 2.3.2](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes.html), [SC 2.3.3](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html).

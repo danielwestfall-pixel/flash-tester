@@ -15,6 +15,8 @@ Regression (`test-ui.mjs`): transitional 1×1 → 3×2 → 2×1 startup with a 2
 
 Coverage cost: up to about 0.5 s (longer for sparse static sources) at capture start is not analyzed and is reported as such.
 
+**Correction (0.4.5 red-team retest):** in 0.4.4/0.4.5 the lost interval was shown only in the exports, never in the capture UI, and a burst inside it did not affect the status (RT-01). Static pages that do not repaint could never settle, so calibration was never applied (RT-04). The regression described above also used the old semantics. Both issues are repaired in 0.5.0: stable-size startup frames are buffered and analyzed, transitional sizes are screened for frequency, and static pages are analyzed as unconfirmed geometry. See [RELEASE_0.5.0.md](RELEASE_0.5.0.md).
+
 # NF-02 / NF-03 repair
 
 October 16, 2026. Build `flash-review-0.4.3-20261016`; detector algorithm remains `flash-screen-0.4.1` because the numerical detector did not change. Work resumed at the user's request.

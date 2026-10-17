@@ -38,7 +38,7 @@ The verifier checks:
 - that safe fixtures have no sample-point luminance step of 0.10 or more
 - a flash count computed independently from the decoded pixels
 
-Regeneration with the same ffmpeg build is byte-identical. Other builds may differ in bytes, so check decoded content rather than hashes alone.
+Regeneration with the same ffmpeg build **and the same encoder libraries** is byte-identical. The committed files were made with ffmpeg 9.0.2, libx264 r3222 and libvpx 1.17.0; the manifest records only the ffmpeg version. Other builds or library versions may differ in bytes, so check decoded content rather than hashes alone.
 
 Browser-encoded files are checked with `python3 test-video-fixtures.py DIR --browser-encoded`. In that mode the verifier reports dropped and repeated frames and timestamp spacing instead of requiring the plan.
 

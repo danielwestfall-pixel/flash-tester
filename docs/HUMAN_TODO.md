@@ -18,11 +18,11 @@ Updated October 17, 2026, after the red-team retest of build `flash-review-0.4.5
 
 ## 1. Decisions
 
-- [ ] **Settling and static pages (RT-04).** Since 0.4.4, a calibrated capture of a page that does not repaint often never applies the calibration. Decide which behaviour you want:
+- [ ] **Settling and static pages (RT-04).** *The agent chose a default in 0.5.0: static pages are analyzed as "unconfirmed" geometry, which never counts as meeting the minimum. Confirm or change it.* Since 0.4.4, a calibrated capture of a page that does not repaint often never applies the calibration. Decide which behaviour you want:
   - keep it as is and document it,
   - lock the geometry after a timeout, or
   - tell the reviewer to make the page repaint.
-- [ ] **Area bound wording (RT-02).** When low-contrast regions vanish in the downscale, the reported "upper bound" can fall below the true area. Decide whether to:
+- [ ] **Area bound wording (RT-02).** *The agent chose both in 0.5.0: the sentence is removed, and low-contrast cells are added to the bound. Confirm or change it.* When low-contrast regions vanish in the downscale, the reported "upper bound" can fall below the true area. Decide whether to:
   - remove the "does not exceed the reference limit" sentence, or
   - change the documented exception from "thinner than one cell" to "regions that produce no lit cell".
 - [ ] **Independent review.** The red-team pass was run by the same AI model family that wrote the repairs. Decide whether a person, or a different tool, should spot-check its findings before the gate is closed.
@@ -79,6 +79,12 @@ All Windows rows so far were recorded on 0.4.2.
 - [ ] Microsoft Edge, if you can install it.
 - [ ] Player fullscreen with native video controls (the ~0.25 s capture stall on macOS).
 
-## 6. Hand back to the agent
+## 6. New in 0.5.0: try it yourself
+
+- [ ] Open `file-analysis.html` and analyze one of your own videos or GIFs. Nothing is shown while it runs. Check that the result looks plausible, and note anything confusing.
+- [ ] Work through `motion-review.html` on one real page with reduced motion on and off, and check whether the checklist fits how you review.
+- [ ] Decide whether the SC 2.3.2 strict screen (no area or brightness exception, 0.10 change floor) matches your interpretation of the criterion.
+
+## 7. Hand back to the agent
 
 - [ ] Give the agent the folder of downloads and your notes for each run. It will validate them and update the docs.

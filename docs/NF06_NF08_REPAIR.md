@@ -12,6 +12,8 @@ October 17, 2026. Build `flash-review-0.4.5-20261017`; algorithm `flash-screen-0
 - A new field, `cssPixelsLit`, keeps the previous lit-cell value, with `litAboveReferenceLimit` and `upperBoundCells` alongside.
 - The summary shows both values. The area limitation text now says lit cells can undercount, and that regions thinner than one cell, or flashes erased by downsampling, are not bounded.
 
+**Correction (0.4.5 red-team retest, RT-02):** the exception was understated. Near the threshold, regions up to about two cells wide can be erased entirely. In one counterexample the bound was 16,746 CSS px² against a true 34,481, and the summary said the limit was not exceeded. 0.5.0 adds frequency-qualified low-contrast cells to the bound and removes that sentence ([RELEASE_0.5.0.md](RELEASE_0.5.0.md)).
+
 **Cost.** Upper bounds are deliberately conservative: up to about 35% high for a 9.5-cell region, and about 8% at the 21,824 limit at 3.75 CSS px cells. On a native 1-CSS-pixel grid the bound adds a one-pixel ring. An upper bound above the limit is still not a failure verdict, as before.
 
 **Regression** (`test-area.mjs`):
@@ -59,6 +61,8 @@ A mocked regression covers both. A native static-target case was not rerun.
 - with current files, the page starts normally
 
 The guard covers the two measurement modules only; other modules remain unversioned.
+
+**Correction (0.4.5 red-team retest, RT-05/RT-06):** this native check served only a stale `analyzer.mjs`. A stale `app.mjs`, `evidence.mjs` or `export-metadata.mjs` ran silently under the 0.4.5 build ID: NF-02/NF-03 regressed and export columns were lost. A stale `report.mjs` left a dead page. 0.5.0 versions every module and import URL and adds a page load watchdog ([RELEASE_0.5.0.md](RELEASE_0.5.0.md)).
 
 ## Checks
 

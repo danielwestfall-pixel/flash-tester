@@ -1,8 +1,20 @@
 # Flash Review
 
-Standalone browser screening prototype for WCAG 2.2 SC 2.3.1. No packages, accounts, or capture upload required. Source is in `dist/`.
+Standalone browser screening prototype for the WCAG 2.2 flashing and motion criteria: SC 2.3.1 (screening), SC 2.3.2 (strict screening) and SC 2.3.3 (manual review). No packages, accounts, or capture upload required. Source is in `dist/`.
 
-Build 0.4.5 / algorithm 0.4.2 makes the calibrated area upper bound conservative (NF-06), clarifies one-frame settling (NF-07) and refuses to run on mixed cached module versions (NF-08): [repair status](docs/NF06_NF08_REPAIR.md). Video fixtures: `fixtures/video/` (ffmpeg-generated, decoded and verified by `python3 test-video-fixtures.py`; browser-encoded via `recorder.html`). Build 0.4.4 waits for the shared surface size to settle before locking capture geometry (NF-04), with discarded startup frames reported. [macOS native results](docs/MAC_NATIVE_RESULTS.md). Build 0.4.3 repaired NF-02/NF-03: rejected calibration is reported as rejected rather than missing, and CSV exports always produce metadata-only records when no evidence was collected ([repair status](docs/NF02_NF03_REPAIR.md); native retest pending). Build 0.4.2 repaired NF-01's mixed playback clocks and adds startup-timing regressions. All nine scripts pass; targeted native duration/resize/visibility-hidden log checks pass. [Repair and verification status](docs/NF01_REPAIR.md). The detector algorithm remains 0.4.1 and the overall native coverage gate stays open.
+**Build 0.5.0 / algorithm 0.5.0** ([release notes](docs/RELEASE_0.5.0.md)):
+- **Inputs:** screens tab captures, local video files, and animated GIF / APNG / WebP / AVIF files (`file-analysis.html`, decoded frame by frame without playback).
+- **SC 2.3.2:** a separate strict channel, with no area or brightness exception.
+- **SC 2.3.3:** a manual motion-review checklist (`motion-review.html`).
+- **Repairs:** the 0.4.5 red-team findings, covering startup settling, the area bound, and mixed-build protection.
+
+Checks:
+- 15 test scripts, plus `python3 test-video-fixtures.py`;
+- `node tools/verify-file-analysis.mjs BASE OUT` (native headless Chrome: 54/54 fixtures).
+
+An independent retest of 0.5.0 is pending.
+
+History: Build 0.4.5 / algorithm 0.4.2 makes the calibrated area upper bound conservative (NF-06), clarifies one-frame settling (NF-07) and refuses to run on mixed cached module versions (NF-08): [repair status](docs/NF06_NF08_REPAIR.md). Video fixtures: `fixtures/video/` (ffmpeg-generated, decoded and verified by `python3 test-video-fixtures.py`; browser-encoded via `recorder.html`). Build 0.4.4 waits for the shared surface size to settle before locking capture geometry (NF-04), with discarded startup frames reported. [macOS native results](docs/MAC_NATIVE_RESULTS.md). Build 0.4.3 repaired NF-02/NF-03: rejected calibration is reported as rejected rather than missing, and CSV exports always produce metadata-only records when no evidence was collected ([repair status](docs/NF02_NF03_REPAIR.md); automated macOS native retest passed; reviewer-operated and Windows retests pending). Build 0.4.2 repaired NF-01's mixed playback clocks and adds startup-timing regressions. All nine scripts pass; targeted native duration/resize/visibility-hidden log checks pass. [Repair and verification status](docs/NF01_REPAIR.md). The detector algorithm remains 0.4.1 and the overall native coverage gate stays open.
 
 ## Run locally
 
@@ -37,6 +49,13 @@ Confirm findings using an established flash-analysis tool and review all page st
 ## Checks
 
 The [parameter fixture suite](fixtures/README.md) adds 13 inputs covering 5–15 Hz full-frame flashes, saturated red, a large region, 2/3 Hz frequency boundaries, requested and corrected gray pairs, and small-area cases. Open `http://127.0.0.1:8765/fixtures.html` after starting the server above. Run `node test-fixtures.mjs --write` to verify the generated inputs and refresh the manifest and synthetic results. This suite keeps reference input expectations separate from the app's screening output, including optional calibrated area screening and its remaining limitations.
+
+Run all scripts after any change:
+- the original nine: `test`, `test-ui`, `test-regressions`, `test-fixtures`, `test-fixtures-ui`, `test-area`, `test-image-sequence`, `test-image-ui`, `test-audit-repairs`;
+- new in 0.5.0: `test-thresholds`, `test-settling`, `test-module-guard`, `test-file-source`, `test-motion-review`, `test-area-erased`;
+- `python3 test-video-fixtures.py`.
+
+`node tools/verify-file-analysis.mjs http://127.0.0.1:8791 OUT` checks the file-analysis page in headless Chrome against the video and animated fixture manifests. It needs a server for the repository root. Stamp a release with `node tools/stamp-version.mjs X.Y.Z YYYYMMDD`.
 
 `node test.mjs` verifies synthetic in-memory static frames, transitions, three/four flash boundaries, contrast, luminance, smooth ramps, red candidates, slow pairs, timestamps, independent spatial regions, all five fixtures, evidence measurements, screenshot retention and report escaping. `node test-ui.mjs` verifies the capture-to-evidence flow and live-example warning gates with mock browser APIs. These tests display no flashing content and do not replace real browser capture, visual QA, or device timing validation.
 
