@@ -1,7 +1,8 @@
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['area']=MODULE_BUILD;
 // Conservative spatial screening in the WCAG reference viewing geometry.
 export const FIELD={width:341,height:256,limit:21824};
-export const AREA_ALGORITHM='flash-screen-0.5.0';
+export const AREA_ALGORITHM='flash-screen-0.5.1';
 // Supplied calibration that was never applied (rejected geometry, or no
 // analyzed frames) must not be reported as missing input.
 export function unappliedArea(calibration,reason,observedSourcePixels=null){
@@ -53,6 +54,7 @@ export class AreaMeter{
       totalSampledCssPixels:lit.total*this.dx*this.dy,
       fieldOriginCss:{x:upper.bx*this.dx,y:upper.by*this.dy},sampleCells:lit.max,upperBoundCells:upper.max,lowContrastCells:mask.reduce((n,v)=>n+(v===2),0)};
   }
+  empty(){return {cssPixelsUpperBound:0,cssPixelsLit:0,aboveReferenceLimit:false,litAboveReferenceLimit:false,fieldFractionUpperBound:0,totalSampledCssPixels:0,fieldOriginCss:{x:0,y:0},sampleCells:0,upperBoundCells:0,lowContrastCells:0};}
   window(mask,only=0){
     const w=this.width,h=this.height,p=this.prefix,stride=w+1;p.fill(0);
     let total=0;
@@ -68,8 +70,14 @@ export class AreaMeter{
     if(!Number.isFinite(time)||(this.lastTime!==null&&time<=this.lastTime))throw Error('Area timestamps must increase');
     if(mask.length!==this.lastPair.length)throw Error('Area mask size changed');
     this.lastTime=time;
-    for(let i=0;i<mask.length;i++){if(mask[i]===1)this.lastPair[i]=time;if(mask[i])this.lastAny[i]=time;this.envelope[i]=this.lastPair[i]>time-1?1:this.lastAny[i]>time-1?2:0;}
-    const completion={...this.measure(mask),time},envelope={...this.measure(this.envelope),time};
+    let any=false,changed=!this.lastEnvelope;
+    for(let i=0;i<mask.length;i++){if(mask[i]){any=true;if(mask[i]===1)this.lastPair[i]=time;this.lastAny[i]=time;}
+      const e=this.lastPair[i]>time-1?1:this.lastAny[i]>time-1?2:0;if(e!==this.envelope[i]){this.envelope[i]=e;changed=true;}}
+    // Measuring is the costly step: skip it for an empty completion mask and for an
+    // envelope that did not change since the previous sample (results are identical).
+    const completion={...(any?this.measure(mask):this.empty()),time};
+    if(changed)this.lastEnvelope=this.measure(this.envelope);
+    const envelope={...this.lastEnvelope,time};
     if(!this.peakCompletion||completion.cssPixelsUpperBound>this.peakCompletion.cssPixelsUpperBound)this.peakCompletion=completion;
     if(!this.peakEnvelope||envelope.cssPixelsUpperBound>this.peakEnvelope.cssPixelsUpperBound)this.peakEnvelope=envelope;
     return {completion,envelope};

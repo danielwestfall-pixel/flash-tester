@@ -21,6 +21,8 @@ assert.deepEqual([s.total,s.open,s.needsAttention,s.essentialClaims,s.incomplete
 assert.equal(s.status,'review-incomplete');
 const done=motion.reviewRecord({reference:'p',environment:'e'},[items[0],{...items[2],rationale:'Panning is the function'}],ids);
 assert.equal(done.summary.status,'review-recorded');assert.equal(done.summary.conformance,'not-determined');
+// Incomplete records keep the review incomplete even when nothing is untested.
+assert.equal(motion.reviewRecord({reference:'p',environment:'e'},[items[0],items[2]],ids).summary.status,'review-incomplete');
 const attention=motion.reviewRecord({reference:'p',environment:'e'},[items[0],items[1]],ids);assert.equal(attention.summary.status,'motion-not-disabled-recorded');
 const csv=motion.reviewCsv(rec),lines=csv.split('\n');
 assert.equal(lines.length,6);assert.ok(lines[1].includes("\"'=HYPERLINK(\"\"x\"\")\""),'Formula-like cells are neutralized and quoted');

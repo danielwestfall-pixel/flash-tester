@@ -28,7 +28,24 @@ assert.equal(run(square([g79,g79,g79],[255,255,255],4)).peakGeneral,4,'Darker st
 const bright=run(square([g80,g80,g80],[255,255,255],4));
 assert.equal(bright.peakGeneral,0,'Both states at or above 0.80: not a general flash under SC 2.3.1');
 assert.equal(bright.sc232.peakPairs,4,'SC 2.3.2 strict screening has no 0.80 exemption');
-assert.equal(bright.sc232.status,'candidates-detected');assert.equal(bright.status,'inconclusive-no-candidates');
+assert.equal(bright.sc232.status,'candidates-detected');
+// RT2-01: at reduced resolution a flash on a bright background blends above 0.80, so
+// brightness-exempt frequent pairs make SC 2.3.1 inconclusive rather than "no candidates".
+assert.equal(bright.status,'insufficient-observation');assert.equal(bright.windows.length,0,'Still no SC 2.3.1 candidate');
+assert.ok(bright.observation.reasons.some(r=>r.startsWith('Frequent opposing changes of 0.10 or more were found where both states are at or above 0.80')));
+// Below the 0.10 change the brightness rule does not apply: a bright 0.05 flicker stays "no candidates".
+{let lo=255;while(1-Y([lo-1,lo-1,lo-1])<.06)lo--;const faint=run(square([lo,lo,lo],[255,255,255],4));
+  assert.ok(1-Y([lo,lo,lo])<.1);assert.equal(faint.status,'inconclusive-no-candidates');assert.equal(faint.sc232.status,'inconclusive-no-candidates');}
+// 2b. SC 2.3.2 keeps the 0.10 change floor: a bright pair just under 0.10 is not a strict
+// pair; just over is. (A bright pair can never have its darker state above 0.90.)
+{let a=255;while(1-Y([a-1,a-1,a-1])<.1)a--;const under=run(square([a,a,a],[255,255,255],4)),over=run(square([a-1,a-1,a-1],[255,255,255],4));
+  assert.ok(1-Y([a,a,a])<.1&&1-Y([a-1,a-1,a-1])>=.1);
+  assert.equal(under.sc232.peakPairs,0,'Strict channel ignores changes below 0.10');assert.equal(over.sc232.peakPairs,4,'Strict channel counts 0.10 bright pairs');
+  const top=run(square([229,229,229],[255,255,255],4));assert.ok(Y([229,229,229])>=.78&&Y([229,229,229])<.8);}
+// 2c. Observation minimums: 30 fps and a 0.10 s gap are the boundaries (tested either side; 0.10 is not exact in binary).
+{const at=(fps,gap)=>{const a=new Analyzer(1,1),px=new Uint8ClampedArray([128,128,128,255]);for(let i=0;i<=fps*2;i++)a.push(px,i/fps);a.push(px,2+gap);return a.report().observation.reasons;};
+  assert.ok(!at(30,1/30).some(r=>r.includes('30 fps')),'30 fps meets the minimum');assert.ok(at(29,1/29).some(r=>r.includes('below 30 fps')),'29 fps does not');
+  assert.ok(!at(60,.0999).some(r=>r.includes('gap')),'A gap just under 0.10 s is allowed');assert.ok(at(60,.11).some(r=>r.includes('gap exceeded 0.1')),'A 0.11 s gap is not');}
 // 3. Three vs four flashes per second, and SC 2.3.2 follows the same frequency.
 const three=run(square([0,0,0],[255,255,255],3)),four=run(square([0,0,0],[255,255,255],4));
 assert.deepEqual([three.peakGeneral,three.status,three.sc232.status],[3,'inconclusive-no-candidates','inconclusive-no-candidates']);
@@ -53,6 +70,9 @@ function redPair(target){
   throw Error('no red pair found for '+target);
 }
 const [ra,rb]=redPair('above'),[sa,sb]=redPair('below');
+// Lower edge of the red saturation band too: saturation in [0.800, 0.806) still forms red pairs.
+{let found=null;for(let r=255;r>100&&!found;r--)for(let g=0;g<80&&!found;g++){const c=[r,g,0],s=sat(c);if(s<.8||s>=.806)continue;for(const o of [[0,r>200?110:90,0],[0,90,90],[0,80,140],[0,100,60]]){const [u1,v1]=uv(c),[u2,v2]=uv(o);if(Math.hypot(u1-u2,v1-v2)>.21&&Math.abs(Y(c)-Y(o))<.08&&sat(o)<.5){found=[c,o];break;}}}
+  assert.ok(found,'colour near saturation 0.80');assert.equal(run(square(...found,4)).peakRedHeuristic,4,`Saturation ${sat(found[0]).toFixed(4)} counts`);}
 const redAbove=run(square(ra,rb,4)),redBelow=run(square(sa,sb,4));
 assert.equal(redAbove.peakRedHeuristic,4,`Saturation ${sat(ra).toFixed(3)} >= 0.8 forms red candidates`);
 assert.equal(redAbove.peakGeneral,0,'Red-only pair has no general flash');

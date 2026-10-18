@@ -1,6 +1,7 @@
 // SC 2.3.3 manual review records. Pure functions: the page and tests share them.
-import {csvCell} from './export-metadata.mjs?v=0.5.0';
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+import {csvCell} from './export-metadata.mjs?v=0.5.1-20261018';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['motion-review']=MODULE_BUILD;
 export const TRIGGERS=['scroll','hover-or-focus','click-or-tap','drag','page-transition','keyboard','other'];
 export const MECHANISMS=['prefers-reduced-motion','site-setting','both','none-found','not-tested'];
 export const OUTCOMES=['not-tested','motion-disabled','motion-reduced-not-disabled','not-disabled','essential'];

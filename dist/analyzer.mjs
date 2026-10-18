@@ -1,28 +1,57 @@
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['analyzer']=MODULE_BUILD;
 // Screening only. Spatially reduced captures cannot establish WCAG conformance.
-import {AreaMeter} from './area.mjs?v=0.5.0';
-export const ALGORITHM='flash-screen-0.5.0';
+import {AreaMeter} from './area.mjs?v=0.5.1-20261018';
+export const ALGORITHM='flash-screen-0.5.1';
 const linear = Array.from({length:256}, (_,i) => {
   const v=i/255; return v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4;
 });
+// color() is pure and its results are never mutated, so results are shared through a
+// bounded cache keyed by the 8-bit RGB value (avoids an allocation per pixel per frame).
+const colorCache=new Map();
 export function color(r,g,b) {
+  const key=r<<16|g<<8|b,hit=colorCache.get(key);if(hit)return hit;
+  if(colorCache.size>=1<<18)colorCache.clear();
+  const c=computeColor(r,g,b);colorCache.set(key,c);return c;
+}
+function computeColor(r,g,b) {
   const R=linear[r],G=linear[g],B=linear[b];
   const X=.4124564*R+.3575761*G+.1804375*B;
   const Y=.2126729*R+.7151522*G+.0721750*B;
   const Z=.0193339*R+.1191920*G+.9503041*B;
   const d=X+15*Y+3*Z;
   // Black has no chromaticity: red/black changes are covered by luminance.
-  return {y:.2126*R+.7152*G+.0722*B,u:d?4*X/d:0,v:d?9*Y/d:0,
-    valid:d>1e-8,saturation:R+G+B>0?R/(R+G+B):0,red:R+G+B>0&&R/(R+G+B)>=.8};
+  return Object.freeze({y:.2126*R+.7152*G+.0722*B,u:d?4*X/d:0,v:d?9*Y/d:0,
+    valid:d>1e-8,saturation:R+G+B>0?R/(R+G+B):0,red:R+G+B>0&&R/(R+G+B)>=.8});
+}
+// Fixed-capacity list of pair-start times, allocated on first use. Keeping the newest
+// `cap` starts makes the rolling-second count exact up to `cap` (higher counts read as
+// `cap`), with no per-frame allocation.
+class StartRing {
+  constructor(cap){this.cap=cap;this.buf=null;this.head=0;this.len=0;}
+  get length(){return this.len;}
+  push(v){if(!this.buf)this.buf=new Float64Array(this.cap);if(this.len===this.cap){this.head=(this.head+1)%this.cap;this.len--;}this.buf[(this.head+this.len)%this.cap]=v;this.len++;}
+  prune(old){while(this.len&&this.buf[this.head]<old){this.head=(this.head+1)%this.cap;this.len--;}}
 }
 // One opposing-excursion pairing channel. The general SC 2.3.1 channel uses
 // threshold 0.10 with the darker state below 0.80. Other channels reuse the same
 // pairing rules with different limits (see Pixel).
 class Excursion {
-  constructor(y,t,threshold,darkLimit,kind){
-    this.threshold=threshold;this.darkLimit=darkLimit;this.kind=kind;
+  constructor(y,t,threshold,darkLimit,kind,keepPair=true,cap=0){
+    // keepPair: build latest-pair records (only the general channel's feed the witness).
+    // cap: use fixed-capacity start rings (counts exact up to cap) instead of arrays.
+    this.threshold=threshold;this.darkLimit=darkLimit;this.kind=kind;this.keepPair=keepPair;
     this.extreme=y;this.extremeTime=t;this.direction=0;this.pending=null;this.pendingY=null;
-    this.phases=[[],[]];this.latest=[null,null];this.index=0;this.starts=this.phases[0];this.pair=null;this.completed=false;
+    this.phases=cap?[new StartRing(cap),new StartRing(cap)]:[[],[]];this.latest=[null,null];this.index=0;this.starts=this.phases[0];this.pair=null;this.completed=false;
+  }
+  // A channel that is identical to `src` so far: same extrema, pending transition and
+  // pair starts (rings keep the newest `cap`).
+  static fork(src,threshold,darkLimit,kind,keepPair,cap){
+    const e=new Excursion(src.extreme,src.extremeTime,threshold,darkLimit,kind,keepPair,cap);
+    Object.assign(e,{direction:src.direction,pending:src.pending,pendingY:src.pendingY,index:src.index});
+    for(const k of [0,1])for(let i=0;i<src.phases[k].length;i++)e.phases[k].push(src.phases[k][i]);
+    const k=e.phases[1].length>e.phases[0].length?1:0;e.starts=e.phases[k];
+    return e;
   }
   update(y,t){
     this.completed=false;
@@ -36,7 +65,7 @@ class Excursion {
       if(this.pending!==null){
         const phase=this.index++%2;
         this.phases[phase].push(this.pending);
-        this.latest[phase]={kind:this.kind,states:[{time:this.pending,luminance:this.pendingY},
+        if(this.keepPair)this.latest[phase]={kind:this.kind,states:[{time:this.pending,luminance:this.pendingY},
           {time:this.extremeTime,luminance:this.extreme},{time:t,luminance:y}]};
         this.completed=true;
       }
@@ -45,9 +74,10 @@ class Excursion {
       this.pending=this.extremeTime;this.pendingY=this.extreme;
       this.direction=direction;this.extreme=y;this.extremeTime=t;
     }
-    for(const pairs of this.phases)while(pairs.length&&pairs[0]<t-1-1e-9)pairs.shift();
-    const k=this.phases[1].length>this.phases[0].length?1:0;
-    this.starts=this.phases[k];this.pair=this.latest[k];
+    const a=this.phases[0],b=this.phases[1],old=t-1-1e-9;
+    if(a.prune){a.prune(old);b.prune(old);}else{while(a.length&&a[0]<old)a.shift();while(b.length&&b[0]<old)b.shift();}
+    const k=b.length>a.length?1:0;
+    this.starts=k?b:a;this.pair=this.latest[k];
     return this.starts.length;
   }
 }
@@ -56,8 +86,14 @@ class Pixel {
     // general: SC 2.3.1 general flash. strict: SC 2.3.2 screening with no 0.80
     // brightness exemption. weak: low-contrast (>= 0.05) pairs that only widen the
     // area upper bound where partial cell coverage blends a flash below 0.10.
-    this.g=new Excursion(c.y,t,.1,.8,'general');this.s=new Excursion(c.y,t,.1,Infinity,'strict-sc232');
-    this.w=weak?new Excursion(c.y,t,.05,.8,'low-contrast'):null;
+    // The low-contrast channel has no darker-state limit: blending a flash with a
+    // bright background raises the darker state above 0.80 (RT2-01).
+    // The strict and low-contrast channels make the same decisions as the general channel
+    // until the first transition the general channel rejects but they accept (a bright
+    // pair for strict; a 0.05-0.10 or bright change for low-contrast). Until then they
+    // share its state; at that moment they fork an exact copy. Most pixels never fork.
+    this.g=new Excursion(c.y,t,.1,.8,'general');this.s=null;this.w=null;this.weak=weak;this.key=-1;
+    this.counts={general:0,red:0,strict:0,weak:0};this.strictCompleted=false;this.weakCompleted=false;
     this.red=[];this.redPhases=[[],[]];this.redLatest=[null,null];this.redPairIndex=0;
     this.previous=c; this.previousTime=t;
     this.redOrigin=c;this.redOriginTime=t;this.redExtreme=c;this.redExtremeTime=t;
@@ -68,13 +104,24 @@ class Pixel {
   get completedGeneral(){return this.g.completed;}
   update(c,t) {
     this.completedRed=false;
-    const g=this.g.update(c.y,t),strict=this.s.update(c.y,t),weak=this.w?this.w.update(c.y,t):0;
+    const n=this.counts,G=this.g,y=c.y;
+    if(!this.s||(this.weak&&!this.w)){
+      // Would the general channel reach its acceptance test here, and reject?
+      const delta=y-G.extreme,size=Math.abs(delta);
+      if(!(size<1e-10)&&!(G.direction&&Math.sign(delta)===G.direction)&&!(size>=.1-1e-10&&Math.min(y,G.extreme)<.8)){
+        if(!this.s&&size>=.1-1e-10)this.s=Excursion.fork(G,.1,Infinity,'strict-sc232',false,32);
+        if(this.weak&&!this.w&&size>=.05-1e-10)this.w=Excursion.fork(G,.05,Infinity,'low-contrast',false,4);
+      }
+    }
+    n.general=G.update(y,t);
+    if(this.s){n.strict=this.s.update(y,t);this.strictCompleted=this.s.completed;}else{n.strict=Math.min(n.general,32);this.strictCompleted=G.completed;}
+    if(this.w){n.weak=this.w.update(y,t);this.weakCompleted=this.w.completed;}else if(this.weak){n.weak=Math.min(n.general,4);this.weakCompleted=G.completed;}else n.weak=0;
     this.updateRed(c,t);
     this.previous=c; this.previousTime=t;
     for(const pairs of this.redPhases)while(pairs.length&&pairs[0]<t-1-1e-9)pairs.shift();
     const rp=this.redPhases[1].length>this.redPhases[0].length?1:0;
-    this.red=this.redPhases[rp];this.redPair=this.redLatest[rp];
-    return [g,this.red.length,strict,weak];
+    this.red=this.redPhases[rp];this.redPair=this.redLatest[rp];n.red=this.red.length;
+    return n;
   }
   updateRed(c,t){
     // Experimental trajectory detector. Accumulate excursions between extrema
@@ -111,7 +158,7 @@ export class Analyzer {
     if(!Number.isInteger(width)||!Number.isInteger(height)||width<0||height<0||width*height>640*640)throw Error('Invalid analysis dimensions');
     this.width=width;this.height=height;this.pixels=[];this.frames=0;
     this.start=null;this.last=null;this.maxGap=0;this.peakGeneral=0;this.peakRed=0;this.peakStrict=0;
-    this.maxFlaggedFraction=0;this.windows=[];this.strictWindows=[];
+    this.maxFlaggedFraction=0;this.windows=[];this.strictWindows=[];this.brightExemptFrames=0;this.maxBrightExempt=0;
     this.area=options.calibration?new AreaMeter(width,height,options.calibration):null;
     this.pairMask=this.area?new Uint8Array(width*height):null;
   }
@@ -122,20 +169,23 @@ export class Analyzer {
     if(this.start===null)this.start=t;
     if(this.last!==null)this.maxGap=Math.max(this.maxGap,t-this.last);
     this.last=t;this.frames++;
-    let general=0,red=0,strict=0,flagged=0,strictFlagged=0,minX=this.width,minY=this.height,maxX=-1,maxY=-1;
+    let general=0,red=0,strict=0,flagged=0,strictFlagged=0,brightExempt=0,minX=this.width,minY=this.height,maxX=-1,maxY=-1;
     let luminanceMin=1,luminanceMax=0,luminanceSum=0,witness=null;
     this.pairMask?.fill(0);
     for(let i=0;i<this.width*this.height;i++) {
-      const k=i*4,c=color(rgba[k],rgba[k+1],rgba[k+2]);
+      // color() is pure: an unchanged pixel reuses its previous colour object, so the
+      // update below receives identical input and detection is unchanged.
+      const k=i*4,key=rgba[k]<<16|rgba[k+1]<<8|rgba[k+2],old=this.pixels[i];
+      const c=old&&old.key===key?old.previous:color(rgba[k],rgba[k+1],rgba[k+2]);
       luminanceMin=Math.min(luminanceMin,c.y);luminanceMax=Math.max(luminanceMax,c.y);luminanceSum+=c.y;
-      if(!this.pixels[i]) {this.pixels[i]=new Pixel(c,t,!!this.area);continue;}
-      const pixel=this.pixels[i];
-      const [g,r,s,w]=pixel.update(c,t);
+      if(!old) {const p=this.pixels[i]=new Pixel(c,t,!!this.area);p.key=key;continue;}
+      const pixel=old;pixel.key=key;
+      const {general:g,red:r,strict:s,weak:w}=pixel.update(c,t);
       // 1: general/red pair completion. 2: frequency-qualified low-contrast completion,
       // used only for the area upper bound.
-      if(this.pairMask){if(pixel.completedGeneral||pixel.completedRed)this.pairMask[i]=1;else if(pixel.w.completed&&w>3)this.pairMask[i]=2;}
+      if(this.pairMask){if(pixel.completedGeneral||pixel.completedRed)this.pairMask[i]=1;else if(pixel.weakCompleted&&w>3)this.pairMask[i]=2;}
       general=Math.max(general,g);red=Math.max(red,r);strict=Math.max(strict,s,r);
-      if(s>3||r>3)strictFlagged++;
+      if(s>3||r>3){strictFlagged++;if(g<=3&&r<=3)brightExempt++;}
       if(g>3||r>3) {
         flagged++;const x=i%this.width,y=Math.floor(i/this.width);
         if(!witness){const p=this.pixels[i];witness={x,y,rgb:[rgba[k],rgba[k+1],rgba[k+2]],luminance:c.y,general:g,red:r,
@@ -143,6 +193,7 @@ export class Analyzer {
         minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
       }
     }
+    if(brightExempt)this.brightExemptFrames++;this.maxBrightExempt=Math.max(this.maxBrightExempt,brightExempt);
     this.peakGeneral=Math.max(this.peakGeneral,general);this.peakRed=Math.max(this.peakRed,red);this.peakStrict=Math.max(this.peakStrict,strict);
     const fraction=flagged/(this.width*this.height);
     this.maxFlaggedFraction=Math.max(this.maxFlaggedFraction,fraction);
@@ -169,6 +220,11 @@ export class Analyzer {
     if(duration<1)reasons.push('Less than one second observed');
     if(fps<30)reasons.push('Observed frame rate below 30 fps');
     if(this.maxGap>.1)reasons.push('A frame gap exceeded 0.1 seconds');
+    // RT2-01: SC 2.3.1 exempts pairs whose darker state is >= 0.80, but a reduced-resolution
+    // cell that blends a flash with a bright background also lands above 0.80. When the
+    // strict channel finds frequent pairs that only the brightness rule exempts, a
+    // "no candidates" result cannot be supported.
+    if(this.brightExemptFrames&&!this.windows.length)reasons.push(`Frequent opposing changes of 0.10 or more were found where both states are at or above 0.80 (up to ${this.maxBrightExempt} sampled pixel(s)). SC 2.3.1 exempts these, but at reduced resolution a flash on a bright background can blend above 0.80; rerun at higher detail or confirm the true states`);
     const status=this.windows.length?'candidates-detected':reasons.length?'insufficient-observation':'inconclusive-no-candidates';
     const strictStatus=this.strictWindows.length?'candidates-detected':reasons.length?'insufficient-observation':'inconclusive-no-candidates';
     return {algorithm:ALGORITHM,status,outcome:outcomeFor(status),
@@ -177,7 +233,7 @@ export class Analyzer {
       area:this.area?.report()??{status:'not-evaluated',reason:'Displayed CSS dimensions were not supplied.'},
       sc232:{criterion:'WCAG 2.2 SC 2.3.2 Three Flashes (Level AAA)',status:strictStatus,outcome:outcomeFor(strictStatus),peakPairs:this.peakStrict,windows:this.strictWindows,
         method:'Strict screening: more than three opposing relative-luminance excursion pairs (each >= 0.10) or experimental red pairs in a rolling second at one sampled pixel. No darker-state (0.80) exemption and no area exception.',
-        limitations:['SC 2.3.2 has no area or brightness exception, so any flagged pixel, however small, is a candidate.','Luminance changes below 0.10 are not counted; WCAG does not define a separate minimum for SC 2.3.2, so this is an interpretation.','Reduced-resolution sampling can still miss small flashes, which matters more for SC 2.3.2 than for SC 2.3.1.','Screening only; no SC 2.3.2 conformance verdict.']},
+        limitations:['SC 2.3.2 has no area or brightness exception, so any flagged pixel, however small, is a candidate.','Luminance changes below 0.10 are not counted; WCAG does not define a separate minimum for SC 2.3.2, so this is an interpretation.','Reduced-resolution sampling can still miss small flashes, which matters more for SC 2.3.2 than for SC 2.3.1.','Peak pair counts above 32 per rolling second are reported as 32.','Screening only; no SC 2.3.2 conformance verdict.']},
       duration,frames:this.frames,observedFps:fps,maxFrameGapSeconds:this.maxGap,
       analysisResolution:{width:this.width,height:this.height},peakGeneral:this.peakGeneral,
       peakRedHeuristic:this.peakRed,maxFlaggedFraction:this.maxFlaggedFraction,windows:this.windows,
@@ -189,6 +245,7 @@ export class Analyzer {
         'Red candidates use accumulated CIE 1976 u-prime/v-prime excursions > 0.2 involving linear-sRGB saturation >= 0.8. The trajectory model remains experimental and incomplete, including curved color paths and black chromaticity.',
         'Rolling windows count complete pairs whose starts and completions fit within one second at the same sampled pixel. Moving or differently phased flashes can be missed.',
         'Flagged pixel fraction is not the WCAG area threshold. Optional calibrated area reports sample-aligned completions and a conservative rolling spatial envelope; full temporal overlap, physical viewing conditions and fine-pattern exceptions remain unevaluated.',
+        'Moving content (scrolling text, sliding images, camera motion) changes each sampled pixel repeatedly and can produce false candidates for both criteria. With area calibration it also drives the rolling envelope bound toward its cap, so that bound carries little information for pages with motion.',
         'Only the shared viewport, exercised states and captured interval were screened. Confirm flagged segments with a validated flash analyzer and inspect all relevant page states.'
       ]};
   }

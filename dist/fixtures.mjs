@@ -1,7 +1,8 @@
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['fixtures']=MODULE_BUILD;
 // One Hz means one complete A -> B -> A cycle (two opposing transitions).
 // Expectations describe these generated inputs, not a conformance certification.
-import {color} from './analyzer.mjs?v=0.5.0';
+import {color} from './analyzer.mjs?v=0.5.1-20261018';
 export const fixtureSpec = {width:1024,height:768,fps:120,seconds:3,
   source:'https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html',
   fieldWidth:341,fieldHeight:256,areaLimit:21824};

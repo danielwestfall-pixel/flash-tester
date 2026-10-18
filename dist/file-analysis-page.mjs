@@ -1,13 +1,15 @@
-import {Analyzer} from './analyzer.mjs?v=0.5.0';
-import {Evidence,csv,witnessCsv,reportHtml} from './evidence.mjs?v=0.5.0';
-import * as reportModule from './report.mjs?v=0.5.0';
-import * as sourceModule from './file-source.mjs?v=0.5.0';
-import {areaSummary} from './area.mjs?v=0.5.0';
-import {sc232Summary} from './export-metadata.mjs?v=0.5.0';
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+import {Analyzer} from './analyzer.mjs?v=0.5.1-20261018';
+import {Evidence,csv,witnessCsv,reportHtml} from './evidence.mjs?v=0.5.1-20261018';
+import * as reportModule from './report.mjs?v=0.5.1-20261018';
+import * as sourceModule from './file-source.mjs?v=0.5.1-20261018';
+import {areaSummary} from './area.mjs?v=0.5.1-20261018';
+import {sc232Summary} from './export-metadata.mjs?v=0.5.1-20261018';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['file-analysis-page']=MODULE_BUILD;
+export const PAGE_MODULES=["analyzer","area","evidence","export-metadata","file-analysis-page","file-source","report"];
 const {stampReport,reviewText}=reportModule,{fileKind,imageType,videoSampleTimes,frameSeconds,playsFor,animationSamples}=sourceModule;
-const moduleVersionProblem=()=>typeof reportModule.moduleVersionProblem==='function'?reportModule.moduleVersionProblem({'file-analysis-page':MODULE_BUILD,'file-source':sourceModule.MODULE_BUILD}):
-  'Mixed Flash Review files are loaded (report unversioned). Hard-reload this page (Shift + Reload) before testing.';
+const moduleVersionProblem=()=>{try{return typeof reportModule.moduleVersionProblem==='function'?reportModule.moduleVersionProblem(PAGE_MODULES):STALE_REPORT;}catch{return STALE_REPORT;}};
+const STALE_REPORT='Mixed Flash Review files are loaded (report unversioned). Hard-reload this page (Shift + Reload) before testing.';
 const $=id=>document.getElementById(id),canvas=$('pixels'),ctx=canvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
 const MAX_IMAGE_FRAMES=3000,MAX_FRAME_BYTES=768*1024*1024,MAX_HASH_BYTES=1024*1024*1024;
 let report=null,busy=false,generation=0;
@@ -53,24 +55,39 @@ async function analyzeVideo(file,c,token){
     video.src=url;
     await new Promise((resolve,reject)=>{video.addEventListener('loadeddata',resolve,{once:true});video.addEventListener('error',()=>reject(Error('This browser cannot decode this video (codec or container unsupported).')),{once:true});});
     const W=video.videoWidth,H=video.videoHeight;if(!(W>0&&H>0))throw Error('Video has no decodable frames.');
+    // Recorded WebM often reports an Infinity duration until the end has been seen (RT2-07).
+    let durationNote=null;
+    if(!Number.isFinite(video.duration)){
+      try{await seek(video,1e7);}catch{}
+      if(Number.isFinite(video.duration))durationNote='The container did not state a duration; it was found by seeking to the end.';
+      else durationNote='The duration is unknown; analysis ran to the limit, and samples past the end may repeat the last frame.';
+      try{await seek(video,0);}catch{}
+    }
     const problem=aspectProblem(c,W,H);if(problem)throw Error(problem);
     const [w,h]=analysisSize(W,H,c.analysisWidth),plan=videoSampleTimes(video.duration,c.sampleRateHz,c.maxSeconds);
     if(!plan.times.length)throw Error('Video is shorter than one sample interval.');
     canvas.width=w;canvas.height=h;
     const analyzer=new Analyzer(w,h,{calibration:c.calibration}),evidence=new Evidence(w,h),shot=shooter(c,w,h);
-    let ended='Whole file analyzed';
+    let ended='Whole file analyzed',changed=0,previous=null;
     for(const [i,t] of plan.times.entries()){
       if(token!==generation)return null;
       await seek(video,t);
       if(video.videoWidth!==W||video.videoHeight!==H){ended='Video dimensions changed; analysis stopped at the change';break;}
       ctx.drawImage(video,0,0,w,h);const rgba=ctx.getImageData(0,0,w,h).data;
+      if(previous){for(let k=0;k<rgba.length;k+=4)if(rgba[k]!==previous[k]||rgba[k+1]!==previous[k+1]||rgba[k+2]!==previous[k+2]){changed++;break;}}
+      previous=new Uint8ClampedArray(rgba);
       const frame=analyzer.push(rgba,t);evidence.push(rgba,t,frame,historical=>shot(historical?.rgba??rgba));
       if(i%20===0)status(`Decoded ${i+1} of ${plan.times.length} samples…`,100*i/plan.times.length);
     }
     if(plan.truncated&&ended==='Whole file analyzed')ended=`Analysis limit reached (${c.maxSeconds} s of ${video.duration.toFixed(1)} s)`;
+    if(!Number.isFinite(video.duration)&&ended==='Whole file analyzed')ended=`Analysis limit reached (${c.maxSeconds} s; duration unknown)`;
+    const changedFraction=plan.times.length>1?changed/(plan.times.length-1):0;
     return {analyzer,evidence,ended,viewport:{width:W,height:H},analysisResolution:{width:w,height:h},
-      source:{kind:'video',intrinsicWidth:W,intrinsicHeight:H,durationSeconds:Number.isFinite(video.duration)?video.duration:null,samples:plan.times.length,sampleRateHz:c.sampleRateHz,truncated:plan.truncated},
-      limitations:[`Frames were sampled by seeking every 1/${c.sampleRateHz} s, offset by half an interval. Source frames shorter than the interval can be skipped; choose a rate at or above the source frame rate.`,
+      source:{kind:'video',intrinsicWidth:W,intrinsicHeight:H,durationSeconds:Number.isFinite(video.duration)?video.duration:null,samples:plan.times.length,sampleRateHz:c.sampleRateHz,truncated:plan.truncated,
+        sampleOffset:sourceModule.SAMPLE_OFFSET,changedSampleFraction:+changedFraction.toFixed(4),durationNote},
+      limitations:[`Frames were sampled by seeking every 1/${c.sampleRateHz} s, offset by ${sourceModule.SAMPLE_OFFSET} of an interval. The source frame rate is not measured. Source frames shorter than the interval can be skipped; choose a rate at or above the source frame rate.`,
+        ...(changedFraction>.98&&c.sampleRateHz<120?[`${(changedFraction*100).toFixed(0)}% of samples differ from the previous sample, so the source may have more frames than ${c.sampleRateHz} per second. Rerun at a higher sample rate.`]:[]),
+        ...(durationNote?[durationNote]:[]),
         'Decoding uses this browser’s codecs and colour conversion to an sRGB canvas. HDR, wide-gamut and protected media are not validated.',
         'Only the file was analyzed. Player controls, captions, overlays, playback rate and page layout are not included.']};
   }finally{video.removeAttribute('src');video.load();video.remove();URL.revokeObjectURL(url);}

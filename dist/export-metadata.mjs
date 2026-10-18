@@ -1,11 +1,15 @@
-import {FIELD} from './area.mjs?v=0.5.0';
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+import {FIELD} from './area.mjs?v=0.5.1-20261018';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['export-metadata']=MODULE_BUILD;
 // Shared context for standalone exports, including files with no numeric rows.
 // Shown in the capture UI and in every export: startup frames are never discarded silently.
 export function startupSummary(st){
   if(!st)return '';
-  const parts=[`Startup settling: ${st.discardedFrames} frame(s) over ${st.discardedMediaSeconds.toFixed(2)} s at changing or invalid sizes were discarded for area`];
-  if(st.transitionalScreening.length)parts.push(`screened separately for flashing frequency (${st.transitionalScreening.length} segment(s)${st.transitionalCandidates?', CANDIDATES FOUND':', no candidates'})`);
+  const transitional=st.transitionalFrames??st.discardedFrames;
+  const parts=[`Startup settling: ${transitional} frame(s) over ${st.discardedMediaSeconds.toFixed(2)} s at changing or invalid sizes were discarded for area`];
+  if(st.transitionalSegments??st.transitionalScreening?.length)parts.push(`screened separately for flashing frequency (${st.transitionalSegments??st.transitionalScreening.length} segment(s)${st.transitionalCandidates?', CANDIDATES FOUND':', no candidates'})`);
+  if(st.bridge)parts.push(`a ${st.bridge.analysisResolution.width} × ${st.bridge.analysisResolution.height} startup bridge across size changes found ${st.bridge.candidates?'CANDIDATES':'no candidates'} (peak ${st.bridge.peakGeneral})`);
+  if(st.bufferOverflowFrames)parts.push(`${st.bufferOverflowFrames} final-size frame(s) were dropped by the settling buffer before analysis`);
   parts.push(`${st.analyzedStartupFrames} startup frame(s) at the final size were analyzed${st.geometryConfirmed?'':' without confirmation that the size was stable'}`);
   return parts.join('; ')+'.';
 }

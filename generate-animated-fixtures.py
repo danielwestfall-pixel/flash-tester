@@ -31,6 +31,8 @@ FIXTURES = [
      'note': 'Two frames. Flashing exists only across the loop seam.'},
     {'id': 'seam-once-4hz', 'loop': 1, 'formats': ['gif', 'png', 'webp'], 'frames': alternating(full(BLACK), full(WHITE), 120, 2),
      'note': 'Same two frames, played once: a single change, no flash.'},
+    {'id': 'bw-loop3', 'loop': 3, 'formats': ['gif', 'png', 'webp'], 'frames': alternating(full(BLACK), full(WHITE), 120, 2),
+     'note': 'Two frames played exactly 3 times: 5 transitions, 2 flashes. Checks the loop count.'},
     {'id': 'fast-10ms', 'loop': 'infinite', 'formats': ['gif', 'png', 'webp'], 'frames': alternating(full(BLACK), full(WHITE), 10, 20),
      'note': '10 ms frames. Browsers show them for 100 ms (5 flashes/s); as encoded, 50 flashes/s.'},
     {'id': 'low-contrast-4hz', 'loop': 'infinite', 'formats': ['gif', 'png', 'webp'], 'frames': alternating(full((100, 100, 100, 255)), full((110, 110, 110, 255)), 120, 16),

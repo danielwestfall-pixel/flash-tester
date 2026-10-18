@@ -7,8 +7,12 @@ import {Analyzer} from './dist/analyzer.mjs';
 assert.equal(fileKind({type:'video/mp4',name:'a.mp4'}),'video');assert.equal(fileKind({type:'',name:'clip.WEBM'}),'video');
 assert.equal(fileKind({type:'image/gif',name:'a.gif'}),'image');assert.equal(fileKind({type:'',name:'a.apng'}),'image');assert.equal(fileKind({type:'image/jpeg',name:'a.jpg'}),null);
 assert.equal(imageType({type:'image/apng'}),'image/png');assert.equal(imageType({type:'',name:'x.webp'}),'image/webp');
-// Video grid: 4 s at 60 Hz -> 240 mid-frame samples at (k + 0.5) / 60.
-const v=videoSampleTimes(4,60,30);assert.equal(v.times.length,240);assert.equal(v.times[0],1/120);assert.ok(Math.abs(v.times.at(-1)-(239.5/60))<1e-12);assert.equal(v.truncated,false);
+// Video grid: 4 s at 60 Hz -> 240 samples at (k + 0.3) / 60.
+const v=videoSampleTimes(4,60,30);assert.equal(v.times.length,240);assert.equal(v.times[0],.3/60);assert.ok(Math.abs(v.times.at(-1)-(239.3/60))<1e-12);assert.equal(v.truncated,false);
+// RT2-10: samples never sit on a frame boundary for common source rates (boundaries at m / fps).
+for(const rate of [30,60,120])for(const fps of [24,25,30,50,60,120,240]){
+  const near=videoSampleTimes(10,rate,10).times.filter(t=>{const m=Math.round(t*fps);return Math.abs(t*fps-m)<1e-6;});
+  assert.equal(near.length,0,`rate ${rate} Hz has samples on ${fps} fps frame boundaries`);}
 const long=videoSampleTimes(100,30,10);assert.equal(long.times.length,300);assert.equal(long.truncated,true);
 assert.throws(()=>videoSampleTimes(4,0,30));
 // Display model: frames that specify <= 10 ms are shown for 100 ms; encoded keeps the value (1 ms floor).

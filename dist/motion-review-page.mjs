@@ -1,8 +1,10 @@
-import * as reportModule from './report.mjs?v=0.5.0';
-import * as motion from './motion-review.mjs?v=0.5.0';
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
-const moduleVersionProblem=()=>typeof reportModule.moduleVersionProblem==='function'?reportModule.moduleVersionProblem({'motion-review-page':MODULE_BUILD,'motion-review':motion.MODULE_BUILD}):
-  'Mixed Flash Review files are loaded (report unversioned). Hard-reload this page (Shift + Reload) before testing.';
+import * as reportModule from './report.mjs?v=0.5.1-20261018';
+import * as motion from './motion-review.mjs?v=0.5.1-20261018';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['motion-review-page']=MODULE_BUILD;
+export const PAGE_MODULES=["analyzer","area","evidence","export-metadata","motion-review","motion-review-page","report"];
+const moduleVersionProblem=()=>{try{return typeof reportModule.moduleVersionProblem==='function'?reportModule.moduleVersionProblem(PAGE_MODULES):STALE_REPORT;}catch{return STALE_REPORT;}};
+const STALE_REPORT='Mixed Flash Review files are loaded (report unversioned). Hard-reload this page (Shift + Reload) before testing.';
 const $=id=>document.getElementById(id);
 const items=[];let reportId=globalThis.crypto?.randomUUID?.()??`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 const options=(values,labels={})=>values.map(v=>{const o=document.createElement('option');o.value=v;o.textContent=labels[v]??v.replaceAll('-',' ');return o;});

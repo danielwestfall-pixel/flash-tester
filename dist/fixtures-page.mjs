@@ -1,10 +1,13 @@
-import * as fixturesModule from './fixtures.mjs?v=0.5.0';
-import {Analyzer} from './analyzer.mjs?v=0.5.0';
-import * as reportModule from './report.mjs?v=0.5.0';
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+import * as fixturesModule from './fixtures.mjs?v=0.5.1-20261018';
+import {Analyzer} from './analyzer.mjs?v=0.5.1-20261018';
+import * as reportModule from './report.mjs?v=0.5.1-20261018';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['fixtures-page']=MODULE_BUILD;
+export const PAGE_MODULES=["analyzer","area","evidence","export-metadata","fixtures","fixtures-page","report"];
 const {fixtures,fixtureSpec,fixtureInfo,fixtureRect,fixtureState,fixtureFrame}=fixturesModule;
 // Stale cached modules must not produce fixture results silently (RT-10).
-const moduleVersionProblem=()=>typeof reportModule.moduleVersionProblem==='function'?reportModule.moduleVersionProblem({'fixtures-page':MODULE_BUILD,fixtures:fixturesModule.MODULE_BUILD}):'Mixed Flash Review files are loaded (report unversioned). Hard-reload this page (Shift + Reload) before testing.';
+const moduleVersionProblem=()=>{try{return typeof reportModule.moduleVersionProblem==='function'?reportModule.moduleVersionProblem(PAGE_MODULES):STALE_REPORT;}catch{return STALE_REPORT;}};
+const STALE_REPORT='Mixed Flash Review files are loaded (report unversioned). Hard-reload this page (Shift + Reload) before testing.';
 const $=id=>document.getElementById(id),canvas=$('surface'),ctx=canvas.getContext('2d');
 let running=false,raf=null,timer=null,startTime=0,active=null,draws=0,skipped=0,lastFrame=null;
 for(const f of fixtures){const o=document.createElement('option');o.value=f.id;o.textContent=`${f.expected.toUpperCase()} input · ${f.title}`;$('fixture').append(o);}

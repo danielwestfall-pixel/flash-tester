@@ -1,7 +1,8 @@
-import {Analyzer,color} from './analyzer.mjs?v=0.5.0';
-import {Evidence} from './evidence.mjs?v=0.5.0';
-import {stampReport} from './report.mjs?v=0.5.0';
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+import {Analyzer,color} from './analyzer.mjs?v=0.5.1-20261018';
+import {Evidence} from './evidence.mjs?v=0.5.1-20261018';
+import {stampReport} from './report.mjs?v=0.5.1-20261018';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['examples']=MODULE_BUILD;
 export const examples=[
   {id:'static',title:'Pass example · static gray',hz:0,a:[128,128,128],b:[128,128,128],expectation:'Passes SC 2.3.1: no transitions or flashes.',fail:false},
   {id:'two',title:'Pass example · 2 flashes / second',hz:2,a:[0,0,0],b:[255,255,255],expectation:'Passes the frequency branch: two complete flashes per second, below the limit of more than three.',fail:false},

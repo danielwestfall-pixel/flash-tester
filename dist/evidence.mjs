@@ -1,7 +1,8 @@
-import {color} from './analyzer.mjs?v=0.5.0';
-import {areaSummary} from './area.mjs?v=0.5.0';
-import {exportMetadata,metadataCsv,startupSummary,sc232Summary} from './export-metadata.mjs?v=0.5.0';
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+import {color} from './analyzer.mjs?v=0.5.1-20261018';
+import {areaSummary} from './area.mjs?v=0.5.1-20261018';
+import {exportMetadata,metadataCsv,startupSummary,sc232Summary} from './export-metadata.mjs?v=0.5.1-20261018';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['evidence']=MODULE_BUILD;
 export class Evidence {
   constructor(width,height,xPercent=50,yPercent=50,options={}){
     this.width=width;this.height=height;

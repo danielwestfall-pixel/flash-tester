@@ -1,4 +1,5 @@
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['image-sequence']=MODULE_BUILD;
 // Scheduling and finite pair enumeration, shared by playback and screening.
 export function imageUrls(text){
   const urls=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);

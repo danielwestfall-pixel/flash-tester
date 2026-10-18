@@ -400,6 +400,66 @@
    "sha256": "3548f26cb27963a570cb9b5816904a94aa78e30c078e7c9e54c5590f626efe94"
   },
   {
+   "file": "bw-loop3.gif",
+   "id": "bw-loop3",
+   "format": "image/gif",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": 3,
+   "safe": false,
+   "expectedFlashes": {
+    "display": 2,
+    "encoded": 2,
+    "displayOverBlack": 2
+   },
+   "note": "Two frames played exactly 3 times: 5 transitions, 2 flashes. Checks the loop count.",
+   "bytes": 5943,
+   "sha256": "1f60cbaf66b1999c48140b241347c7d8981de966f1a38b8242b9010c03cb869f"
+  },
+  {
+   "file": "bw-loop3.png",
+   "id": "bw-loop3",
+   "format": "image/png",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": 3,
+   "safe": false,
+   "expectedFlashes": {
+    "display": 2,
+    "encoded": 2,
+    "displayOverBlack": 2
+   },
+   "note": "Two frames played exactly 3 times: 5 transitions, 2 flashes. Checks the loop count.",
+   "bytes": 366,
+   "sha256": "0eea301675e0f5d1893023d4e95ca86a376c8e0e692e86cd76fcae1e1338d1e2"
+  },
+  {
+   "file": "bw-loop3.webp",
+   "id": "bw-loop3",
+   "format": "image/webp",
+   "frames": 2,
+   "frameDurationsMs": [
+    120,
+    120
+   ],
+   "loop": 3,
+   "safe": false,
+   "expectedFlashes": {
+    "display": 2,
+    "encoded": 2,
+    "displayOverBlack": 2
+   },
+   "note": "Two frames played exactly 3 times: 5 transitions, 2 flashes. Checks the loop count.",
+   "bytes": 152,
+   "sha256": "74d9894d4e9d48974d52c89aa75c64ed33bb8121f6990b3f7642254824b2f903"
+  },
+  {
    "file": "fast-10ms.gif",
    "id": "fast-10ms",
    "format": "image/gif",

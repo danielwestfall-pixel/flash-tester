@@ -1,6 +1,7 @@
 // Deterministic sampling plans for local files decoded without playback.
 // Video: seek on a regular grid. Animated images: every decoded frame, on its timeline.
-export const MODULE_BUILD='flash-review-0.5.0-20261017';
+export const MODULE_BUILD='flash-review-0.5.1-20261018';
+(globalThis.flashReviewModules??={})['file-source']=MODULE_BUILD;
 export const VIDEO_TYPES=/^video\//;
 export const IMAGE_TYPES=['image/gif','image/png','image/apng','image/webp','image/avif'];
 export function fileKind(file){
@@ -13,12 +14,15 @@ export function imageType(file){
   const type=(file?.type||'').toLowerCase();if(IMAGE_TYPES.includes(type))return type==='image/apng'?'image/png':type;
   const ext=(file?.name||'').toLowerCase().split('.').pop();return {gif:'image/gif',png:'image/png',apng:'image/png',webp:'image/webp',avif:'image/avif'}[ext]??null;
 }
-// Sample times for seeking: k/rate + half a period, so each frame of a source at
-// `rate` fps is sampled once, mid-frame, never on an ambiguous frame boundary.
+// Sample times for seeking: (k + 0.3) / rate. Each frame of a source at `rate` fps is
+// sampled once. The 0.3 offset (not 0.5) also keeps samples off the frame boundaries of
+// sources at 2x and 4x the rate and at 24, 25, 30 and 50 fps; a source faster than the
+// rate can still have frames skipped.
+export const SAMPLE_OFFSET=.3;
 export function videoSampleTimes(duration,rate,maxSeconds){
   if(!Number.isFinite(rate)||rate<=0)throw Error('Invalid sample rate');
   const end=Math.min(Number.isFinite(duration)?duration:maxSeconds,maxSeconds),out=[];
-  for(let k=0;;k++){const t=(k+.5)/rate;if(t>=end)break;out.push(t);}
+  for(let k=0;;k++){const t=(k+SAMPLE_OFFSET)/rate;if(t>=end)break;out.push(t);}
   return {times:out,truncated:Number.isFinite(duration)&&duration>maxSeconds,end};
 }
 // Browsers (Blink, Gecko) display animation frames that specify <= 10 ms for 100 ms.

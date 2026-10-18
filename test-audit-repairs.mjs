@@ -63,3 +63,12 @@ for(const value of ['default','maximized','browser-fullscreen','content-fullscre
 const empty=new Evidence(1,1).report();
 assert.equal(parseCsv(csv(empty,report))[1].includes('metadata'),true,'Zero-row probe export retains metadata');
 console.log('AI-01 and AI-03 regressions passed: both pairing phases, frozen shuffle, three/four boundaries, red orphan cases, complete standalone export metadata and escaping.');
+// RT2-13: export-level guarantees for every source type.
+{const {csvCell,exportMetadata}=await import('./dist/export-metadata.mjs'),{stampReport,reviewText}=await import('./dist/report.mjs'),{Analyzer:A}=await import('./dist/analyzer.mjs'),{csv:csvOut}=await import('./dist/evidence.mjs');
+  for(const lead of ['=','+','-','@','\t'])assert.ok(csvCell(`${lead}SUM(A1)`).replace(/^"/,'').startsWith("'"+lead),`CSV cell starting with ${JSON.stringify(lead)} is neutralized`);
+  const base=new A(2,2).report(),file=stampReport({...base,localFile:true,sourceFile:{name:'clip.mp4',sha256:'ab'},createdAt:'x'});
+  assert.equal(file.sourceType,'local-file-decoded');const meta=exportMetadata(file);
+  assert.ok(typeof meta.source_file_json==='string','source_file_json column present');assert.equal(JSON.parse(meta.source_file_json).name,'clip.mp4');assert.equal(typeof meta.sc232_peak_pairs,'number');assert.equal(meta.sc232_status,'insufficient-observation');
+  assert.ok(reviewText(file).includes('Local file decoded frame by frame')&&!reviewText(file).includes('A shared surface was sampled'),'Review notes name decoded files correctly');
+  assert.ok(csvOut(undefined,file).split('\n')[0].includes('source_file_json'));}
+console.log('Export guarantees passed: formula cells, local-file provenance, SC 2.3.2 columns.');
