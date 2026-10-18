@@ -29,7 +29,7 @@ Updated October 17, 2026, after the red-team retest of build `flash-review-0.4.5
 
 ## 2. Check whether a background analyzer tab captures anything
 
-This is the most important manual check, because it could affect every capture.
+This is the most important manual check, because it could affect every capture. **Headless evidence (0.5.0 audit, RT2-09): the same-window layout captured 0 frames.** From 0.5.1 the report says how long the analyzer was hidden, and the instructions say to use separate windows. Please confirm in a normal browser window.
 
 - [ ] In normal Chrome, open the analyzer and the static target as **two tabs in the same window**.
 - [ ] Start a capture, choose the target in the picker, and switch to the target tab for 10 seconds.

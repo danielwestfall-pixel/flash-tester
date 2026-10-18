@@ -6,7 +6,13 @@ This release does two things:
 - repairs the defects found by the 0.4.5 red-team retest (RT-01 to RT-10);
 - closes the largest coverage gaps for the three WCAG flashing and motion criteria.
 
-It was implemented and checked by the same agent that ran the red-team pass. **An independent retest is still required.** No result here is a WCAG conformance verdict.
+It was implemented and checked by the same agent that ran the red-team pass. No result here is a WCAG conformance verdict.
+
+**Corrections after the independent 0.5.0 audit** (repaired in [0.5.1](RELEASE_0.5.1.md)):
+- "Every stale-module combination is refused natively" was false: `example.html` ran with 17 stale or mixed combinations, and an unversioned image-sequence page module failed silently (RT2-08).
+- "The remaining documented exception: regions that blend below 0.05 in every cell" was false: flashes on a bright background blend above the 0.80 darker-state limit and were missed by both the general and low-contrast channels (RT2-01).
+- "General and red detection are unchanged in behaviour" held for detection (0 differences in 15,000 cases), but analysis cost 1.2–2.4× more CPU per frame (RT2-02).
+- "54/54" was a headless Chrome run under automation, and the verifier then checked only peakGeneral, the flag and the alternate peak (it passed 7 of 8 page mutants).
 
 ## Coverage by criterion
 

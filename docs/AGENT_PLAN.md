@@ -1,10 +1,12 @@
 # Flash Review agent plan
 
-Updated October 16, 2026. Repository: https://github.com/danielwestfall-pixel/flash-tester
+Updated October 18, 2026. Repository: https://github.com/danielwestfall-pixel/flash-tester
 
 ## Current state
 
-Build `flash-review-0.4.5-20261017`, algorithm `flash-screen-0.4.2` (NF-06 dilated area upper bound, NF-07, NF-08 module-version guard: [NF06_NF08_REPAIR.md](NF06_NF08_REPAIR.md); earlier NF-02/NF-03 reporting repairs plus NF-04 startup geometry settling; see [NF02_NF03_REPAIR.md](NF02_NF03_REPAIR.md) and the automated [macOS native set](MAC_NATIVE_RESULTS.md); Windows retest pending). **Superseded by build `flash-review-0.5.0-20261017` / algorithm `flash-screen-0.5.0`: see [RELEASE_0.5.0.md](RELEASE_0.5.0.md).** Implemented: optional calibrated sampled-area screening, local static images and URL lists, finite directed pairs, seeded shuffle screening/playback, presentation scenario labels, and evidence exports. Direct video decoding, arbitrary multi-image trajectory clearance, automatic fullscreen orchestration, precise temporal-overlap area analysis and separate SC 2.3.2/2.3.3 evaluation remain roadmap work.
+**Build `flash-review-0.5.1-20261018`, algorithm `flash-screen-0.5.1`.** See [RELEASE_0.5.1.md](RELEASE_0.5.1.md) and [RELEASE_0.5.0.md](RELEASE_0.5.0.md). The paragraphs below are history.
+
+History: Build `flash-review-0.4.5-20261017`, algorithm `flash-screen-0.4.2` (NF-06 dilated area upper bound, NF-07, NF-08 module-version guard: [NF06_NF08_REPAIR.md](NF06_NF08_REPAIR.md); earlier NF-02/NF-03 reporting repairs plus NF-04 startup geometry settling; see [NF02_NF03_REPAIR.md](NF02_NF03_REPAIR.md) and the automated [macOS native set](MAC_NATIVE_RESULTS.md); Windows retest pending). **Superseded by build `flash-review-0.5.0-20261017` / algorithm `flash-screen-0.5.0`: see [RELEASE_0.5.0.md](RELEASE_0.5.0.md).** Implemented: optional calibrated sampled-area screening, local static images and URL lists, finite directed pairs, seeded shuffle screening/playback, presentation scenario labels, and evidence exports. Direct video decoding, arbitrary multi-image trajectory clearance, automatic fullscreen orchestration, precise temporal-overlap area analysis and separate SC 2.3.2/2.3.3 evaluation remain roadmap work.
 
 AI-01 (pairing phases), AI-02 (navigation/resource invalidation), and AI-03 (export context) passed independent targeted retest. The subsequently found NF-01 clock defect is repaired in 0.4.2: all nine scripts and targeted native duration/resize/visibility-hidden original-log checks pass. The visibility check used a manual Incognito window minimized/restored without automation attached; direct same-window switching on 0.4.2 remains unestablished. The overall gate is **BLOCKED**, not PASS, on the remaining presentation/video/device matrix and positive witness coverage. See [the repair status](NF01_REPAIR.md) and [the historical finding](NATIVE_FINDINGS.md).
 
@@ -23,7 +25,7 @@ Local evidence directories (excluded from Git): `audit-area-images-2026-10-16/`,
 
 ## Checks and acceptance
 
-Run from the repository root (15 scripts from 0.5.0):
+Run from the repository root (16 scripts from 0.5.1):
 
 ```powershell
 node test.mjs
@@ -41,6 +43,7 @@ node test-module-guard.mjs
 node test-file-source.mjs
 node test-motion-review.mjs
 node test-area-erased.mjs
+node test-file-analysis-ui.mjs
 python3 test-video-fixtures.py
 node tools/verify-file-analysis.mjs http://127.0.0.1:8791 <out-dir>   # native, headless Chrome
 ```

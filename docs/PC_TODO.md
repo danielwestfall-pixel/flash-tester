@@ -6,7 +6,7 @@ Updated October 17, 2026. Sections 1–4 are done in build 0.5.0 ([RELEASE_0.5.0
 
 ## Rules
 
-- Run all nine scripts after any code change, and `python3 test-video-fixtures.py` after any fixture change.
+- Run all test scripts after any code change (16 from 0.5.1; see AGENT_PLAN), and `python3 test-video-fixtures.py` after any fixture change.
 - For every repair, add a regression that fails when the repair is removed. Confirm it fails by reverting the repair once.
 - Flashing content runs headless only, unless the person has agreed to watch it.
 - Never edit original evidence. Write new evidence in a new folder that stays out of Git.
@@ -16,12 +16,12 @@ Updated October 17, 2026. Sections 1–4 are done in build 0.5.0 ([RELEASE_0.5.0
 
 - [x] **RT-01: show discarded startup frames.**
   - Show the discarded interval in the capture UI.
-  - Add an observation reason, so the screening minimum is not met when any frames were discarded.
+  - ~~Add an observation reason, so the screening minimum is not met when any frames were discarded.~~ Not implemented in 0.5.0 (red-team RT2-03). 0.5.1 instead screens startup frequency across size changes with a 16 × 9 startup bridge, so a straddling burst is a candidate.
   - Regression: a burst that falls only inside the settling window must not produce "No candidates" with the minimum met.
 - [x] **RT-05: guard every module.**
   - Version every module the pages import: `app`, `evidence`, `export-metadata`, `examples`, `fixtures`, `image-sequence`, `report`, and the page scripts.
   - Check them all against `report.mjs`.
-  - Regression: load each module from an older commit and assert that the page refuses to run.
+  - Regression: load each module from an older commit and assert that the page refuses to run. (0.5.0 relabelled current files; 0.5.1 also loads a real `ccb80c1` module.)
 - [x] **RT-02: area bound.** Use the person's decision (HUMAN_TODO, section 1).
   - Either change the summary wording and the documented exception,
   - or add a check for regions that vanish in the downscale.
@@ -38,7 +38,7 @@ Updated October 17, 2026. Sections 1–4 are done in build 0.5.0 ([RELEASE_0.5.0
 
 ## 3. Missing tests (done in 0.5.0)
 
-All nine scripts still pass with each of these removed. Add a regression for each:
+The original nine scripts still passed with each of these removed. Add a regression for each:
 
 - [x] `observedSourcePixels` must come from the video element, not the track settings (use different mock sizes).
 - [x] The 2% aspect guard (a 3% mismatch must be rejected).
@@ -66,7 +66,8 @@ All nine scripts still pass with each of these removed. Add a regression for eac
   - [x] Say the native NF-08 check covered only `analyzer.mjs`.
 - [x] `TODO.md` and `docs/NATIVE_FINDINGS.md`: qualify "NF-04 5/5 natively" as 0.4.4, a static target, one analyzed frame each.
 - [x] `docs/NF02_NF03_REPAIR.md`: note that the settling cost is not shown in the UI, and that non-repainting pages may never settle.
-- [x] `fixtures/video/README.md` and the manifest: record the libx264 and libvpx versions alongside ffmpeg.
+- [x] `fixtures/video/README.md`: record the libx264 and libvpx versions alongside ffmpeg.
+- [ ] `fixtures/video/manifest.json` still records only the ffmpeg version (red-team audit 0.5.0).
 
 ## 5. Automated verification after the repairs
 
@@ -88,6 +89,12 @@ All nine scripts still pass with each of these removed. Add a regression for eac
 - [ ] Sequence file analysis with page-level capture: one report linking a file result to the capture of the page that shows it.
 - [ ] Independent temporal-overlap reference for area (TODO section 1).
 
-## 7. Gate
+## 7. From the 0.5.0 audit (done in 0.5.1)
+
+- [x] RT2-01 to RT2-10, RT2-12 and RT2-13 repaired, with regressions ([RELEASE_0.5.1.md](RELEASE_0.5.1.md)).
+- [ ] RT2-11: CSV rows repeat the metadata prefix (standalone rows, AI-03). Consider an optional compact export.
+- [ ] Record libx264 and libvpx versions in `fixtures/video/manifest.json`.
+
+## 8. Gate
 
 - [ ] The gate stays BLOCKED until the P2 repairs, the Windows rerun and the person-operated runs are done.

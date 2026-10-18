@@ -2,7 +2,12 @@
 
 Scope: SC 2.3.1 for browser animations, video and displayed image sequences; separate SC 2.3.2 and 2.3.3 reviews. A completed fixture/test does not certify the detector or a webpage.
 
-## Current: build 0.5.0 (October 17, 2026)
+## Current: build 0.5.1 (October 18, 2026)
+
+0.5.1 repairs the independent 0.5.0 audit findings RT2-01 to RT2-13 ([RELEASE_0.5.1.md](docs/RELEASE_0.5.1.md)).
+**Gate: BLOCKED** on an independent retest of 0.5.1, headful confirmation of RT2-09, the Windows rerun and reviewer-operated runs.
+
+## Build 0.5.0 (October 17, 2026)
 
 See [RELEASE_0.5.0.md](docs/RELEASE_0.5.0.md), [PC_TODO.md](docs/PC_TODO.md) and [HUMAN_TODO.md](docs/HUMAN_TODO.md).
 - 0.5.0 repairs RT-01 to RT-10 from the 0.4.5 red-team retest.
@@ -70,12 +75,12 @@ Updated October 17, 2026. Build `flash-review-0.4.5-20261017`, algorithm `flash-
 - [ ] Add sequence import/export, dwell times, fades, contain/cover/crop, background and responsive presentation settings.
 - [ ] Add ordered triples/multi-state trajectories, loop boundaries, adversarial sequence search and whole-sequence review. Pair screening/random samples cannot prove every possible combination passes.
 - [x] Reject GIF, APNG and animated WebP explicitly on the image-sequence page.
-- [x] Decode animated GIF/APNG/WebP/AVIF timelines with loop seams, loop counts, the browser display timing model and transparency (0.5.0 `file-analysis.html`; 30/30 animated fixture cases natively).
+- [x] Decode animated GIF/APNG/WebP/AVIF timelines with loop seams, loop counts, the browser display timing model and transparency (0.5.0 `file-analysis.html`; 30/30 animated fixture cases in headless Chrome under automation; 33/33 in 0.5.1).
 - [x] Download reports linking loaded image labels, sequence, rate, geometry and detector build; omit source URLs. Persistent history/content hashes remain future work.
 
 ## 3. Video
 
-- [x] Accept local video files and decode them without a flashing preview, keeping frame timestamps and source metadata (0.5.0 `file-analysis.html`; 24/24 video fixtures natively). CORS video URLs remain open.
+- [x] Accept local video files and decode them without a flashing preview, keeping source metadata (0.5.0 `file-analysis.html`; 24/24 video fixtures in headless Chrome under automation). Video frames are sampled on a regular seek grid, so analysis times are grid times, not source frame timestamps; the source frame rate is not measured. CORS video URLs remain open.
 - [x] Add reproducible encoded video fixtures (frequency, contrast, red and area), validate decoded pixels/timestamps against source patterns. `fixtures/video/`, `generate-video-fixtures.py`, `test-video-fixtures.py` (requires ffmpeg); browser-encoded variants via `fixtures/video/recorder.html`.
 - [ ] Handle variable frame rate, duplicate/drop frames, decode errors, seeks, loop seams and short bursts. Drop/dup/VFR fixtures exist and captured counts matched; direct decoding, decode errors and seeks remain.
 - [ ] Record displayed CSS size independently of encoded resolution, including fullscreen testing. Video target page records element/content rectangles and player fullscreen; macOS capture covered five presentations, but player fullscreen did not meet the sampling minimum.
