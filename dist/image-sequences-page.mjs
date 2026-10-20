@@ -4,11 +4,16 @@ import {imageUrls,orderedPairs,schedule,imageAt,rasterKind,containRect} from './
 const $=id=>document.getElementById(id),canvas=$('surface'),context=canvas.getContext('2d',{colorSpace:'srgb'});
 let images=[],failures=[],busy=false,sourceDirty=false,output=null,running=false,raf=null,timer=null,started=null,plan=[],liveLog=[],liveConfig=null;
 let generation=0,suspended=false,loadController=null;
-const controls=['files','urls','load','samples','changes','seed','width','height','pairs','shuffle','ack','play','download'];
+const controls=['files','urls','load','samples','changes','seed','width','height','pairs','shuffle','adversarial','ack','play','download'];
 function update(){
-  for(const id of controls)$(id).disabled=busy||running||suspended;
+  for(const id of controls){const el=$(id);if(el)el.disabled=busy||running||suspended;}
   $('pairs').disabled=busy||running||suspended||sourceDirty||images.length<2||images.length>12;
   $('shuffle').disabled=busy||running||suspended||sourceDirty||images.length<2;
+  if($('adversarial'))$('adversarial').disabled=busy||running||suspended||sourceDirty||images.length<2;
+  if($('cancel-load')){
+    $('cancel-load').hidden=!loadController;
+    $('cancel-load').disabled=!loadController;
+  }
   const failsafeOk=confirmInput?checkFailsafe(confirmInput.value):true;
   $('play').disabled=busy||running||suspended||sourceDirty||images.length<2||!(failsafeOk&&$('ack').checked);
   $('download').disabled=busy||running||suspended||!output;
@@ -68,26 +73,53 @@ $('load').addEventListener('click',async()=>{
   catch(e){sourcesChanged();$('load-status').textContent=e.message;return;}
   busy=true;update();output=null;failures=[];images.forEach(i=>i.bitmap.close());images=[];$('rows').replaceChildren();$('result-table').hidden=true;$('ack').checked=false;
   const token=++generation,controller=new AbortController();loadController=controller;
-  const sources=[...files.map(file=>({name:file.name,read:async()=>file})),...urls.map((url,i)=>({name:`URL image ${i+1}`,read:async()=>{
-    const response=await fetch(url,{mode:'cors',credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});
-    if(!response.ok)throw Error(`HTTP ${response.status}`);
-    const reader=response.body.getReader();let size=0;const chunks=[];
-    try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>20*1024*1024)throw Error('Image exceeds 20 MB.');chunks.push(value);}}
-    catch(e){await reader.cancel();throw e;}return new Blob(chunks);
-  }}))];
-  for(const source of sources){
-    $('load-status').textContent=`Loading ${source.name}…`;
+  const aggregateTimer=setTimeout(()=>{controller.abort(new Error('Aggregate load timeout exceeded (30 seconds).'));},30000);
+  update();
+  const urlFetches=urls.map(async(url,i)=>{
+    const name=`URL image ${i+1}`;
     try{
-      const blob=await source.read();if(token!==generation||suspended)return;
-      const item=await decode(blob,source.name);
-      if(token!==generation||suspended){item.bitmap.close();return;}
+      const response=await fetch(url,{mode:'cors',credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});
+      if(!response.ok)throw Error(`HTTP ${response.status}`);
+      const reader=response.body.getReader();let size=0;const chunks=[];
+      try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>20*1024*1024)throw Error('Image exceeds 20 MB.');chunks.push(value);}}
+      catch(e){await reader.cancel();throw e;}return {name,blob:new Blob(chunks)};
+    }catch(e){return {name,error:e.message||'Image load failed (network, CORS or decode).'};}
+  });
+  const fileItems=files.map(file=>Promise.resolve({name:file.name,blob:file}));
+  const allSources=[...fileItems,...urlFetches];
+  for(let i=0;i<allSources.length;i++){
+    if(token!==generation||suspended)break;
+    if(controller.signal.aborted)break;
+    $('load-status').textContent=`Loading ${i+1}/${allSources.length} images…`;
+    const res=await allSources[i];
+    if(token!==generation||suspended)break;
+    if(controller.signal.aborted)break;
+    if(res.error){failures.push({name:res.name,error:res.error});continue;}
+    try{
+      const item=await decode(res.blob,res.name);
+      if(token!==generation||suspended||controller.signal.aborted){item.bitmap.close();break;}
       images.push(item);
+    }catch(e){
+      if(token!==generation||suspended)break;
+      failures.push({name:res.name,error:e.message||'Image decode failed.'});
     }
-    catch(e){if(token!==generation||suspended)return;failures.push({name:source.name,error:e.message||'Image load failed (network, CORS or decode).'});}
   }
-  if(token!==generation||suspended)return;loadController=null;
-  $('load-status').textContent=`${images.length}/${sources.length} loaded. ${failures.length?'COVERAGE INCOMPLETE: '+failures.map(f=>`${f.name}: ${f.error}`).join('\n'):'No load failures.'}\n`+images.map((i,n)=>`${n+1}. ${i.name} (${i.bitmap.width} × ${i.bitmap.height})`).join('\n');
+  clearTimeout(aggregateTimer);
+  loadController=null;
+  if(token!==generation||suspended)return;
+  if(controller.signal.aborted){
+    images.forEach(i=>i.bitmap.close());images=[];
+    $('load-status').textContent=controller.signal.reason?.message||'Image loading was cancelled.';
+    $('result').textContent='Load cancelled. No images loaded.';
+    busy=false;sourceDirty=true;update();return;
+  }
+  $('load-status').textContent=`${images.length}/${allSources.length} loaded. ${failures.length?'COVERAGE INCOMPLETE: '+failures.map(f=>`${f.name}: ${f.error}`).join('\n'):'No load failures.'}\n`+images.map((i,n)=>`${n+1}. ${i.name} (${i.bitmap.width} × ${i.bitmap.height})`).join('\n');
   $('result').textContent='Loaded images have not been screened. No image preview was played.';busy=false;sourceDirty=false;update();
+});
+$('cancel-load')?.addEventListener('click',()=>{
+  if(loadController){
+    loadController.abort(new Error('Image loading was cancelled by the user.'));
+  }
 });
 function base(c,kind){return {buildId:BUILD_ID,kind,createdAt:new Date().toISOString(),settings:c,images:images.map(i=>({name:i.name,width:i.bitmap.width,height:i.bitmap.height})),loadFailures:[...failures],
   coverage:failures.length?'incomplete-load-failures':'finite-selected-sequences-only',
@@ -106,7 +138,30 @@ async function analyze(kind){
     const frames=images.map(item=>{draw(ctx,item,c.analysisWidth,c.analysisHeight);return ctx.getImageData(0,0,c.analysisWidth,c.analysisHeight).data;});
     const linear=Array.from({length:256},(_,i)=>{const v=i/255;return v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4;});
     const meanY=frames.map(data=>{let sum=0,count=data.length/4;for(let i=0;i<data.length;i+=4)sum+=0.2126*linear[data[i]]+0.7152*linear[data[i+1]]+0.0722*linear[data[i+2]];return sum/count;});
-    const jobs=pairs??[null],results=[],shufflePlan=schedule(images.length,c.seconds,c.rate,c.seed);
+    const meanRed=frames.map(data=>{let sum=0,count=data.length/4;for(let i=0;i<data.length;i+=4){const r=linear[data[i]],g=linear[data[i+1]],b=linear[data[i+2]];sum+=Math.max(0,(r-g-b)*320);}return sum/count;});
+    let jobs,adversarialPairs=null;
+    if(kind==='pairs'){
+      jobs=pairs;
+    }else if(kind==='shuffle'){
+      jobs=[null];
+    }else if(kind==='adversarial'){
+      let maxDeltaY=-1,bestYPair=[0,1];
+      let maxDeltaRed=-1,bestRedPair=[0,1];
+      for(let i=0;i<images.length;i++){
+        for(let j=i+1;j<images.length;j++){
+          const dy=Math.abs(meanY[i]-meanY[j]);
+          if(dy>maxDeltaY){maxDeltaY=dy;bestYPair=[i,j];}
+          const dr=Math.abs(meanRed[i]-meanRed[j]);
+          if(dr>maxDeltaRed){maxDeltaRed=dr;bestRedPair=[i,j];}
+        }
+      }
+      adversarialPairs=[bestYPair];
+      if(maxDeltaRed>20&&(bestRedPair[0]!==bestYPair[0]||bestRedPair[1]!==bestYPair[1])){
+        adversarialPairs.push(bestRedPair);
+      }
+      jobs=adversarialPairs;
+    }
+    const results=[],shufflePlan=schedule(images.length,c.seconds,c.rate,c.seed);
     for(let j=0;j<jobs.length;j++){
       if(token!==generation||suspended)return;
       const pair=jobs[j],a=new Analyzer(c.analysisWidth,c.analysisHeight,{calibration:{cssWidth:c.width,cssHeight:c.height}});
@@ -115,20 +170,39 @@ async function analyze(kind){
       }
       const r=stampReport({...a.report(),synthetic:true,source:'Decoded static images in generated schedules; no tab captured',pair});results.push(r);
       const delta=pair?Math.abs(meanY[pair[0]]-meanY[pair[1]]):null;
-      const name=pair?`${pair[0]+1} → ${pair[1]+1} → ${pair[0]+1} (ΔY: ${delta.toFixed(3)})`:'Seeded shuffle';
+      const rDelta=pair?Math.abs(meanRed[pair[0]]-meanRed[pair[1]]):0;
+      let name;
+      if(kind==='adversarial'){
+        name=`Worst-case pair: ${pair[0]+1} ↔ ${pair[1]+1} (ΔY: ${delta.toFixed(3)}${rDelta>20?`, ΔSR: ${rDelta.toFixed(1)}`:''})`;
+      }else if(pair){
+        name=`${pair[0]+1} → ${pair[1]+1} → ${pair[0]+1} (ΔY: ${delta.toFixed(3)})`;
+      }else{
+        name='Seeded shuffle';
+      }
       tableRow(name,r);
       $('result').textContent=`Screened ${j+1}/${jobs.length} finite sequences…`;
       await new Promise(resolve=>setTimeout(resolve,0));
     }
     if(token!==generation||suspended)return;
-    output={...base(c,kind),plan:kind==='shuffle'?shufflePlan:undefined,results,imageLuminance:images.map((i,idx)=>({name:i.name,meanRelativeLuminance:Number(meanY[idx].toFixed(4))}))};
+    output={
+      ...base(c,kind),
+      plan:kind==='shuffle'?shufflePlan:undefined,
+      worstCasePairs:kind==='adversarial'?adversarialPairs:undefined,
+      results,
+      imageLuminance:images.map((i,idx)=>({name:i.name,meanRelativeLuminance:Number(meanY[idx].toFixed(4)),meanSaturatedRed:Number(meanRed[idx].toFixed(4))}))
+    };
     const candidates=results.filter(r=>r.windows.length).length;
     const lumSummary=images.map((i,idx)=>`#${idx+1}: Y≈${meanY[idx].toFixed(3)}`).join(', ');
-    $('result').textContent=`${results.length} finite sequence${results.length===1?'':'s'} screened; flash candidates in ${candidates}. Loaded image luminance: [${lumSummary}]. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination. Changes per second are transitions; A/B flashes occur at half that rate.`;
+    if(kind==='adversarial'){
+      $('result').textContent=`Adversarial worst-case screening complete (${results.length} sequence${results.length===1?'':'s'}); flash candidates in ${candidates}. Screened pair(s) maximizing transition hazard. Loaded image luminance: [${lumSummary}]. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination. Changes per second are transitions; A/B flashes occur at half that rate.`;
+    }else{
+      $('result').textContent=`${results.length} finite sequence${results.length===1?'':'s'} screened; flash candidates in ${candidates}. Loaded image luminance: [${lumSummary}]. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination. Changes per second are transitions; A/B flashes occur at half that rate.`;
+    }
   }catch(e){$('result').textContent=`Screening interrupted; coverage incomplete: ${e.message}`;output=null;}
   finally{if(token===generation){busy=false;update();}}
 }
 $('pairs').addEventListener('click',()=>analyze('pairs'));$('shuffle').addEventListener('click',()=>analyze('shuffle'));
+$('adversarial')?.addEventListener('click',()=>analyze('adversarial'));
 function stop(reason){
   if(!running)return;running=false;cancelAnimationFrame(raf);clearTimeout(timer);raf=null;timer=null;
   $('stage').hidden=true;context.fillStyle='#000000';context.fillRect(0,0,canvas.width,canvas.height);$('setup').hidden=false;

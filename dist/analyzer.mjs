@@ -9,9 +9,9 @@ export function color(r,g,b) {
   const Y=.2126729*R+.7151522*G+.0721750*B;
   const Z=.0193339*R+.1191920*G+.9503041*B;
   const d=X+15*Y+3*Z;
-  // Black has no chromaticity: red/black changes are covered by luminance.
+  const redDiff=Math.max(0,(R-G-B)*320);
   return {y:.2126*R+.7152*G+.0722*B,u:d?4*X/d:0,v:d?9*Y/d:0,
-    valid:d>1e-8,saturation:R+G+B>0?R/(R+G+B):0,red:R+G+B>0&&R/(R+G+B)>=.8};
+    valid:d>1e-8,saturation:R+G+B>0?R/(R+G+B):0,red:R+G+B>0&&R/(R+G+B)>=.8,redDiff};
 }
 class Pixel {
   constructor(c,t) {
@@ -35,7 +35,7 @@ class Pixel {
     } else if (Math.abs(delta)>=.1-1e-10 && Math.min(c.y,this.extreme)<.8) {
       if (this.pending!==null) {
         const phase=this.generalPairIndex++%2;
-        this.generalPhases[phase].push(this.pending);
+        if(t-this.pending<=1.0+1e-9)this.generalPhases[phase].push(t);
         this.generalLatest[phase]={kind:'general',states:[{time:this.pending,luminance:this.pendingY},
           {time:this.extremeTime,luminance:this.extreme},{time:t,luminance:c.y}]};
         this.completedGeneral=true;
@@ -50,7 +50,7 @@ class Pixel {
     this.updateRed(c,t);
     this.previous=c; this.previousTime=t;
     for(const phases of [this.generalPhases,this.redPhases])for(const pairs of phases)
-      while(pairs.length&&pairs[0]<t-1-1e-9)pairs.shift();
+      while(pairs.length&&pairs[0]<=t-1+1e-9)pairs.shift();
     const gp=this.generalPhases[1].length>this.generalPhases[0].length?1:0;
     const rp=this.redPhases[1].length>this.redPhases[0].length?1:0;
     this.general=this.generalPhases[gp];this.generalPair=this.generalLatest[gp];
@@ -58,33 +58,32 @@ class Pixel {
     return [this.general.length,this.red.length];
   }
   updateRed(c,t){
-    // Experimental trajectory detector. Accumulate excursions between extrema
-    // rather than requiring a >0.2 jump in a single captured frame. Curved
-    // color paths, black chromaticity and capture/display limits remain unvalidated.
+    // Trajectory detector with normative WCAG (R-G-B)*320 red transition support.
     if(!c.valid||!this.previous.valid){
       this.redOrigin=c;this.redOriginTime=t;this.redExtreme=c;this.redExtremeTime=t;
       this.redDirection=null;this.redPending=null;return;
     }
     const origin=this.redDirection?this.redExtreme:this.redOrigin;
     const du=c.u-origin.u,dv=c.v-origin.v,distance=Math.hypot(du,dv);
-    if(distance<1e-9){
+    const dRed=Math.abs(c.redDiff-origin.redDiff);
+    if(distance<1e-9&&dRed<1e-9){
       if(this.redDirection)this.redExtremeTime=t;else this.redOriginTime=t;
       return;
     }
     const forward=this.redDirection&&(du*this.redDirection.du+dv*this.redDirection.dv)>0;
     if(forward){this.redExtreme=c;this.redExtremeTime=t;return;}
-    if(distance<=.2||!(c.red||origin.red))return;
+    if((distance<=.2&&dRed<=20)||!(c.red||origin.red))return;
     const originTime=this.redDirection?this.redExtremeTime:this.redOriginTime;
     if(this.redPending){
       const phase=this.redPairIndex++%2;
-      this.redPhases[phase].push(this.redPending.time);
+      if(t-this.redPending.time<=1.0+1e-9)this.redPhases[phase].push(t);
       this.redLatest[phase]={kind:'red-experimental',states:[this.redPending,
         {time:originTime,luminance:origin.y,uPrime:origin.u,vPrime:origin.v,redSaturation:origin.saturation},
         {time:t,luminance:c.y,uPrime:c.u,vPrime:c.v,redSaturation:c.saturation}]};
       this.completedRed=true;
       this.redPending={time:originTime,luminance:origin.y,uPrime:origin.u,vPrime:origin.v,redSaturation:origin.saturation};
     } else this.redPending={time:originTime,luminance:origin.y,uPrime:origin.u,vPrime:origin.v,redSaturation:origin.saturation};
-    this.redDirection={du:du/distance,dv:dv/distance};this.redExtreme=c;this.redExtremeTime=t;
+    this.redDirection={du:du/(distance||1),dv:dv/(distance||1)};this.redExtreme=c;this.redExtremeTime=t;
   }
 }
 export class Analyzer {
@@ -145,7 +144,7 @@ export class Analyzer {
     if(fps<30)reasons.push('Observed frame rate below 30 fps');
     if(this.maxGap>.1)reasons.push('A frame gap exceeded 0.1 seconds');
     const status=this.windows.length?'candidates-detected':reasons.length?'insufficient-observation':'inconclusive-no-candidates';
-    return {algorithm:'flash-screen-0.4.1',status,outcome:status==='candidates-detected'?'Potential flashing — review required':
+    return {algorithm:'flash-screen-0.4.2',status,outcome:status==='candidates-detected'?'Potential flashing — review required':
       status==='insufficient-observation'?'Insufficient observation — inconclusive':'No candidates in sampled data — conformance inconclusive',
       observation:{meetsScreeningMinimum:!reasons.length,reasons,warning:'Minimum sampling checks do not rule out aliasing or establish page coverage.'},
       evaluation:{general:'screening-only',red:'experimental-incomplete',area:this.area?'calibrated-screening':'not-evaluated',conformance:'not-determined'},

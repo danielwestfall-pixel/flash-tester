@@ -74,6 +74,7 @@ canvas#surface { display: block; background: black; border-radius: 8px; }
     <div class="button-row">
       <button id="samples" type="button">Fill bundled sample image URLs</button>
       <button id="load" class="primary" type="button" style="width: auto;">Load images without playback</button>
+      <button id="cancel-load" type="button" style="width: auto;" hidden disabled>Cancel load</button>
     </div>
 
     <p id="load-status" role="status">No images loaded yet. Choose files above or click "Fill bundled sample image URLs".</p>
@@ -112,12 +113,13 @@ canvas#surface { display: block; background: black; border-radius: 8px; }
     <div class="explainer-box" style="background:#f0fdf4; border:2px solid #16a34a; border-radius:8px; padding:16px; margin:14px 0; color:#14532d;">
       <strong style="color:#14532d; font-size:15px;">💡 Background screening without playback:</strong>
       <p style="margin:6px 0 0 0; line-height:1.6;">
-        Both <strong>"Screen all ordered pairs"</strong> and <strong>"Screen seeded shuffle"</strong> test image toggling 100% in memory in the background. No images are displayed or flashed on your screen (0% photosensitivity risk), and testing continues uninterrupted even if you switch browser tabs or work in another window.
+        <strong>"Screen all ordered pairs"</strong>, <strong>"Screen seeded shuffle"</strong>, and <strong>"Find worst-case flash sequence (Adversarial Search)"</strong> test image toggling 100% in memory in the background. No images are displayed or flashed on your screen (0% photosensitivity risk), and testing continues uninterrupted even if you switch browser tabs or work in another window.
       </p>
     </div>
     <div class="button-row">
       <button id="pairs" type="button" disabled>Screen all ordered pairs without playback</button>
       <button id="shuffle" type="button" disabled>Screen seeded shuffle without playback</button>
+      <button id="adversarial" type="button" disabled>Find worst-case flash sequence (Adversarial Search)</button>
       <button id="download" type="button" disabled>Download JSON results and sequence</button>
     </div>
 

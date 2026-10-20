@@ -16,6 +16,8 @@ assert.ok(series(t=>gray(Math.round(127.5*(1-Math.cos(t*2*Math.PI*5))))).peakGen
 assert.ok(series(t=>Math.floor(t*10)%2?[255,0,0]:[0,255,0]).peakRedHeuristic>3,'Alternating red/green');
 assert.equal(series(t=>Math.floor(t*10)%2?[0,0,255]:[0,255,0]).peakRedHeuristic,0,'Non-red transitions');
 assert.equal(series(pulse(.5),4).peakGeneral,0,'Slow opposing transitions do not fit a second');
+assert.ok(series(pulse(3.2),3).peakGeneral>3,'RED-01: 3.2 Hz square wave flags candidates');
+assert.ok(series(t=>Math.floor(t*20)%2?[230,20,0]:[200,75,0]).peakRedHeuristic>3,'RED-02: 10 Hz saturated red/orange chromatic strobe flags candidates');
 assert.ok(Math.abs(color(255,255,255).y-1)<1e-9,'Linear sRGB luminance');
 assert.equal(new Analyzer(1,1).report().status,'insufficient-observation');
 const a=new Analyzer(1,1);a.push([0,0,0,255],0);a.push([255,255,255,255],.2);a.push([0,0,0,255],.2);

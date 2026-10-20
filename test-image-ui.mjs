@@ -101,5 +101,34 @@ try{
     assert.ok(live.note.includes('not proof of displayed or captured frames'));
   }
 }finally{Object.defineProperty(globalThis,'performance',originalPerformance);}
-console.log('Image input/playback contracts and AI-02 history restoration, late decoding, aborted network loading and interrupted analysis regressions passed.');
+// RED-09 & Adversarial Search UI contracts:
+$('files').files=[file('black.jpg',0),file('white.jpg',255)];
+$('urls').value='';
+await $('load').fire('click');
+assert.equal($('adversarial').disabled,false);
+await $('adversarial').fire('click');
+assert.equal($('rows').children.length,1);
+$('download').fire('click');
+const advReport=JSON.parse(await download.text());
+assert.equal(advReport.kind,'adversarial');
+assert.equal(advReport.worstCasePairs.length,1);
+assert.equal(advReport.results[0].peakGeneral,10);
+assert.ok($('result').textContent.includes('Adversarial worst-case screening complete'));
+
+// Cancel-load button cancels pending network fetches:
+globalThis.fetch=(url,options)=>new Promise((_,reject)=>{
+  options?.signal?.addEventListener('abort',()=>reject(new Error('aborted')));
+});
+$('files').files=[];
+$('urls').value='https://example.com/slow.jpg';
+const slowLoading=$('load').fire('click');
+assert.equal($('cancel-load').hidden,false);
+assert.equal($('cancel-load').disabled,false);
+$('cancel-load').fire('click');
+await slowLoading;
+assert.ok($('load-status').textContent.includes('cancelled'));
+assert.equal($('cancel-load').hidden,true);
+assert.equal($('cancel-load').disabled,true);
+
+console.log('Image input/playback contracts, parallel URL loading, cancel-load, and adversarial worst-case search regressions passed.');
 console.log('NF-01 startup-clock regressions passed: earlier/same/later animation timestamps, repeated Start/replay, duplicate entry times, schedule boundaries and duration cap (mock browser APIs).');
