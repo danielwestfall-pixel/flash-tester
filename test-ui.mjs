@@ -86,6 +86,8 @@ assert.equal(rafCalls,0,'No animation starts on page load');
 await $('play').fire('click');assert.equal(rafCalls,0,'Unacknowledged click cannot start animation');
 $('ack').checked=true;await $('ack').fire('change');assert.equal($('play').disabled,true,'Checkbox alone does not unlock play');
 $('confirm-text').value='I agree';await $('confirm-text').fire('input');assert.equal($('play').disabled,false,'Typing I agree unlocks play');
+$('confirm-text').value='i\u00A0agree\u200B';await $('confirm-text').fire('input');assert.equal($('play').disabled,false,'TEST-12: Non-breaking and zero-width spaces accepted');
+$('confirm-text').value='“i agree”';await $('confirm-text').fire('input');assert.equal($('play').disabled,false,'TEST-12: Smart quotes accepted');
 await $('play').fire('click');assert.equal(rafCalls,1,'Animation requires acknowledgment plus Start');
 await $('halt').fire('click');assert.equal($('test-field').hidden,true);assert.equal($('ack').checked,false);assert.equal($('confirm-text').value,'');assert.equal($('play').disabled,true);
 console.log('Capture-to-evidence flow, synthetic example UI, and live-warning gates passed (mock browser APIs)');

@@ -140,8 +140,17 @@ function syncCanvasSize() {
   }
 }
 
+function normalizeFailsafeText(text) {
+  return (text || '')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\u00A0\s]+/g, ' ')
+    .replace(/["'“”]/g, '')
+    .trim()
+    .toLowerCase();
+}
+
 function checkFailsafe(text) {
-  const val = (text || '').trim().toLowerCase();
+  const val = normalizeFailsafeText(text);
   return val === 'i agree' || val === 'i understand';
 }
 

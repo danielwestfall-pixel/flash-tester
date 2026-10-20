@@ -10,6 +10,7 @@ const plan=schedule(4,3,20,1);assert.equal(plan.length,61);assert.equal(plan.at(
 for(let i=0;i<60;i++){assert.equal(imageAt(plan,i/20),plan[i].image);assert.equal(imageAt(plan,i/20+.001),plan[i].image);}
 assert.equal(imageAt(plan,3),plan.at(-1).image);assert.throws(()=>schedule(3,3,100,0));
 assert.deepEqual(containRect(200,100,100,100),{x:0,y:25,width:100,height:50});
+const thinRect=containRect(16000,1,64,64);assert.ok(thinRect.width>=1&&thinRect.height>=1,'TEST-10: Extreme aspect ratio clamped to minimum 1px');
 assert.equal(rasterKind(new Uint8Array([255,216,255,0])),'jpeg');
 assert.throws(()=>rasterKind(new TextEncoder().encode('GIF89a')),/static/);
 const png=new Uint8Array(20);png.set([137,80,78,71,13,10,26,10]);png.set(new TextEncoder().encode('acTL'),12);assert.throws(()=>rasterKind(png),/Animated PNG/);

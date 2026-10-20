@@ -18,8 +18,16 @@ function describe(){
   if(badge){badge.textContent='🔒 Locked';badge.className='failsafe-badge';}
 }
 const confirmInput=$('confirm-text'),badge=$('failsafe-badge');
-function checkFailsafe(text){
-  const val=(text||'').trim().toLowerCase();
+export function normalizeFailsafeText(text){
+  return (text||'')
+    .replace(/[\u200B-\u200D\uFEFF]/g,'')
+    .replace(/[\u00A0\s]+/g,' ')
+    .replace(/["'“”]/g,'')
+    .trim()
+    .toLowerCase();
+}
+export function checkFailsafe(text){
+  const val=normalizeFailsafeText(text);
   return val==='i agree'||val==='i understand';
 }
 function updateStartState(){

@@ -25,8 +25,16 @@ function config(){
   return {width,height,rate,seed,seconds:3,fit:'contain',background:'#000000',analysisWidth:Math.max(1,Math.round(width*scale)),analysisHeight:Math.max(1,Math.round(height*scale))};
 }
 const confirmInput=$('confirm-text'),badge=$('failsafe-badge');
-function checkFailsafe(text){
-  const val=(text||'').trim().toLowerCase();
+export function normalizeFailsafeText(text){
+  return (text||'')
+    .replace(/[\u200B-\u200D\uFEFF]/g,'')
+    .replace(/[\u00A0\s]+/g,' ')
+    .replace(/["'“”]/g,'')
+    .trim()
+    .toLowerCase();
+}
+export function checkFailsafe(text){
+  const val=normalizeFailsafeText(text);
   return val==='i agree'||val==='i understand';
 }
 if(confirmInput){
@@ -56,7 +64,7 @@ $('samples').addEventListener('click',()=>{
   $('load-status').textContent='Sample URLs filled in. Click Load images without playback to replace the loaded set.';
 });
 function draw(ctx,item,width,height){
-  ctx.imageSmoothingEnabled=false;
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='medium';
   ctx.fillStyle='#000000';ctx.fillRect(0,0,width,height);
   const r=containRect(item.bitmap.width,item.bitmap.height,width,height);ctx.drawImage(item.bitmap,r.x,r.y,r.width,r.height);
 }
@@ -76,46 +84,53 @@ $('load').addEventListener('click',async()=>{
   const token=++generation,controller=new AbortController();loadController=controller;
   const aggregateTimer=setTimeout(()=>{controller.abort(new Error('Aggregate load timeout exceeded (30 seconds).'));},30000);
   update();
-  const urlFetches=urls.map(async(url,i)=>{
-    const name=`URL image ${i+1}`;
-    try{
-      const response=await fetch(url,{mode:'cors',credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});
-      if(!response.ok)throw Error(`HTTP ${response.status}`);
-      const reader=response.body.getReader();let size=0;const chunks=[];
-      try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>20*1024*1024)throw Error('Image exceeds 20 MB.');chunks.push(value);}}
-      catch(e){await reader.cancel();throw e;}return {name,blob:new Blob(chunks)};
-    }catch(e){return {name,error:e.message||'Image load failed (network, CORS or decode).'};}
-  });
-  const fileItems=files.map(file=>Promise.resolve({name:file.name,blob:file}));
-  const allSources=[...fileItems,...urlFetches];
-  for(let i=0;i<allSources.length;i++){
-    if(token!==generation||suspended)break;
-    if(controller.signal.aborted)break;
-    $('load-status').textContent=`Loading ${i+1}/${allSources.length} images…`;
-    const res=await allSources[i];
-    if(token!==generation||suspended)break;
-    if(controller.signal.aborted)break;
-    if(res.error){failures.push({name:res.name,error:res.error});continue;}
-    try{
-      const item=await decode(res.blob,res.name);
-      if(token!==generation||suspended||controller.signal.aborted){item.bitmap.close();break;}
-      images.push(item);
-    }catch(e){
+  try{
+    const urlFetches=urls.map(async(url,i)=>{
+      const name=`URL image ${i+1}`;
+      try{
+        const response=await fetch(url,{mode:'cors',credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});
+        if(!response.ok)throw Error(`HTTP ${response.status}`);
+        const reader=response.body.getReader();let size=0;const chunks=[];
+        try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>20*1024*1024)throw Error('Image exceeds 20 MB.');chunks.push(value);}}
+        catch(e){await reader.cancel();throw e;}return {name,blob:new Blob(chunks)};
+      }catch(e){return {name,error:e.message||'Image load failed (network, CORS or decode).'};}
+    });
+    const fileItems=files.map(file=>Promise.resolve({name:file.name,blob:file}));
+    const allSources=[...fileItems,...urlFetches];
+    for(let i=0;i<allSources.length;i++){
       if(token!==generation||suspended)break;
-      failures.push({name:res.name,error:e.message||'Image decode failed.'});
+      if(controller.signal.aborted)break;
+      $('load-status').textContent=`Loading ${i+1}/${allSources.length} images…`;
+      const res=await allSources[i];
+      if(token!==generation||suspended)break;
+      if(controller.signal.aborted)break;
+      if(res.error){failures.push({name:res.name,error:res.error});continue;}
+      try{
+        const item=await decode(res.blob,res.name);
+        if(token!==generation||suspended||controller.signal.aborted){item.bitmap.close();break;}
+        images.push(item);
+      }catch(e){
+        if(token!==generation||suspended)break;
+        failures.push({name:res.name,error:e.message||'Image decode failed.'});
+      }
     }
+    if(token!==generation||suspended)return;
+    if(controller.signal.aborted){
+      images.forEach(i=>i.bitmap.close());images=[];
+      $('load-status').textContent=controller.signal.reason?.message||'Image loading was cancelled.';
+      $('result').textContent='Load cancelled. No images loaded.';
+      sourceDirty=true;return;
+    }
+    $('load-status').textContent=`${images.length}/${allSources.length} loaded. ${failures.length?'COVERAGE INCOMPLETE: '+failures.map(f=>`${f.name}: ${f.error}`).join('\n'):'No load failures.'}\n`+images.map((i,n)=>`${n+1}. ${i.name} (${i.bitmap.width} × ${i.bitmap.height})`).join('\n');
+    $('result').textContent='Loaded images have not been screened. No image preview was played.';sourceDirty=false;
+  }catch(e){
+    $('load-status').textContent=`Image loading encountered an error: ${e.message}`;
+    $('result').textContent='Load failed.';sourceDirty=true;
+  }finally{
+    clearTimeout(aggregateTimer);
+    loadController=null;
+    if(token===generation){busy=false;update();}
   }
-  clearTimeout(aggregateTimer);
-  loadController=null;
-  if(token!==generation||suspended)return;
-  if(controller.signal.aborted){
-    images.forEach(i=>i.bitmap.close());images=[];
-    $('load-status').textContent=controller.signal.reason?.message||'Image loading was cancelled.';
-    $('result').textContent='Load cancelled. No images loaded.';
-    busy=false;sourceDirty=true;update();return;
-  }
-  $('load-status').textContent=`${images.length}/${allSources.length} loaded. ${failures.length?'COVERAGE INCOMPLETE: '+failures.map(f=>`${f.name}: ${f.error}`).join('\n'):'No load failures.'}\n`+images.map((i,n)=>`${n+1}. ${i.name} (${i.bitmap.width} × ${i.bitmap.height})`).join('\n');
-  $('result').textContent='Loaded images have not been screened. No image preview was played.';busy=false;sourceDirty=false;update();
 });
 $('cancel-load')?.addEventListener('click',()=>{
   if(loadController){
@@ -140,24 +155,35 @@ async function analyze(kind){
     const linear=Array.from({length:256},(_,i)=>{const v=i/255;return v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4;});
     const meanY=frames.map(data=>{let sum=0,count=data.length/4;for(let i=0;i<data.length;i+=4)sum+=0.2126*linear[data[i]]+0.7152*linear[data[i+1]]+0.0722*linear[data[i+2]];return sum/count;});
     const meanRed=frames.map(data=>{let sum=0,count=data.length/4;for(let i=0;i<data.length;i+=4){const r=linear[data[i]],g=linear[data[i+1]],b=linear[data[i+2]];sum+=Math.max(0,(r-g-b)*320);}return sum/count;});
+    const frameMad=(f1,f2)=>{
+      let madY=0,madRed=0,count=f1.length/4;
+      for(let k=0;k<f1.length;k+=4){
+        const y1=0.2126*linear[f1[k]]+0.7152*linear[f1[k+1]]+0.0722*linear[f1[k+2]];
+        const y2=0.2126*linear[f2[k]]+0.7152*linear[f2[k+1]]+0.0722*linear[f2[k+2]];
+        madY+=Math.abs(y1-y2);
+        const r1=Math.max(0,(linear[f1[k]]-linear[f1[k+1]]-linear[f1[k+2]])*320);
+        const r2=Math.max(0,(linear[f2[k]]-linear[f2[k+1]]-linear[f2[k+2]])*320);
+        madRed+=Math.abs(r1-r2);
+      }
+      return {madY:madY/count,madRed:madRed/count};
+    };
     let jobs,adversarialPairs=null;
     if(kind==='pairs'){
       jobs=pairs;
     }else if(kind==='shuffle'){
       jobs=[null];
     }else if(kind==='adversarial'){
-      let maxDeltaY=-1,bestYPair=[0,1];
-      let maxDeltaRed=-1,bestRedPair=[0,1];
+      let maxMadY=-1,bestYPair=[0,1];
+      let maxMadRed=-1,bestRedPair=[0,1];
       for(let i=0;i<images.length;i++){
         for(let j=i+1;j<images.length;j++){
-          const dy=Math.abs(meanY[i]-meanY[j]);
-          if(dy>maxDeltaY){maxDeltaY=dy;bestYPair=[i,j];}
-          const dr=Math.abs(meanRed[i]-meanRed[j]);
-          if(dr>maxDeltaRed){maxDeltaRed=dr;bestRedPair=[i,j];}
+          const {madY,madRed}=frameMad(frames[i],frames[j]);
+          if(madY>maxMadY){maxMadY=madY;bestYPair=[i,j];}
+          if(madRed>maxMadRed){maxMadRed=madRed;bestRedPair=[i,j];}
         }
       }
       adversarialPairs=[bestYPair];
-      if(maxDeltaRed>20&&(bestRedPair[0]!==bestYPair[0]||bestRedPair[1]!==bestYPair[1])){
+      if(maxMadRed>20&&(bestRedPair[0]!==bestYPair[0]||bestRedPair[1]!==bestYPair[1])){
         adversarialPairs.push(bestRedPair);
       }
       jobs=adversarialPairs;
@@ -170,12 +196,12 @@ async function analyze(kind){
         const t=i/120,index=pair?pair[Math.floor(t*c.rate+1e-9)%2]:imageAt(shufflePlan,t);a.push(frames[index],t);
       }
       const r=stampReport({...a.report(),synthetic:true,source:'Decoded static images in generated schedules; no tab captured',pair});results.push(r);
-      const delta=pair?Math.abs(meanY[pair[0]]-meanY[pair[1]]):null;
-      const rDelta=pair?Math.abs(meanRed[pair[0]]-meanRed[pair[1]]):0;
+      const pairMad=pair?frameMad(frames[pair[0]],frames[pair[1]]):null;
       let name;
       if(kind==='adversarial'){
-        name=`Worst-case pair: ${pair[0]+1} ↔ ${pair[1]+1} (ΔY: ${delta.toFixed(3)}${rDelta>20?`, ΔSR: ${rDelta.toFixed(1)}`:''})`;
+        name=`Worst-case pair: ${pair[0]+1} ↔ ${pair[1]+1} (MAD Y: ${pairMad.madY.toFixed(3)}${pairMad.madRed>20?`, MAD SR: ${pairMad.madRed.toFixed(1)}`:''})`;
       }else if(pair){
+        const delta=Math.abs(meanY[pair[0]]-meanY[pair[1]]);
         name=`${pair[0]+1} → ${pair[1]+1} → ${pair[0]+1} (ΔY: ${delta.toFixed(3)})`;
       }else{
         name='Seeded shuffle';

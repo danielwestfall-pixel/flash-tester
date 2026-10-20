@@ -73,6 +73,7 @@ export function rasterKind(bytes){
   throw Error('Use static PNG, JPEG or WebP images. GIF, SVG and other formats are not supported.');
 }
 export function containRect(sourceWidth,sourceHeight,targetWidth,targetHeight){
-  const scale=Math.min(targetWidth/sourceWidth,targetHeight/sourceHeight),width=sourceWidth*scale,height=sourceHeight*scale;
+  const scale=Math.min(targetWidth/sourceWidth,targetHeight/sourceHeight);
+  const width=Math.max(1,Math.round(sourceWidth*scale)),height=Math.max(1,Math.round(sourceHeight*scale));
   return {x:(targetWidth-width)/2,y:(targetHeight-height)/2,width,height};
 }

@@ -50,7 +50,7 @@ class Pixel {
     this.updateRed(c,t);
     this.previous=c; this.previousTime=t;
     for(const phases of [this.generalPhases,this.redPhases])for(const pairs of phases)
-      while(pairs.length&&pairs[0]<=t-1+1e-9)pairs.shift();
+      while(pairs.length&&pairs[0]<=t-1+1e-11)pairs.shift();
     const gp=this.generalPhases[1].length>this.generalPhases[0].length?1:0;
     const rp=this.redPhases[1].length>this.redPhases[0].length?1:0;
     this.general=this.generalPhases[gp];this.generalPair=this.generalLatest[gp];
@@ -64,13 +64,23 @@ class Pixel {
       this.redDirection=null;this.redPending=null;return;
     }
     const origin=this.redDirection?this.redExtreme:this.redOrigin;
-    const du=c.u-origin.u,dv=c.v-origin.v,distance=Math.hypot(du,dv);
-    const dRed=Math.abs(c.redDiff-origin.redDiff);
-    if(distance<1e-9&&dRed<1e-9){
+    const du=c.u-origin.u,dv=c.v-origin.v;
+    const rawDist=Math.hypot(du,dv);
+    const distance=rawDist<1e-4?0:rawDist;
+    const diff=c.redDiff-origin.redDiff;
+    const dRed=Math.abs(diff);
+    if(distance<1e-6&&dRed<1e-6){
       if(this.redDirection)this.redExtremeTime=t;else this.redOriginTime=t;
       return;
     }
-    const forward=this.redDirection&&(du*this.redDirection.du+dv*this.redDirection.dv)>0;
+    let forward=false;
+    if(this.redDirection){
+      if(distance>0.05&&this.redDirection.distance>0.05){
+        forward=(du*this.redDirection.du+dv*this.redDirection.dv)>0;
+      }else{
+        forward=(diff*this.redDirection.diffSign)>0;
+      }
+    }
     if(forward){this.redExtreme=c;this.redExtremeTime=t;return;}
     if((distance<=.2&&dRed<=20)||!(c.red||origin.red))return;
     const originTime=this.redDirection?this.redExtremeTime:this.redOriginTime;
@@ -83,7 +93,14 @@ class Pixel {
       this.completedRed=true;
       this.redPending={time:originTime,luminance:origin.y,uPrime:origin.u,vPrime:origin.v,redSaturation:origin.saturation};
     } else this.redPending={time:originTime,luminance:origin.y,uPrime:origin.u,vPrime:origin.v,redSaturation:origin.saturation};
-    this.redDirection={du:du/(distance||1),dv:dv/(distance||1)};this.redExtreme=c;this.redExtremeTime=t;
+    const dirDist=Math.hypot(du,dv);
+    this.redDirection={
+      du:dirDist>1e-4?du/dirDist:0,
+      dv:dirDist>1e-4?dv/dirDist:0,
+      distance:dirDist,
+      diffSign:diff>=0?1:-1
+    };
+    this.redExtreme=c;this.redExtremeTime=t;
   }
 }
 export class Analyzer {

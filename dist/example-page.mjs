@@ -7,8 +7,16 @@ $('description').textContent=`${example.expectation} State A RGB ${example.a.joi
 if(example.fail)$('warning-title').textContent=`⚠️ CRITICAL WARNING: Intentional Threshold-Exceeding Flash Test (${example.hz} flashes/s)`;
 let running=false,animation=null,timeout=null,started=0;
 const confirmInput=$('confirm-text'),badge=$('failsafe-badge');
-function checkFailsafe(text){
-  const val=(text||'').trim().toLowerCase();
+export function normalizeFailsafeText(text){
+  return (text||'')
+    .replace(/[\u200B-\u200D\uFEFF]/g,'')
+    .replace(/[\u00A0\s]+/g,' ')
+    .replace(/["'“”]/g,'')
+    .trim()
+    .toLowerCase();
+}
+export function checkFailsafe(text){
+  const val=normalizeFailsafeText(text);
   return val==='i agree'||val==='i understand';
 }
 function updatePlayState(){

@@ -18,6 +18,7 @@ assert.equal(series(t=>Math.floor(t*10)%2?[0,0,255]:[0,255,0]).peakRedHeuristic,
 assert.equal(series(pulse(.5),4).peakGeneral,0,'Slow opposing transitions do not fit a second');
 assert.ok(series(pulse(3.2),3).peakGeneral>3,'RED-01: 3.2 Hz square wave flags candidates');
 assert.ok(series(t=>Math.floor(t*20)%2?[230,20,0]:[200,75,0]).peakRedHeuristic>3,'RED-02: 10 Hz saturated red/orange chromatic strobe flags candidates');
+assert.equal(series(t=>[Math.round(50+205*t/2),0,0],2).peakRedHeuristic,0,'TEST-04: Monotonic pure red ramp has zero red flashes');
 assert.ok(Math.abs(color(255,255,255).y-1)<1e-9,'Linear sRGB luminance');
 assert.equal(new Analyzer(1,1).report().status,'insufficient-observation');
 const a=new Analyzer(1,1);a.push([0,0,0,255],0);a.push([255,255,255,255],.2);a.push([0,0,0,255],.2);
