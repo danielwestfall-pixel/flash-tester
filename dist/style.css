@@ -704,3 +704,148 @@ footer {
     display: none;
   }
 }
+
+/* Double Extra Visible Warning Styles for Failing Tests */
+.double-warning-container {
+  border: 4px solid #b91c1c;
+  background: #fef2f2;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  box-shadow: 0 6px 24px rgba(185, 28, 28, 0.25);
+}
+
+.double-warning-banner-top {
+  background: #7f1d1d;
+  color: #ffffff;
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: 0.5px;
+}
+
+.double-warning-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #7f1d1d;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 12px 0;
+  border-bottom: 2px solid #fecaca;
+  padding-bottom: 10px;
+}
+
+.double-warning-box {
+  background: #ffffff;
+  border: 2px solid #b91c1c;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  color: #450a0a;
+}
+
+.double-warning-box strong {
+  color: #7f1d1d;
+  font-size: 15px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.danger-badge-flag {
+  display: inline-block;
+  background: #991b1b;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-left: 8px;
+}
+
+.danger-link {
+  color: #b91c1c !important;
+  font-weight: 800;
+  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.danger-link:hover {
+  color: #7f1d1d !important;
+}
+
+/* GitHub-Style Fail-Safe Confirmation Styles */
+.failsafe-box {
+  background: #fdf2f2;
+  border: 2px solid #b91c1c;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+
+.failsafe-box label {
+  color: #7f1d1d;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.failsafe-box code {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: 15px;
+  border: 1px solid #fca5a5;
+  font-family: ui-monospace, monospace;
+}
+
+.failsafe-input {
+  width: 100%;
+  max-width: 380px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border: 2px solid #b91c1c;
+  border-radius: 6px;
+  margin-right: 12px;
+  display: inline-block;
+  vertical-align: middle;
+  min-height: 44px;
+}
+
+.failsafe-input:focus {
+  outline: 3px solid #004fb0;
+  border-color: #004fb0;
+}
+
+.failsafe-badge {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 13px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #f87171;
+  margin-top: 6px;
+}
+
+.failsafe-badge.unlocked {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+

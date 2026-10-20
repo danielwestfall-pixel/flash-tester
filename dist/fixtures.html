@@ -5,14 +5,30 @@
 <body><main id="setup"><a href="./">← Flash Review</a><p class="eyebrow">PARAMETER FIXTURES · NO AUTOPLAY</p>
 <h1>Flash test fixtures</h1>
 <p>Thirteen deterministic inputs cover frequency, saturated red, contrast and spatial area. One Hz means a complete A → B → A cycle, comprising two transitions.</p>
-<p class="notice"><strong>Warning: deliberate flashing content.</strong> Live playback can trigger seizures, migraines, dizziness or nausea. Synthetic tests require no visible playback. Stop controls and brief duration do not make playback safe.</p>
+<div class="double-warning-container">
+  <div class="double-warning-banner-top">
+    <span class="danger-icon-large" aria-hidden="true">⚠️</span>
+    <span>CRITICAL PHOTOSENSITIVITY WARNING</span>
+  </div>
+  <p class="notice" style="margin:0 0 14px 0;"><strong>Warning: deliberate flashing content.</strong> Live playback can trigger seizures, migraines, dizziness or nausea. Synthetic tests require no visible playback. Stop controls and brief duration do not make playback safe.</p>
+  <div class="failsafe-box" id="fixtures-failsafe">
+    <label for="confirm-text"><strong>Fail-safe confirmation:</strong> Type <code>I agree</code> or <code>I understand</code> to unlock live playback:</label>
+    <div>
+      <input id="confirm-text" type="text" autocomplete="off" placeholder="Type I agree or I understand" class="failsafe-input">
+      <span id="failsafe-badge" class="failsafe-badge">🔒 Locked</span>
+    </div>
+  </div>
+  <label id="ack-row"><input id="ack" type="checkbox"><strong>I understand the warning and choose to start this fixture.</strong></label>
+  <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
+    <button id="start" class="primary" style="background:#7f1d1d; border-color:#7f1d1d; width:auto;" disabled>Start 3-second fixture</button>
+    <button id="analyze" type="button">Analyze all without playback</button>
+  </div>
+</div>
 <label for="fixture">Choose fixture</label><select id="fixture"></select>
 <pre id="details"></pre><p id="note"></p>
 <p>The surface is exactly 1024 × 768 CSS pixels at 100% browser zoom, with controls outside it. It is not scaled to fit. Use a viewport large enough to show the entire surface plus controls; share this tab, then start playback. Full-frame cases fill this reference surface. The capture also includes the static controls and margins.</p>
 <p>Area expectations assume the WCAG reference viewing setup: a 341 × 256 field and a 21,824-pixel limit within that field. They are not unconditional safety claims for arbitrary display size, zoom or distance. The app now provides optional calibrated area screening. The small-zone input still produces frequency candidates; the area measurement is reported separately and does not certify conformance.</p>
-<label id="ack-row"><input id="ack" type="checkbox">I understand the warning and choose to start this fixture.</label>
-<button id="start" disabled>Start 3-second fixture</button> <button id="analyze">Analyze all without playback</button>
 <p id="result" role="status"></p><pre id="analysis"></pre>
 <p><a href="https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html">WCAG flash definitions and reference viewing geometry</a></p></main>
 <section id="stage" hidden aria-label="Running flash fixture"><button id="halt">Stop fixture (Escape)</button><span id="run-state" role="status"></span><canvas id="surface" width="1024" height="768" aria-label="Intentional flashing test surface"></canvas></section>
-<script type="module" src="fixtures-page.mjs"></script></body></html>
+<script type="module" src="fixtures-page.mjs?v=0.4.3"></script></body></html>

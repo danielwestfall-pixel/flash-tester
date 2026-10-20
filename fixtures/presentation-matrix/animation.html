@@ -71,8 +71,18 @@ input[type=number]{width:70px}
       <strong>Safety Warning:</strong> This mode contains intentional flashing that may trigger seizures, migraines, or photosensitive reactions. Playback is capped at 3 seconds. Stop with Escape key, Stop button, or tab hiding.
     </div>
 
+    <div id="animation-failsafe" class="failsafe-box" style="display:none; background:#fff1f0; border:2px solid #b71c1c; padding:12px; border-radius:6px; margin:10px 0;">
+      <label for="confirm-text" style="color:#b71c1c; font-weight:700; display:block; margin-bottom:6px;">
+        Fail-safe confirmation: Type <code>I agree</code> or <code>I understand</code> to unlock flashing animation:
+      </label>
+      <div>
+        <input id="confirm-text" type="text" autocomplete="off" placeholder="Type I agree or I understand" class="failsafe-input" style="max-width:320px; padding:8px 12px; border:2px solid #b71c1c; border-radius:4px; font-weight:600;">
+        <span id="failsafe-badge" class="failsafe-badge" style="padding:6px 12px; font-weight:700; border-radius:14px; background:#fee2e2; color:#991b1b; display:inline-block; margin-top:4px;">🔒 Locked</span>
+      </div>
+    </div>
+
     <div class="fields-row">
-      <label id="ack-row"><input id="ack" type="checkbox"> I understand the flashing warning and choose to start playback.</label>
+      <label id="ack-row"><input id="ack" type="checkbox"> <strong>I understand the flashing warning and choose to start playback.</strong></label>
     </div>
 
     <div class="fields-row">
@@ -130,10 +140,32 @@ function syncCanvasSize() {
   }
 }
 
+function checkFailsafe(text) {
+  const val = (text || '').trim().toLowerCase();
+  return val === 'i agree' || val === 'i understand';
+}
+
+const confirmInput = document.getElementById('confirm-text');
+const badge = document.getElementById('failsafe-badge');
+
+if (confirmInput) {
+  confirmInput.addEventListener('input', () => {
+    const ok = checkFailsafe(confirmInput.value);
+    document.getElementById('ack').checked = ok;
+    updateSafetyNotice();
+    if (badge) {
+      badge.textContent = ok ? '🔓 Confirmed: Fail-safe unlocked' : '🔒 Locked';
+      badge.style.background = ok ? '#dcfce7' : '#fee2e2';
+      badge.style.color = ok ? '#166534' : '#991b1b';
+    }
+  });
+}
+
 function updateSafetyNotice() {
   const mode = document.getElementById('motion-mode').value;
   const isSafe = mode === 'safe-orbit';
   const notice = document.getElementById('safety-notice');
+  const failsafeBox = document.getElementById('animation-failsafe');
   const ackRow = document.getElementById('ack-row');
   const ackBox = document.getElementById('ack');
   const startBtn = document.getElementById('start');
@@ -141,12 +173,14 @@ function updateSafetyNotice() {
   if (isSafe) {
     notice.className = 'notice-safe';
     notice.innerHTML = '<strong>Non-flashing motion:</strong> Luminance remains constant (Y≈0.48). Designed to test that continuous physical motion alone does not trigger false flash alarms.';
+    if (failsafeBox) failsafeBox.style.display = 'none';
     ackRow.style.display = 'none';
     startBtn.disabled = running;
     startBtn.textContent = running ? 'Running…' : 'Start smooth motion';
   } else {
     notice.className = 'notice';
     notice.innerHTML = '<strong>Safety Warning:</strong> This mode contains intentional flashing that may trigger seizures, migraines, or photosensitive reactions. Playback is capped at 3 seconds. Stop with Escape key, Stop button, or tab hiding.';
+    if (failsafeBox) failsafeBox.style.display = 'block';
     ackRow.style.display = 'block';
     startBtn.disabled = running || !ackBox.checked;
     startBtn.textContent = running ? 'Running…' : 'Start 3-second animation';

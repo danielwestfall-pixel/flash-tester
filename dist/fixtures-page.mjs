@@ -14,13 +14,40 @@ function describe(){
     `Flashing zone: ${v.rect.width} × ${v.rect.height} pixels · ${(100*v.screenFraction).toFixed(2)}% of reference surface`,
     `Maximum flashing area in reference visual field: ${v.maxConcurrentPixelsInReferenceField.toLocaleString()} pixels (limit: 21,824)`].join('\n');
   $('note').textContent=f.note;$('ack').checked=false;$('start').disabled=true;
+  if(confirmInput)confirmInput.value='';
+  if(badge){badge.textContent='🔒 Locked';badge.className='failsafe-badge';}
+}
+const confirmInput=$('confirm-text'),badge=$('failsafe-badge');
+function checkFailsafe(text){
+  const val=(text||'').trim().toLowerCase();
+  return val==='i agree'||val==='i understand';
+}
+if(confirmInput){
+  confirmInput.addEventListener('input',()=>{
+    const ok=checkFailsafe(confirmInput.value);
+    $('ack').checked=ok;
+    $('start').disabled=!ok;
+    if(badge){
+      badge.textContent=ok?'🔓 Confirmed: Fail-safe unlocked':'🔒 Locked';
+      badge.className=ok?'failsafe-badge unlocked':'failsafe-badge';
+    }
+  });
 }
 describe();$('fixture').addEventListener('change',describe);
-$('ack').addEventListener('change',()=>{$('start').disabled=!$('ack').checked;});
+$('ack').addEventListener('change',()=>{
+  $('start').disabled=!$('ack').checked;
+  if($('ack').checked&&confirmInput&&!checkFailsafe(confirmInput.value)){
+    confirmInput.value='I understand';
+    if(badge){badge.textContent='🔓 Confirmed: Fail-safe unlocked';badge.className='failsafe-badge unlocked';}
+  }
+});
 function stop(reason){
   if(!running)return;running=false;cancelAnimationFrame(raf);clearTimeout(timer);
   $('stage').hidden=true;ctx.fillStyle='#000000';ctx.fillRect(0,0,canvas.width,canvas.height);
-  $('setup').hidden=false;$('ack').checked=false;$('start').disabled=true;
+  $('setup').hidden=false;$('ack').checked=false;
+  if(confirmInput)confirmInput.value='';
+  if(badge){badge.textContent='🔒 Locked';badge.className='failsafe-badge';}
+  $('start').disabled=true;
   $('result').textContent=`Stopped: ${reason}. ${draws} draw callbacks; ${skipped} nominal 120 fps sample slots skipped. This is browser scheduling telemetry, not a measurement of presented or captured frames. Verify timing in capture.`;
   $('ack').focus();
 }

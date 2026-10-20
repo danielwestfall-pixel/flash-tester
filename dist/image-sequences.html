@@ -131,20 +131,35 @@ canvas#surface { display: block; background: black; border-radius: 8px; }
       </table>
     </div>
 
-    <div class="notice">
-      <strong>Safety Warning for Live Playback:</strong>
-      <p>Watching rapidly toggling images can trigger seizures, migraines, or severe dizziness. Live playback is completely optional; all numerical screening is performed safely in memory above without flashing.</p>
-    </div>
+    <div class="double-warning-container" style="margin-top:24px;">
+      <div class="double-warning-banner-top">
+        <span class="danger-icon-large" aria-hidden="true">⚠️</span>
+        <span>CRITICAL PHOTOSENSITIVITY WARNING FOR LIVE PLAYBACK</span>
+      </div>
+      <p class="notice" style="margin:0 0 14px 0;">
+        <strong>Safety Warning for Live Playback:</strong>
+        Watching rapidly toggling images can trigger seizures, migraines, or severe dizziness. Live playback is completely optional; all numerical screening is performed safely in memory above without flashing.
+      </p>
 
-    <div class="fields-row">
-      <label class="check-row">
-        <input id="ack" type="checkbox">
-        I understand the flashing-content warning and choose to start 3-second live playback.
-      </label>
-    </div>
+      <!-- GitHub-Style Fail-Safe Confirmation -->
+      <div class="failsafe-box" id="sequence-failsafe">
+        <label for="confirm-text"><strong>Fail-safe confirmation:</strong> Type <code>I agree</code> or <code>I understand</code> to unlock live playback:</label>
+        <div>
+          <input id="confirm-text" type="text" autocomplete="off" placeholder="Type I agree or I understand" class="failsafe-input">
+          <span id="failsafe-badge" class="failsafe-badge">🔒 Locked</span>
+        </div>
+      </div>
 
-    <div class="button-row">
-      <button id="play" type="button" disabled>Play seeded shuffle for 3 seconds</button>
+      <div class="fields-row">
+        <label class="check-row">
+          <input id="ack" type="checkbox">
+          <strong>I understand the flashing-content warning and choose to start 3-second live playback.</strong>
+        </label>
+      </div>
+
+      <div class="button-row">
+        <button id="play" class="primary" style="background:#7f1d1d; border-color:#7f1d1d; width:auto;" disabled>Play seeded shuffle for 3 seconds</button>
+      </div>
     </div>
 
     <p><a href="fixture-images.zip" download>Download eight PNG test images (ZIP)</a> &middot; <a href="fixture-images/manifest.json">View pair expectations</a></p>
@@ -162,6 +177,6 @@ canvas#surface { display: block; background: black; border-radius: 8px; }
   <span>WCAG 2.2 Level AAA Interface Design</span>
 </footer>
 
-<script type="module" src="image-sequences-page.mjs"></script>
+<script type="module" src="image-sequences-page.mjs?v=0.4.3"></script>
 </body>
 </html>

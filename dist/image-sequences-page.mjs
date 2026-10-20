@@ -18,11 +18,38 @@ function config(){
   const scale=Math.min(64/width,64/height);
   return {width,height,rate,seed,seconds:3,fit:'contain',background:'#000000',analysisWidth:Math.max(1,Math.round(width*scale)),analysisHeight:Math.max(1,Math.round(height*scale))};
 }
-function invalidate(){output=null;$('rows').replaceChildren();$('result-table').hidden=true;$('ack').checked=false;$('result').textContent='Settings changed; screen again for these conditions.';update();}
+const confirmInput=$('confirm-text'),badge=$('failsafe-badge');
+function checkFailsafe(text){
+  const val=(text||'').trim().toLowerCase();
+  return val==='i agree'||val==='i understand';
+}
+if(confirmInput){
+  confirmInput.addEventListener('input',()=>{
+    const ok=checkFailsafe(confirmInput.value);
+    $('ack').checked=ok;
+    update();
+    if(badge){
+      badge.textContent=ok?'🔓 Confirmed: Fail-safe unlocked':'🔒 Locked';
+      badge.className=ok?'failsafe-badge unlocked':'failsafe-badge';
+    }
+  });
+}
+function invalidate(){
+  output=null;$('rows').replaceChildren();$('result-table').hidden=true;$('ack').checked=false;
+  if(confirmInput)confirmInput.value='';
+  if(badge){badge.textContent='🔒 Locked';badge.className='failsafe-badge';}
+  $('result').textContent='Settings changed; screen again for these conditions.';update();
+}
 for(const id of ['changes','seed','width','height'])$(id).addEventListener('change',invalidate);
 function sourcesChanged(){sourceDirty=true;invalidate();$('load-status').textContent='Inputs changed. Load images before screening this set.';}
 $('files').addEventListener('change',sourcesChanged);$('urls').addEventListener('input',sourcesChanged);
-$('ack').addEventListener('change',update);
+$('ack').addEventListener('change',()=>{
+  if($('ack').checked&&confirmInput&&!checkFailsafe(confirmInput.value)){
+    confirmInput.value='I understand';
+    if(badge){badge.textContent='🔓 Confirmed: Fail-safe unlocked';badge.className='failsafe-badge unlocked';}
+  }
+  update();
+});
 $('samples').addEventListener('click',()=>{
   $('files').value='';
   $('urls').value=['black','white','red','blue','gray-b0','gray-b8','gray-e0','small-white'].map(name=>new URL(`fixture-images/${name}.png`,location.href).href).join('\n');
@@ -112,7 +139,10 @@ function stop(reason){
   if(!running)return;running=false;cancelAnimationFrame(raf);clearTimeout(timer);raf=null;timer=null;
   $('stage').hidden=true;context.fillStyle='#000000';context.fillRect(0,0,canvas.width,canvas.height);$('setup').hidden=false;
   output={...base(liveConfig,'live-shuffle'),plan,drawCallbacks:liveLog,endedBecause:reason,observedSeconds:Math.min(3,(performance.now()-started)/1000),note:'Draw callbacks are not proof of displayed or captured frames. Elapsed seconds use performance.now() at callback entry, starting at zero for the initial draw. No pixel analysis was performed during this playback.'};
-  $('ack').checked=false;$('result').textContent=`Playback stopped: ${reason}. Download the plan and draw-callback log; use tab capture for measured screening.`;update();$('ack').focus();
+  $('ack').checked=false;
+  if(confirmInput)confirmInput.value='';
+  if(badge){badge.textContent='🔒 Locked';badge.className='failsafe-badge';}
+  $('result').textContent=`Playback stopped: ${reason}. Download the plan and draw-callback log; use tab capture for measured screening.`;update();$('ack').focus();
 }
 function tick(){
   if(!running)return;
