@@ -40,6 +40,7 @@ function renderReport(reason){
   if(report.maxFrameGapSeconds>.1)quality.push(`Capture gap reached ${report.maxFrameGapSeconds.toFixed(3)} seconds.`);
   if(reason!=='Time limit reached')quality.push(`Capture ended: ${reason}.`);
   quality.push(...(report.observation?.reasons??[]));
+  quality.push('Fixed-frame capture is subject to temporal aliasing and Nyquist phase-lock: strobes synchronized with the capture or refresh rate can appear static or reduced in frequency (RED-10). Capture uses 8-bit sRGB; Display P3 and HDR peak lumens are clipped (RED-03).');
   quality.push('Sampling can miss flashing even at higher frame rates. '+areaSummary(report.area));
   $('quality').textContent=quality.join(' ');
   if(report.synthetic)$('quality').textContent=`Synthetic example: ${report.interactions} Generated frames do not validate actual tab capture, display timing, or physical flash area.`;

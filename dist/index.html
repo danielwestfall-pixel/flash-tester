@@ -271,9 +271,14 @@
       <details>
         <summary>What can automated browser screening miss?</summary>
         <p>
-          High-frequency strobes above 60 Hz, subtle color shifts, moving camera pans with repetitive textures (like picket fences or escalators), 
-          or protected DRM video streams that browser tab capture cannot read.
+          Automated browser tab screening is subject to fundamental color, spatial, and capture limitations:
         </p>
+        <ul style="margin: 8px 0 8px 20px; line-height: 1.6;">
+          <li><strong>Display P3 &amp; HDR highlight clipping (RED-03):</strong> Web captures are sampled in standard 8-bit sRGB SDR color space. High Dynamic Range (HDR) displays and wide-gamut media (Display P3, Rec.2020) can emit peak physical brightness exceeding 1,000 nits that clip or compress in standard sRGB, potentially underestimating real-world flash hazard.</li>
+          <li><strong>Spatial counter-phase checkerboards &amp; fine stipples (RED-04 &amp; RED-05):</strong> Rapidly alternating fine-pitch checkerboards (e.g. 1-pixel black/white squares swapping positions) or distributed stipples average out to uniform static gray (&Delta;Y &approx; 0) during spatial downsampling, creating false negatives for intense human-visible flicker. Distributed stipple flashes can also evade contiguous 10° visual field apertures.</li>
+          <li><strong>Temporal sampling &amp; Nyquist harmonic phase-lock (RED-10):</strong> Fixed-frame browser capture (30 fps or 60 fps) is blind to strobes operating at exact harmonics of the capture rate (e.g. a 30 Hz flash recorded at 30 fps or 60 fps samples only one phase, appearing completely motionless). Variable frame rates (VFR) and compositor frame coalescing can also conceal short transient flashes.</li>
+          <li><strong>High-frequency strobes &amp; DRM media:</strong> Strobes above 60 Hz, moving camera pans with repetitive textures, or protected DRM video streams that browser tab capture cannot read.</li>
+        </ul>
       </details>
       <div class="sources">
         <a href="https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html" target="_blank" rel="noopener">W3C Guide to WCAG SC 2.3.1 ↗</a>

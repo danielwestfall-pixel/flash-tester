@@ -79,3 +79,20 @@ These are real Chrome playback exports following user-performed native actions. 
 - [x] Rerun independent original-log checks against new native exports, including native visibility hiding by minimization and actual resizing; retain the failing originals unchanged. Direct tab switching on 0.4.2 remains a separate coverage gap.
 - [x] Rerun the nine existing scripts after the repair, then independently retest the targeted fix before clearing NF-01.
 - [ ] Complete the remaining native matrix in `NATIVE_RESULTS.md`. Passing this fix alone cannot close that coverage gate or establish WCAG conformance.
+
+## Adversarial Red Team Findings (v0.4.3 / Algorithm 0.4.2)
+
+Audit Scope: Adversarial penetration review of temporal mathematics, color spaces, spatial aliasing, browser capture telemetry, and safety controls.
+
+| ID | Domain | Severity | Status | Resolution / Limitation Documentation |
+| :--- | :--- | :---: | :---: | :--- |
+| **RED-01** | Temporal Engine | Critical | Resolved | 3.0 Hz – 3.3 Hz boundary escape resolved in detector algorithm 0.4.2 by tracking pair completion timestamps inside the 1.0-second rolling window. |
+| **RED-02** | Color Mathematics | High | Resolved | Saturated red/orange strobes resolved by incorporating normative WCAG $(R-G-B)\times 320$ metric in addition to CIE 1976 $(u', v')$ chromatic excursions. |
+| **RED-03** | Color & Gamma | Medium | Documented | Documented in detector and report limitations: relative luminance assumes standard 8-bit sRGB SDR piecewise linearization (gamma ≈ 2.2). Content rendered in wide gamuts (Display P3, Rec.2020) or HDR (> 1000 nits) clips in standard sRGB, potentially underestimating flash intensity. |
+| **RED-04** | Spatial Aliasing | High | Documented | Documented in detector, area meter, and user documentation: counter-phase checkerboards (1-pixel alternating black/white grids) and striped gratings average opposing pixels into static uniform gray ($\Delta Y \approx 0$) during spatial downsampling, masking human-visible full-screen flicker. |
+| **RED-05** | Spatial Area | High | Documented | Documented in detector and area meter: diffuse stipples and non-contiguous pattern distributions across the 10° visual field can evade contiguous rectangular bounding envelopes and localized area thresholds. |
+| **RED-06** | Safety Controls | Critical | Resolved | Resolved in commit `94d5d50`: decoupled acknowledgment checkbox from typed fail-safe confirmation input (`#confirm-text`). |
+| **RED-07** | Safety Controls | Medium | Resolved | Resolved in commit `94d5d50`: added `window.addEventListener('blur', () => stop('window lost focus'))` emergency stop to prevent unattended background strobes during window/monitor switching. |
+| **RED-08** | Ingestion & Memory | High | Resolved | Resolved in commit `94d5d50`: pre-validation of binary image headers in `rasterKind()` for PNG (`IHDR`), JPEG (`SOF0`–`SOF3`), and WebP (`VP8X`) to reject $> 16\text{ MP}$ before memory allocation. |
+| **RED-09** | Image Ingestion | Medium | Resolved | Resolved in commit `57f9de7`: concurrent URL fetching with `AbortSignal.any`, 30s aggregate timeout, and interactive `Cancel load` button. Added Adversarial Worst-Case Sequence Search. |
+| **RED-10** | Browser Capture | High | Documented | Documented in capture quality warnings and detector limitations: fixed-interval frame sampling (30 fps or 60 fps) is subject to Nyquist harmonic phase-lock. Strobes at integer harmonics of the capture frame rate (e.g. 30 Hz strobe at 30 fps or 60 fps) sample the same phase on every frame, appearing completely motionless. Variable frame rates (VFR) and compositor frame coalescing can also conceal transient flashes. |

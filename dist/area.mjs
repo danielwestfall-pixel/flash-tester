@@ -59,6 +59,8 @@ export class AreaMeter{
     limitations:['The rolling envelope is a spatial upper bound on observed pair locations, not concurrent flashing and not a failure verdict.',
       'Completion masks combine general and experimental-red events conservatively; no independent red-area clearance.',
       'Gradual, moving or asynchronous pairs, missed pixels/frames and fine-pattern exceptions require further evaluation.',
+      'Spatial counter-phase checkerboards, alternating dither, and distributed stipples can average away opposing transitions during downsampling, creating false-negative static readings (ΔY ≈ 0) for human-visible full-field flicker (RED-04).',
+      'Distributed stipples and diffuse non-contiguous flashing across the 10° reference field can evade contiguous envelope detection despite exceeding cumulative spatial threshold limits (RED-05).',
       'Reduced-resolution cells and field edges overestimate observed area; downsampling can also erase flashes.',
       'User-supplied CSS dimensions assume standard reference viewing geometry, not measured steradians. No conformance verdict.']};}
 }
