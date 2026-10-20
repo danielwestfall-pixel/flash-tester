@@ -26,13 +26,16 @@ assert.equal($('fixture').value,'red-blue');
 assert.equal(paints.length,0,'No drawing before explicit start');
 assert.equal($('start').disabled,true);
 $('start').fire('click');assert.equal(paints.length,0,'Unacknowledged start rejected');
-function start(){ $('ack').checked=true;$('ack').fire('change');$('start').fire('click'); }
+$('ack').checked=true;$('ack').fire('change');assert.equal($('start').disabled,true,'Checkbox alone does not unlock start');
+$('ack').checked=false;$('ack').fire('change');
+function start(){ $('confirm-text').value='I understand';$('ack').checked=true;$('ack').fire('change');$('start').fire('click'); }
 start();assert.equal($('stage').hidden,false);assert.equal($('setup').hidden,true);assert.ok(raf);
 assert.deepEqual(paints.at(-1),{color:'rgb(255,0,0)',rect:[0,0,1024,768]});
-function checkStopped(){assert.equal($('stage').hidden,true);assert.equal($('setup').hidden,false);assert.equal($('ack').checked,false);assert.equal($('start').disabled,true);assert.equal(raf,null);assert.equal(watchdog,null);}
+function checkStopped(){assert.equal($('stage').hidden,true);assert.equal($('setup').hidden,false);assert.equal($('ack').checked,false);assert.equal($('confirm-text').value,'');assert.equal($('start').disabled,true);assert.equal(raf,null);assert.equal(watchdog,null);}
 $('halt').fire('click');checkStopped();
 start();docEvents.keydown({key:'Escape'});checkStopped();
 start();document.hidden=true;docEvents.visibilitychange();checkStopped();document.hidden=false;
+start();winEvents.blur();checkStopped();
 start();winEvents.pagehide();checkStopped();
 start();winEvents.resize();checkStopped();
 start();watchdog();checkStopped();

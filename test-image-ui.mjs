@@ -33,13 +33,14 @@ $('urls').value='';await $('load').fire('click');
 $('changes').value='4';$('changes').fire('change');assert.equal($('download').disabled,true);await $('pairs').fire('click');$('download').fire('click');
 report=JSON.parse(await download.text());assert.ok(report.results.every(r=>r.peakGeneral===2&&!r.windows.length));
 $('changes').value='20';$('changes').fire('change');await $('shuffle').fire('click');$('download').fire('click');report=JSON.parse(await download.text());assert.equal(report.plan.length,61);
-$('ack').checked=true;$('ack').fire('change');$('play').fire('click');assert.equal($('stage').hidden,false);assert.ok(raf);docEvents.keydown({key:'Escape'});assert.equal($('stage').hidden,true);assert.equal(raf,null);assert.equal(timer,null);assert.equal($('ack').checked,false);
-for(const mode of ['timeout','hidden','resize']){
-  $('ack').checked=true;$('ack').fire('change');$('play').fire('click');
-  if(mode==='timeout')timer();if(mode==='hidden'){document.hidden=true;docEvents.visibilitychange();document.hidden=false;}if(mode==='resize')winEvents.resize();
-  assert.equal($('stage').hidden,true);assert.equal($('ack').checked,false);
+$('ack').checked=true;$('ack').fire('change');assert.equal($('play').disabled,true,'Checkbox alone does not unlock image playback');
+$('confirm-text').value='I agree';$('ack').fire('change');$('play').fire('click');assert.equal($('stage').hidden,false);assert.ok(raf);docEvents.keydown({key:'Escape'});assert.equal($('stage').hidden,true);assert.equal(raf,null);assert.equal(timer,null);assert.equal($('ack').checked,false);
+for(const mode of ['timeout','hidden','blur','resize']){
+  $('confirm-text').value='I agree';$('ack').checked=true;$('ack').fire('change');$('play').fire('click');
+  if(mode==='timeout')timer();if(mode==='hidden'){document.hidden=true;docEvents.visibilitychange();document.hidden=false;}if(mode==='blur')winEvents.blur();if(mode==='resize')winEvents.resize();
+  assert.equal($('stage').hidden,true);assert.equal($('ack').checked,false);assert.equal($('confirm-text').value,'');
 }
-window.innerWidth=500;$('ack').checked=true;$('play').fire('click');assert.ok($('result').textContent.includes('Enlarge'));assert.equal(raf,null);window.innerWidth=1400;
+window.innerWidth=500;$('confirm-text').value='I agree';$('ack').checked=true;$('ack').fire('change');$('play').fire('click');assert.ok($('result').textContent.includes('Enlarge'));assert.equal(raf,null);window.innerWidth=1400;
 globalThis.fetch=async url=>{if(url.includes('denied'))throw Error('CORS denied');return new Response(new Uint8Array([255,216,255,128]));};
 $('urls').value='https://example.com/gray.jpg\nhttps://example.com/denied.jpg';await $('load').fire('click');assert.ok(closed>=2);assert.ok($('load-status').textContent.includes('COVERAGE INCOMPLETE'));
 await $('pairs').fire('click');$('download').fire('click');report=JSON.parse(await download.text());assert.equal(report.coverage,'incomplete-load-failures');assert.equal(report.loadFailures.length,1);assert.equal(report.images.length,3);assert.ok(!JSON.stringify(report).includes('https://example.com/gray.jpg'),'Export excludes source URLs');
@@ -75,7 +76,7 @@ Object.defineProperty(globalThis,'performance',{configurable:true,value:{now:()=
 try{
   for(const [runIndex,firstOffset] of [-3.3999999985,-1.7799999956,0,16.6667].entries()){
     const origin=1000+runIndex*10000;entryClock=origin;
-    $('ack').checked=true;$('ack').fire('change');$('play').fire('click');
+    $('confirm-text').value='I agree';$('ack').checked=true;$('ack').fire('change');$('play').fire('click');
     assert.equal($('stage').hidden,false);
     const firstCallback=raf;
     $('play').fire('click');assert.equal(raf,firstCallback,'Repeated Start must not create a second callback chain');

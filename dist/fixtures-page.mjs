@@ -22,25 +22,22 @@ function checkFailsafe(text){
   const val=(text||'').trim().toLowerCase();
   return val==='i agree'||val==='i understand';
 }
+function updateStartState(){
+  const ok=confirmInput?checkFailsafe(confirmInput.value):true;
+  $('start').disabled=!(ok&&$('ack').checked);
+}
 if(confirmInput){
   confirmInput.addEventListener('input',()=>{
     const ok=checkFailsafe(confirmInput.value);
-    $('ack').checked=ok;
-    $('start').disabled=!ok;
     if(badge){
       badge.textContent=ok?'🔓 Confirmed: Fail-safe unlocked':'🔒 Locked';
       badge.className=ok?'failsafe-badge unlocked':'failsafe-badge';
     }
+    updateStartState();
   });
 }
 describe();$('fixture').addEventListener('change',describe);
-$('ack').addEventListener('change',()=>{
-  $('start').disabled=!$('ack').checked;
-  if($('ack').checked&&confirmInput&&!checkFailsafe(confirmInput.value)){
-    confirmInput.value='I understand';
-    if(badge){badge.textContent='🔓 Confirmed: Fail-safe unlocked';badge.className='failsafe-badge unlocked';}
-  }
-});
+$('ack').addEventListener('change',updateStartState);
 function stop(reason){
   if(!running)return;running=false;cancelAnimationFrame(raf);clearTimeout(timer);
   $('stage').hidden=true;ctx.fillStyle='#000000';ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -61,7 +58,8 @@ function draw(now){
   raf=requestAnimationFrame(draw);
 }
 $('start').addEventListener('click',()=>{
-  if(running||!$('ack').checked||document.hidden)return;
+  const ok=confirmInput?checkFailsafe(confirmInput.value):true;
+  if(!ok||running||!$('ack').checked||document.hidden)return;
   // Avoid clipping the fixed reference surface in the captured viewport.
   if(window.innerWidth<1056||window.innerHeight<850){$('result').textContent='Enlarge this viewport to at least 1056 × 850 CSS pixels at 100% zoom so the full reference surface and controls fit.';return;}
   active=selected();running=true;draws=0;skipped=0;lastFrame=null;
@@ -72,6 +70,7 @@ $('start').addEventListener('click',()=>{
 $('halt').addEventListener('click',()=>stop('Stop'));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')stop('Escape');});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop('tab hidden');});
+window.addEventListener('blur',()=>stop('window lost focus'));
 window.addEventListener('pagehide',()=>stop('navigation'));
 window.addEventListener('resize',()=>stop('viewport resized'));
 $('analyze').addEventListener('click',()=>{

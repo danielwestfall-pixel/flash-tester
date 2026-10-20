@@ -9,7 +9,8 @@ function update(){
   for(const id of controls)$(id).disabled=busy||running||suspended;
   $('pairs').disabled=busy||running||suspended||sourceDirty||images.length<2||images.length>12;
   $('shuffle').disabled=busy||running||suspended||sourceDirty||images.length<2;
-  $('play').disabled=busy||running||suspended||sourceDirty||images.length<2||!$('ack').checked;
+  const failsafeOk=confirmInput?checkFailsafe(confirmInput.value):true;
+  $('play').disabled=busy||running||suspended||sourceDirty||images.length<2||!(failsafeOk&&$('ack').checked);
   $('download').disabled=busy||running||suspended||!output;
 }
 function config(){
@@ -26,12 +27,11 @@ function checkFailsafe(text){
 if(confirmInput){
   confirmInput.addEventListener('input',()=>{
     const ok=checkFailsafe(confirmInput.value);
-    $('ack').checked=ok;
-    update();
     if(badge){
       badge.textContent=ok?'🔓 Confirmed: Fail-safe unlocked':'🔒 Locked';
       badge.className=ok?'failsafe-badge unlocked':'failsafe-badge';
     }
+    update();
   });
 }
 function invalidate(){
@@ -43,13 +43,7 @@ function invalidate(){
 for(const id of ['changes','seed','width','height'])$(id).addEventListener('change',invalidate);
 function sourcesChanged(){sourceDirty=true;invalidate();$('load-status').textContent='Inputs changed. Load images before screening this set.';}
 $('files').addEventListener('change',sourcesChanged);$('urls').addEventListener('input',sourcesChanged);
-$('ack').addEventListener('change',()=>{
-  if($('ack').checked&&confirmInput&&!checkFailsafe(confirmInput.value)){
-    confirmInput.value='I understand';
-    if(badge){badge.textContent='🔓 Confirmed: Fail-safe unlocked';badge.className='failsafe-badge unlocked';}
-  }
-  update();
-});
+$('ack').addEventListener('change',()=>update());
 $('samples').addEventListener('click',()=>{
   $('files').value='';
   $('urls').value=['black','white','red','blue','gray-b0','gray-b8','gray-e0','small-white'].map(name=>new URL(`fixture-images/${name}.png`,location.href).href).join('\n');
@@ -153,14 +147,15 @@ function tick(){
   const index=imageAt(plan,t);draw(context,images[index],canvas.width,canvas.height);liveLog.push({time:t,image:index});raf=requestAnimationFrame(tick);
 }
 $('play').addEventListener('click',()=>{
-  if(busy||running||suspended||sourceDirty||!$('ack').checked||images.length<2||document.hidden)return;
+  const failsafeOk=confirmInput?checkFailsafe(confirmInput.value):true;
+  if(busy||running||suspended||sourceDirty||!failsafeOk||!$('ack').checked||images.length<2||document.hidden)return;
   try{liveConfig=config();if(window.innerWidth<liveConfig.width+32||window.innerHeight<liveConfig.height+90)throw Error('Enlarge the viewport to show the full selected display surface and controls, or choose smaller display dimensions.');
     canvas.width=liveConfig.width;canvas.height=liveConfig.height;canvas.style.width=`${liveConfig.width}px`;canvas.style.height=`${liveConfig.height}px`;
     plan=schedule(images.length,3,liveConfig.rate,liveConfig.seed);liveLog=[];running=true;update();$('setup').hidden=true;$('stage').hidden=false;window.scrollTo(0,0);$('live-state').textContent='Running · Escape to stop';$('halt').focus();started=null;tick();timer=setTimeout(()=>stop('three-second limit'),3000);
   }catch(e){$('result').textContent=e.message;}
 });
 $('halt').addEventListener('click',()=>stop('Stop'));document.addEventListener('keydown',e=>{if(e.key==='Escape')stop('Escape');});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)stop('tab hidden');});window.addEventListener('resize',()=>stop('viewport resized'));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop('tab hidden');});window.addEventListener('blur',()=>stop('window lost focus'));window.addEventListener('resize',()=>stop('viewport resized'));
 window.addEventListener('pagehide',()=>{
   stop('navigation');suspended=true;generation++;loadController?.abort();loadController=null;
   images.forEach(i=>i.bitmap.close());images=[];failures=[];busy=false;sourceDirty=true;output=null;

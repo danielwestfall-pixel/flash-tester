@@ -11,27 +11,21 @@ function checkFailsafe(text){
   const val=(text||'').trim().toLowerCase();
   return val==='i agree'||val==='i understand';
 }
+function updatePlayState(){
+  const ok=confirmInput?checkFailsafe(confirmInput.value):true;
+  $('play').disabled=!(ok&&$('ack').checked);
+}
 if(confirmInput){
   confirmInput.addEventListener('input',()=>{
     const ok=checkFailsafe(confirmInput.value);
-    $('ack').checked=ok;
-    $('play').disabled=!ok;
     if(badge){
       badge.textContent=ok?'🔓 Confirmed: Fail-safe unlocked':'🔒 Locked';
       badge.className=ok?'failsafe-badge unlocked':'failsafe-badge';
     }
+    updatePlayState();
   });
 }
-$('ack').addEventListener('change',()=>{
-  $('play').disabled=!$('ack').checked;
-  if($('ack').checked&&confirmInput&&!checkFailsafe(confirmInput.value)){
-    confirmInput.value='I understand';
-    if(badge){
-      badge.textContent='🔓 Confirmed: Fail-safe unlocked';
-      badge.className='failsafe-badge unlocked';
-    }
-  }
-});
+$('ack').addEventListener('change',updatePlayState);
 function stop(reason){
   if(!running)return;
   running=false;cancelAnimationFrame(animation);clearTimeout(timeout);
@@ -51,7 +45,8 @@ function draw(now){
   animation=requestAnimationFrame(draw);
 }
 $('play').addEventListener('click',()=>{
-  if(!$('ack').checked||running)return;
+  const ok=confirmInput?checkFailsafe(confirmInput.value):true;
+  if(!ok||!$('ack').checked||running)return;
   running=true;started=performance.now();
   $('test-field').style.backgroundColor=`rgb(${example.a.join(',')})`;
   $('test-field').hidden=false;$('live-controls').hidden=false;$('done').textContent='';
@@ -62,4 +57,5 @@ $('play').addEventListener('click',()=>{
 $('halt').addEventListener('click',()=>stop('reviewer pressed Stop'));
 document.addEventListener('keydown',event=>{if(event.key==='Escape')stop('Escape');});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop('tab became hidden');});
+window.addEventListener('blur',()=>stop('window lost focus'));
 window.addEventListener('pagehide',()=>stop('page closed'));

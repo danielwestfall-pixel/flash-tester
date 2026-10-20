@@ -25,14 +25,50 @@ export function schedule(count,seconds,changesPerSecond,seed){
 export function imageAt(plan,time){let i=Math.min(plan.length-1,Math.max(0,Math.floor(time/(plan[1].time-plan[0].time)+1e-9)));return plan[i].image;}
 export function rasterKind(bytes){
   const text=(start,length)=>String.fromCharCode(...bytes.slice(start,start+length));
-  if(bytes[0]===255&&bytes[1]===216&&bytes[2]===255)return 'jpeg';
+  if(bytes[0]===255&&bytes[1]===216&&bytes[2]===255){
+    const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+    for(let p=2;p+8<=bytes.length;){
+      if(bytes[p]!==0xff){p++;continue;}
+      const m=bytes[p+1];
+      if([0xc0,0xc1,0xc2,0xc3].includes(m)&&p+8<=bytes.length){
+        const h=view.getUint16(p+5),w=view.getUint16(p+7);
+        if(w*h>16000000||w>16384||h>16384)throw Error('Image dimensions exceed 16 megapixels.');
+        break;
+      }
+      if(p+3>=bytes.length)break;
+      const len=view.getUint16(p+2);
+      if(len<2||p+2+len>bytes.length)break;
+      p+=2+len;
+    }
+    return 'jpeg';
+  }
   if(bytes[0]===137&&text(1,3)==='PNG'){
     const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
-    for(let p=8;p+12<=bytes.length;){const n=view.getUint32(p);if(text(p+4,4)==='acTL')throw Error('Animated PNG is not supported yet.');if(n>bytes.length-p-12)throw Error('Invalid PNG chunk.');p+=12+n;}return 'png';
+    for(let p=8;p+12<=bytes.length;){
+      const n=view.getUint32(p),k=text(p+4,4);
+      if(k==='IHDR'&&p+20<=bytes.length){
+        const w=view.getUint32(p+8),h=view.getUint32(p+12);
+        if(w*h>16000000||w>16384||h>16384)throw Error('Image dimensions exceed 16 megapixels.');
+      }
+      if(k==='acTL')throw Error('Animated PNG is not supported yet.');
+      if(n>bytes.length-p-12)throw Error('Invalid PNG chunk.');
+      p+=12+n;
+    }
+    return 'png';
   }
   if(text(0,4)==='RIFF'&&text(8,4)==='WEBP'){
     const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
-    for(let p=12;p+8<=bytes.length;){const n=view.getUint32(p+4,true),kind=text(p,4);if(['ANIM','ANMF'].includes(kind))throw Error('Animated WebP is not supported yet.');if(n>bytes.length-p-8)throw Error('Invalid WebP chunk.');p+=8+n+(n%2);}return 'webp';
+    for(let p=12;p+8<=bytes.length;){
+      const n=view.getUint32(p+4,true),kind=text(p,4);
+      if(['ANIM','ANMF'].includes(kind))throw Error('Animated WebP is not supported yet.');
+      if(kind==='VP8X'&&p+18<=bytes.length){
+        const w=1+(view.getUint32(p+8,true)&0xffffff),h=1+((view.getUint32(p+11,true)>>8)&0xffffff);
+        if(w*h>16000000||w>16384||h>16384)throw Error('Image dimensions exceed 16 megapixels.');
+      }
+      if(n>bytes.length-p-8)throw Error('Invalid WebP chunk.');
+      p+=8+n+(n%2);
+    }
+    return 'webp';
   }
   throw Error('Use static PNG, JPEG or WebP images. GIF, SVG and other formats are not supported.');
 }

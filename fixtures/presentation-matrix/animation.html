@@ -151,13 +151,12 @@ const badge = document.getElementById('failsafe-badge');
 if (confirmInput) {
   confirmInput.addEventListener('input', () => {
     const ok = checkFailsafe(confirmInput.value);
-    document.getElementById('ack').checked = ok;
-    updateSafetyNotice();
     if (badge) {
       badge.textContent = ok ? '🔓 Confirmed: Fail-safe unlocked' : '🔒 Locked';
       badge.style.background = ok ? '#dcfce7' : '#fee2e2';
       badge.style.color = ok ? '#166534' : '#991b1b';
     }
+    updateSafetyNotice();
   });
 }
 
@@ -182,7 +181,8 @@ function updateSafetyNotice() {
     notice.innerHTML = '<strong>Safety Warning:</strong> This mode contains intentional flashing that may trigger seizures, migraines, or photosensitive reactions. Playback is capped at 3 seconds. Stop with Escape key, Stop button, or tab hiding.';
     if (failsafeBox) failsafeBox.style.display = 'block';
     ackRow.style.display = 'block';
-    startBtn.disabled = running || !ackBox.checked;
+    const ok = confirmInput ? checkFailsafe(confirmInput.value) : true;
+    startBtn.disabled = running || !(ok && ackBox.checked);
     startBtn.textContent = running ? 'Running…' : 'Start 3-second animation';
   }
 }
@@ -247,6 +247,9 @@ for (const kind of ['resize', 'pageshow']) addEventListener(kind, () => {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && running) stop('tab hidden');
   sample('visibilitychange');
+});
+window.addEventListener('blur', () => {
+  if (running) stop('window lost focus');
 });
 document.getElementById('scenario').addEventListener('change', () => sample('scenario-change'));
 document.getElementById('zoom').addEventListener('change', () => sample('reported-zoom-change'));
@@ -375,7 +378,9 @@ function start() {
   if (running) return;
   const mode = document.getElementById('motion-mode').value;
   const ackBox = document.getElementById('ack');
-  if (mode !== 'safe-orbit' && !ackBox.checked) return;
+  const confirmInput = document.getElementById('confirm-text');
+  const ok = confirmInput ? checkFailsafe(confirmInput.value) : true;
+  if (mode !== 'safe-orbit' && (!ok || !ackBox.checked)) return;
 
   running = true;
   frameCount = 0;

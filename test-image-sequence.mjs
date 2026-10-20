@@ -14,4 +14,8 @@ assert.equal(rasterKind(new Uint8Array([255,216,255,0])),'jpeg');
 assert.throws(()=>rasterKind(new TextEncoder().encode('GIF89a')),/static/);
 const png=new Uint8Array(20);png.set([137,80,78,71,13,10,26,10]);png.set(new TextEncoder().encode('acTL'),12);assert.throws(()=>rasterKind(png),/Animated PNG/);
 const webp=new Uint8Array(20);webp.set(new TextEncoder().encode('RIFF'),0);webp.set(new TextEncoder().encode('WEBPANIM'),8);assert.throws(()=>rasterKind(webp),/Animated WebP/);
+const bombPng=new Uint8Array(33);bombPng.set([137,80,78,71,13,10,26,10],0);
+const bombView=new DataView(bombPng.buffer);bombView.setUint32(8,13);bombPng.set(new TextEncoder().encode('IHDR'),12);
+bombView.setUint32(16,30000);bombView.setUint32(20,30000);
+assert.throws(()=>rasterKind(bombPng),/exceed 16 megapixels/);
 console.log('Image URL validation, finite pair coverage, reproducible shuffles, schedule boundaries, sizing and animated-format rejection passed.');
