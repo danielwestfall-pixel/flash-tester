@@ -23,6 +23,12 @@
     <button id="start" class="primary" style="background:#7f1d1d; border-color:#7f1d1d; width:auto;" disabled>Start 3-second fixture</button>
     <button id="analyze" type="button">Analyze all without playback</button>
   </div>
+  <div class="explainer-box" style="background:#f0fdf4; border:2px solid #16a34a; border-radius:8px; padding:16px; margin:16px 0; color:#14532d;">
+    <strong style="color:#14532d; font-size:15px;">💡 How background testing works ("Analyze all without playback"):</strong>
+    <p style="margin:6px 0 0 0; line-height:1.6;">
+      Clicking <strong>"Analyze all without playback"</strong> tests all 13 cases 100% in memory in the background with <strong>zero screen flashing</strong> (0% photosensitivity risk). It calculates relative luminance and transition frequencies mathematically and keeps running even if you switch tabs. In contrast, <strong>live visual playback</strong> actively flashes on screen and will automatically halt immediately if you switch tabs or minimize the window to prevent surprise flashing.
+    </p>
+  </div>
 </div>
 <label for="fixture">Choose fixture</label><select id="fixture"></select>
 <pre id="details"></pre><p id="note"></p>
