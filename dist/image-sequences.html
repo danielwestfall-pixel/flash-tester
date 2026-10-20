@@ -1,16 +1,167 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Flash Review · Image sequences</title><link rel="stylesheet" href="style.css"><style>main{max-width:1100px}label{margin-top:18px}input[type=checkbox]{width:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere}#stage{width:max-content;padding:16px}canvas{display:block;background:black}#halt{background:#762c20;color:white}#load-status{white-space:pre-wrap}#result-table{border-collapse:collapse;width:100%;font-size:13px}.table-scroll{overflow-x:auto}th,td{padding:8px;border-bottom:1px solid #ccc;text-align:left}</style></head><body>
-<main id="setup"><a href="./">← Flash Review</a><p class="eyebrow">LOCAL IMAGES / IMAGE URL LIST</p><h1>Test image sequences</h1>
-<p>Load static images without displaying them, screen ordered pairs, or play a repeatable shuffled sequence. Pair tests cover alternating A/B sequences at the selected rate and size. They cannot prove that every multi-image trajectory passes WCAG.</p>
-<label for="files">Local image files (multiple)</label><input id="files" type="file" multiple accept="image/png,image/jpeg,image/webp">
-<label for="urls">Or image URLs, one per line</label><textarea id="urls" rows="5" placeholder="https://example.com/image-a.png&#10;https://example.com/image-b.jpg"></textarea>
-<p class="hint">Local files stay in this browser. URL images are requested from their hosts without credentials; the host must permit CORS pixel access. Load up to 32 static PNG/JPEG/WebP files, each at most 20 MB and 16 megapixels. Animated formats are rejected. Pair screening accepts up to 12 loaded images. Load replaces the previous set and combines selected files with listed URLs.</p>
-<button id="samples">Fill bundled sample image URLs</button> <button id="load">Load images without playback</button><p id="load-status" role="status"></p>
-<div class="fields"><div><label for="changes">Image changes per second</label><select id="changes"><option value="4">4 changes/s (A/B: 2 flashes/s)</option><option value="6">6 changes/s (A/B: 3 flashes/s)</option><option value="8">8 changes/s (A/B: 4 flashes/s)</option><option value="20" selected>20 changes/s (A/B: 10 flashes/s)</option><option value="30">30 changes/s (A/B: 15 flashes/s)</option></select></div><div><label for="seed">Shuffle seed</label><input id="seed" type="number" value="12345" min="0" max="4294967295" step="1"></div></div>
-<div class="fields"><div><label for="width">Display width (CSS px)</label><input id="width" type="number" value="1024" min="64" max="3840" step="1"></div><div><label for="height">Display height (CSS px)</label><input id="height" type="number" value="768" min="64" max="2160" step="1"></div></div>
-<p class="hint">Images are centered with contain sizing on black. Numerical screening uses an sRGB canvas reduced to at most 64 pixels per side, preserving the selected display aspect ratio mapped to these dimensions, with browser smoothing. Tiny details can disappear. Playback uses the stated CSS dimensions without scaling to fit. Test default size and the largest presentation size; use tab capture separately for actual rendered evidence.</p>
-<button id="pairs" disabled>Screen all ordered pairs without playback</button> <button id="shuffle" disabled>Screen seeded shuffle without playback</button> <button id="download" disabled>Download JSON results and sequence</button>
-<p id="result" role="status"></p><div class="table-scroll"><table id="result-table" hidden><thead><tr><th>Sequence</th><th>General / red peak</th><th>Rolling area envelope (CSS px²)</th><th>Screening</th></tr></thead><tbody id="rows"></tbody></table></div>
-<div class="notice"><strong>Warning: live playback can trigger seizures, migraines, dizziness or nausea.</strong> Numerical screening does not require playback. Brief duration and Stop controls do not make exposure safe.</div>
-<label><input id="ack" type="checkbox">I understand the flashing-content warning and choose to start playback.</label><button id="play" disabled>Play seeded shuffle for 3 seconds</button>
-<p><a href="fixture-images.zip" download>Download eight PNG test images (ZIP)</a> · <a href="fixture-images/manifest.json">Pair expectations</a></p><p>Any failed load makes set coverage incomplete. Results are screening evidence only: red evaluation, precise temporal area overlap, fine-pattern exceptions, arbitrary sequence combinations and full conformance remain unevaluated.</p>
-</main><section id="stage" hidden aria-label="Live image sequence"><button id="halt">Stop (Escape)</button><span id="live-state"></span><canvas id="surface" aria-label="Intentional flashing image sequence"></canvas></section><script type="module" src="image-sequences-page.mjs"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash Review · Test Image Sequences for Flashing</title>
+<link rel="stylesheet" href="style.css">
+<style>
+main { max-width: 1100px; margin: 0 auto; }
+.sequence-container { background: #ffffff; border: 2px solid var(--color-border-subtle); border-radius: 12px; padding: 28px; margin: 24px 0; }
+#stage { width: max-content; padding: 20px; background: #ffffff; border: 2px solid var(--color-danger-bg); border-radius: 12px; margin: 20px 0; }
+canvas#surface { display: block; background: black; border-radius: 8px; }
+#halt { background: #7f1d1d; color: white; min-height: 44px; font-weight: 700; margin-bottom: 12px; }
+#load-status { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 14px; background: #eef6f0; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--color-border); margin: 16px 0; }
+.table-scroll { overflow-x: auto; margin: 20px 0; }
+#result-table { border-collapse: collapse; width: 100%; font-size: 14px; text-align: left; }
+#result-table th, #result-table td { padding: 12px 14px; border-bottom: 1px solid var(--color-border-subtle); }
+#result-table th { background: #f0f6f2; color: var(--color-text-main); font-weight: 700; }
+#result-table tr:hover td { background: #f9fbf9; }
+.button-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="./" aria-label="Flash Review Home">
+    <span class="mark" aria-hidden="true">⌁</span>
+    <span>FLASH REVIEW</span>
+  </a>
+  <span class="tag">WCAG 2.2 · IMAGE SEQUENCE SCREENING</span>
+</header>
+
+<main id="setup">
+  <p><a href="./">← Return to Flash Review Home</a></p>
+  <div class="intro">
+    <p class="eyebrow">Local Images &amp; URL Sequences</p>
+    <h1>Test image sequences for flashing</h1>
+    <p class="lede">
+      Want to know if toggling quickly between a series of pictures creates dangerous flashing lights? 
+      Load your pictures here to measure each image's overall brightness and test every combination safely in memory.
+    </p>
+  </div>
+
+  <!-- 3-Step Quick Start Guide for Image Sequences -->
+  <section class="quickstart-banner" aria-labelledby="image-quickstart-title">
+    <h2 id="image-quickstart-title">How this works (Safe &amp; Automated)</h2>
+    <div class="quickstart-steps">
+      <div class="quickstart-step">
+        <span class="step-number" aria-hidden="true">1</span>
+        <strong>Add your images</strong>
+        <p>Upload files or paste image URLs, then click "Load images without playback".</p>
+      </div>
+      <div class="quickstart-step">
+        <span class="step-number" aria-hidden="true">2</span>
+        <strong>Screen safely in memory</strong>
+        <p>Click "Screen all ordered pairs". The tool tests brightness jumps without flashing your screen.</p>
+      </div>
+      <div class="quickstart-step">
+        <span class="step-number" aria-hidden="true">3</span>
+        <strong>Review flash results</strong>
+        <p>See each image's brightness (Y), contrast difference (&Delta;Y), and whether toggling triggers flash alarms.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sequence-container" aria-label="Image Input and Controls">
+    <h2>1. Select or load your images</h2>
+    <label for="files">Local image files <span>(Upload PNG, JPEG, or WebP)</span></label>
+    <input id="files" type="file" multiple accept="image/png,image/jpeg,image/webp">
+
+    <label for="urls">Or paste image URLs <span>(One web link per line)</span></label>
+    <textarea id="urls" rows="4" placeholder="https://example.com/image-a.png&#10;https://example.com/image-b.jpg"></textarea>
+    <p class="hint">Local files stay 100% in this browser. You can load up to 32 static pictures. Animated GIF/APNG files are rejected.</p>
+
+    <div class="button-row">
+      <button id="samples" type="button">Fill bundled sample image URLs</button>
+      <button id="load" class="primary" type="button" style="width: auto;">Load images without playback</button>
+    </div>
+
+    <p id="load-status" role="status">No images loaded yet. Choose files above or click "Fill bundled sample image URLs".</p>
+
+    <h2>2. Choose toggle speed &amp; display size</h2>
+    <div class="fields">
+      <div>
+        <label for="changes">Image changes per second <span>(Toggle speed)</span></label>
+        <select id="changes">
+          <option value="4">4 changes/s (A/B: 2 complete flashes/s — Usually safe)</option>
+          <option value="6">6 changes/s (A/B: 3 complete flashes/s — WCAG boundary)</option>
+          <option value="8">8 changes/s (A/B: 4 complete flashes/s — Exceeds 3-flash limit)</option>
+          <option value="20" selected>20 changes/s (A/B: 10 complete flashes/s — Fast strobe)</option>
+          <option value="30">30 changes/s (A/B: 15 complete flashes/s — High frequency)</option>
+        </select>
+      </div>
+      <div>
+        <label for="seed">Shuffle seed <span>(Integer for repeatable random order)</span></label>
+        <input id="seed" type="number" value="12345" min="0" max="4294967295" step="1">
+      </div>
+    </div>
+
+    <div class="fields">
+      <div>
+        <label for="width">Simulated display width (CSS px)</label>
+        <input id="width" type="number" value="1024" min="64" max="3840" step="1">
+      </div>
+      <div>
+        <label for="height">Simulated display height (CSS px)</label>
+        <input id="height" type="number" value="768" min="64" max="2160" step="1">
+      </div>
+    </div>
+    <p class="hint">Note: Two image changes equal one complete flash cycle (Image A &rarr; Image B &rarr; Image A). WCAG restricts content from flashing more than 3 times per second.</p>
+
+    <h2>3. Screen image combinations</h2>
+    <div class="button-row">
+      <button id="pairs" type="button" disabled>Screen all ordered pairs without playback</button>
+      <button id="shuffle" type="button" disabled>Screen seeded shuffle without playback</button>
+      <button id="download" type="button" disabled>Download JSON results and sequence</button>
+    </div>
+
+    <p id="result" role="status">Load images above to begin screening.</p>
+
+    <div class="table-scroll">
+      <table id="result-table" hidden aria-label="Screening Results Table">
+        <thead>
+          <tr>
+            <th scope="col">Sequence &amp; Contrast (&Delta;Y)</th>
+            <th scope="col">General / red peak (/1s)</th>
+            <th scope="col">Rolling area envelope (CSS px&sup2;)</th>
+            <th scope="col">Screening Verdict</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div class="notice">
+      <strong>Safety Warning for Live Playback:</strong>
+      <p>Watching rapidly toggling images can trigger seizures, migraines, or severe dizziness. Live playback is completely optional; all numerical screening is performed safely in memory above without flashing.</p>
+    </div>
+
+    <div class="fields-row">
+      <label class="check-row">
+        <input id="ack" type="checkbox">
+        I understand the flashing-content warning and choose to start 3-second live playback.
+      </label>
+    </div>
+
+    <div class="button-row">
+      <button id="play" type="button" disabled>Play seeded shuffle for 3 seconds</button>
+    </div>
+
+    <p><a href="fixture-images.zip" download>Download eight PNG test images (ZIP)</a> &middot; <a href="fixture-images/manifest.json">View pair expectations</a></p>
+  </section>
+</main>
+
+<section id="stage" hidden aria-label="Live image sequence playback">
+  <button id="halt" type="button">Stop playback now (Escape key)</button>
+  <span id="live-state" role="status"></span>
+  <canvas id="surface" aria-label="Flashing image sequence display"></canvas>
+</section>
+
+<footer>
+  <span>FLASH REVIEW &middot; Accessible Image Sequence Screening</span>
+  <span>WCAG 2.2 Level AAA Interface Design</span>
+</footer>
+
+<script type="module" src="image-sequences-page.mjs"></script>
+</body>
+</html>

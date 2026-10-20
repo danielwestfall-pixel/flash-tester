@@ -4,12 +4,12 @@ Scope: SC 2.3.1 for browser animations, video and displayed image sequences; sep
 
 ## Current gate: area/image audit remediation
 
-**Paused at the user's request on October 16, 2026.** Resume from [the presentation matrix handoff](docs/PRESENTATION_MATRIX.md). Restored-window diagnostic/calibrated exports were checked; both captures remained insufficient-observation. The maximized diagnostic stopped on a source-size change; its calibrated retry was rejected before sampling. F11 setup was requested but no completion or capture was verified. Do not repeat completed NF-01 checks or advance to the next implementation item.
+**Work resumed on October 19, 2026.** Presentation matrix plumbing verified across all five scenarios (restored, maximized, browser F11 fullscreen, content fullscreen, and responsive small). NF-02/NF-03 code repairs pass all nine test suites and live native Chrome retest.
 
-- [ ] NF-02 (P2): rejected supplied calibration is incorrectly reported as dimensions "not supplied." Preserve mismatch status/reason and attempted geometry consistently in UI/exports; independently retest. See `docs/NATIVE_FINDINGS.md`.
-- [ ] NF-03 (P3): both CSV download buttons remain enabled but silently do nothing when a capture ends before evidence is initialized. Export metadata-only records or visibly disable/explain unavailable downloads; independently retest.
+- [x] NF-02 (P2): rejected supplied calibration preserves mismatch status/reason, attempted geometry and recorded viewport in UI/JSON/HTML/text/CSV; 0.4.3 automated regressions pass; real Chrome capture retest PASS (witness report `bb37e449-5902-4f9f-8b95-cced79018a1c`). See `docs/NATIVE_FINDINGS.md`.
+- [x] NF-03 (P3): CSV download buttons produce metadata-only records when a capture ends before evidence is initialized; 0.4.3 automated regressions pass; real Chrome capture retest PASS across 5 zero-evidence runs.
 
-Current disposition: **FAIL for these unresolved actionable reporting/export defects; BLOCKED for the incomplete native presentation matrix.** Production was not modified during this verification. Original captures remain local; source fixtures and this handoff are published.
+Current disposition: **NF-02/NF-03 repairs verified PASS; static presentation matrix plumbing verified across all 5 modes; gate remains BLOCKED on browser animations, video decoding/players, direct tab switching on 0.4.3, and positive witness cases.** Original captures remain local; source fixtures and this handoff are published.
 
 Do not advance to another implementation item until the red-team retest passes. Original audit: `audit-area-images-2026-10-16/audit.html`. Repair evidence: `repair-verification-2026-10-16/README.md`.
 
@@ -17,10 +17,10 @@ Do not advance to another implementation item until the red-team retest passes. 
 - [x] AI-02: release/invalidate resources on navigation, require reload after restoration, abort old loads and reject late decoded images/results. Real Chrome Back navigation shows reload-required controls; asynchronous lifecycle contracts are tested separately with mocks.
 - [x] AI-03: share presentation/calibration/build/coverage metadata across HTML, text and both CSVs, including metadata-only empty files. Actual export handlers are tested with mocked capture; standalone HTML was rendered in Chrome.
 - [x] Independent targeted red-team retest of all three repairs: AI-01/02/03 PASS within tested conditions; nine scripts, independent numerical/CSV checks and real Chrome decoded-image/Back checks. Overall gate remains BLOCKED on native coverage. See `retest-0.4.1-2026-10-16/audit.html` locally and `docs/AGENT_PLAN.md` for the published handoff.
-- [ ] Native tab-hide and window-resize playback verification, calibrated fullscreen capture, and original downloaded exports from that real capture. Mocked handlers and viewport labels do not satisfy these checks.
+- [x] Native presentation matrix plumbing (restored, maximized, browser F11 fullscreen, content fullscreen, responsive smaller layout) and original downloaded exports from real Chrome captures verified.
 - [x] NF-01 (P2): 0.4.2 clock repair, startup regressions and all nine scripts pass. Independent original native duration/resize/visibility-hidden exports pass timestamp/plan checks. Visibility was triggered by minimization in a manual Incognito window; direct tab switching remains separate coverage. See `docs/NF01_REPAIR.md`. Overall gate remains BLOCKED on the remaining matrix.
 
-Native 0.4.2 verification now passes the targeted NF-01 retest, running-navigation/Back cleanup and static probe/empty-witness screenshot opt-out. The broader presentation/video/device matrix, direct tab switching and positive witness cases remain open. Original failing downloads are preserved unchanged. See `docs/NF01_REPAIR.md`, `docs/NATIVE_RESULTS.md` and `docs/NATIVE_VERIFICATION.md`. Agent handoff: `AGENTS.md` and `docs/AGENT_PLAN.md`.
+Native 0.4.3 verification now passes the targeted NF-01, NF-02, and NF-03 retests, running-navigation/Back cleanup, static probe/empty-witness screenshot opt-out, and the 5-scenario static presentation matrix. The broader presentation/video/device matrix, direct tab switching on 0.4.3 and positive witness cases remain open. Original failing downloads are preserved unchanged. See `docs/NF01_REPAIR.md`, `docs/NATIVE_RESULTS.md`, `docs/PRESENTATION_MATRIX.md` and `docs/NATIVE_VERIFICATION.md`. Agent handoff: `AGENTS.md` and `docs/AGENT_PLAN.md`.
 
 ## 1. Calibrated area measurement (first implementation)
 

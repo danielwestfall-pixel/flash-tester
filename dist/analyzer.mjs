@@ -93,7 +93,8 @@ export class Analyzer {
     this.width=width;this.height=height;this.pixels=[];this.frames=0;
     this.start=null;this.last=null;this.maxGap=0;this.peakGeneral=0;this.peakRed=0;
     this.maxFlaggedFraction=0;this.windows=[];
-    this.area=options.calibration?new AreaMeter(width,height,options.calibration):null;
+    this.area=options.calibration&&width>0&&height>0?new AreaMeter(width,height,options.calibration):null;
+    this.areaFallback=options.area??(options.calibration?{status:'rejected',reason:'Area calibration was rejected or could not be evaluated.',calibration:options.calibration}:null);
     this.pairMask=this.area?new Uint8Array(width*height):null;
   }
   push(rgba,t) {
@@ -148,7 +149,7 @@ export class Analyzer {
       status==='insufficient-observation'?'Insufficient observation — inconclusive':'No candidates in sampled data — conformance inconclusive',
       observation:{meetsScreeningMinimum:!reasons.length,reasons,warning:'Minimum sampling checks do not rule out aliasing or establish page coverage.'},
       evaluation:{general:'screening-only',red:'experimental-incomplete',area:this.area?'calibrated-screening':'not-evaluated',conformance:'not-determined'},
-      area:this.area?.report()??{status:'not-evaluated',reason:'Displayed CSS dimensions were not supplied.'},
+      area:this.area?.report()??this.areaFallback??{status:'not-evaluated',reason:'Displayed CSS dimensions were not supplied.'},
       duration,frames:this.frames,observedFps:fps,maxFrameGapSeconds:this.maxGap,
       analysisResolution:{width:this.width,height:this.height},peakGeneral:this.peakGeneral,
       peakRedHeuristic:this.peakRed,maxFlaggedFraction:this.maxFlaggedFraction,windows:this.windows,

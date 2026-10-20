@@ -15,3 +15,15 @@ Save a geometry JSON before and after each separate capture. The session ID link
 The whole target surface is fixed to the viewport and the panel scrolls internally, keeping content height from changing the target bounds. The bottom-right 95%/95% probe stays outside the panel. A 600 CSS-pixel fixture breakpoint changes panel layout; this is a test fixture choice, not a universal WCAG dimension.
 
 Static captures verify geometry/calibration/scenario/export plumbing only. Actual browser-animation states, browser-presented video/player fullscreen, positive witness cases and physical timing still require separate evidence. No conformance or safety verdict is produced.
+
+## Real motion & animation target
+
+Open `http://127.0.0.1:8774/animation.html`.
+
+This target provides real animated motion across all five presentation scenarios:
+- **Safe smooth motion**: non-flashing continuous motion (constant luminance Y ≈ 0.48, ΔY < 0.02) to verify that motion without flashing does not trigger false flash alarms.
+- **Flashing motion (4 Hz & 10 Hz)**: rapid contrast changes exceeding the 3-flash WCAG limit to verify positive candidate detection during motion.
+- **Red/Blue saturated motion**: tests chromaticity-driven candidate detection during movement.
+- **Borderline 3 Hz motion**: tests the boundary transition rate.
+- Includes identical geometry tracking, DPR calculation, reviewer scenario selection, content fullscreen API controls, and 3-second auto-safety stops.
+

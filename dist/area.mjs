@@ -1,9 +1,14 @@
 // Conservative spatial screening in the WCAG reference viewing geometry.
 export const FIELD={width:341,height:256,limit:21824};
 export function areaSummary(area){
-  if(area?.status!=='calibrated-screening')return 'Flash area not evaluated: displayed CSS dimensions were not supplied.';
-  const completion=area.peakCompletion?.cssPixelsUpperBound??0,envelope=area.peakEnvelope?.cssPixelsUpperBound??0;
-  return `Calibrated sampled area: largest same-sample pair completion ≤ ${completion.toFixed(1)} CSS px²; rolling spatial envelope ≤ ${envelope.toFixed(1)} CSS px² within the reference field (limit ${FIELD.limit}). ${envelope>FIELD.limit?'The envelope exceeds the reference limit; this alone is not a concurrent-area failure.':'The observed envelope does not exceed the reference limit; missed events and untested states remain inconclusive.'} Calibration ${area.calibration.cssWidth} × ${area.calibration.cssHeight} CSS pixels. Red evaluation, temporal overlap and fine-pattern exceptions remain incomplete.`;
+  if(area?.status==='calibrated-screening'){
+    const completion=area.peakCompletion?.cssPixelsUpperBound??0,envelope=area.peakEnvelope?.cssPixelsUpperBound??0;
+    return `Calibrated sampled area: largest same-sample pair completion ≤ ${completion.toFixed(1)} CSS px²; rolling spatial envelope ≤ ${envelope.toFixed(1)} CSS px² within the reference field (limit ${FIELD.limit}). ${envelope>FIELD.limit?'The envelope exceeds the reference limit; this alone is not a concurrent-area failure.':'The observed envelope does not exceed the reference limit; missed events and untested states remain inconclusive.'} Calibration ${area.calibration.cssWidth} × ${area.calibration.cssHeight} CSS pixels. Red evaluation, temporal overlap and fine-pattern exceptions remain incomplete.`;
+  }
+  if(area?.status==='rejected'){
+    return `Flash area not evaluated: ${area.reason||'area calibration was rejected.'}`;
+  }
+  return `Flash area not evaluated: ${area?.reason||'displayed CSS dimensions were not supplied.'}`;
 }
 export class AreaMeter{
   constructor(width,height,calibration){

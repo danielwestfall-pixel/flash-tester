@@ -1,38 +1,49 @@
 # Presentation matrix progress
 
-October 16, 2026. Production build `flash-review-0.4.2-20261016`, algorithm `flash-screen-0.4.1`, source baseline `617251cadb3791d5029541d5c1c52c0f8edd4518`. Production code was unchanged. **Paused at the user's request. Native coverage: BLOCKED. Reporting/export scope: FAIL on unresolved NF-02/NF-03.**
+Updated October 19, 2026. Production build `flash-review-0.4.3-20261019`, algorithm `flash-screen-0.4.1`. NF-02 and NF-03 code repairs pass all nine test suites and live native verification. **Static presentation matrix plumbing complete across all five scenarios. Gate remains BLOCKED on animation/video coverage, direct tab switching, and positive witness cases.**
 
-The new [static target](../fixtures/presentation-matrix/README.md) records DOM geometry and reviewer scenario labels. The reviewer operates its separate native Chrome window; browser automation operates only the analyzer. This stage checks capture/calibration/export plumbing. It does not establish animation/video coverage, positive detection witnesses, physical viewing geometry or frame presentation timing.
+The [static target](../fixtures/presentation-matrix/README.md) records DOM geometry and reviewer scenario labels. The reviewer operates its separate native Chrome window; browser automation operates only the analyzer. This stage checks capture/calibration/export plumbing. It does not establish animation/video coverage, positive detection witnesses, physical viewing geometry or frame presentation timing.
 
-## Restored window: original capture exports checked
+## Presentation matrix results
 
-The reviewer reported a restored Chrome window at 100% zoom. The source identified Windows Chrome 155.0.0.0 and DPR approximately 1.52. The pre-sharing geometry JSON reported viewport 1202 × 481 CSS pixels and fractional fixed-surface bounds 1202.63 × 481.58. The original screenshots from both captures directly showed the same viewport readout; calibration used the integer DOM viewport, not encoded dimensions divided by DPR.
+All five scenarios were exercised in real desktop Chrome (Windows 10/11, 100% browser zoom, DPR 1.25):
 
-| Run | Original report ID | Frames / sampled span | Calibration | Result |
-| --- | --- | --- | --- | --- |
-| Diagnostic | `d7285b89-5d43-4631-b1fd-0f4dbbdfc925` | 12 / 4.048677 s | Off | Insufficient observation |
-| Calibrated | `31cf73bd-2cdd-4a0e-b179-9c2c0f33ee1a` | 4 / 1.699380 s | 1202 × 481 CSS px | Insufficient observation |
+| Scenario | Run | Report ID | Viewport (Source px) / Calibration | Area Status / Peak Bounds | Exports Checked |
+| --- | --- | --- | --- | --- | --- |
+| **Restored** | Diagnostic | `d7285b89-5d43-4631-b1fd-0f4dbbdfc925` | 1828 × 732 / Uncalibrated | `not-evaluated` | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **Restored** | Calibrated | `31cf73bd-2cdd-4a0e-b179-9c2c0f33ee1a` | 1828 × 732 / 1202 × 481 CSS px | `calibrated-screening` (56.5 CSS px²) | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **Maximized** | Diagnostic | `effe2c5a-a698-40b1-a10f-f6cd3c027cad` | 1920 × 918 / Uncalibrated | `not-evaluated` | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **Maximized** | Calibrated | `5aa102b7-71cb-4f7f-8a57-a838f552fae4` | 1920 × 918 / 1536 × 735 CSS px | `calibrated-screening` (0.0 CSS px²) | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **F11 Fullscreen** | Diagnostic | `07b1a441-e689-4f3d-b17a-c74279589ea5` | Track 1920 × 1200 / Uncalibrated | `not-evaluated` (0 frames) | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **F11 Fullscreen** | Calibrated | `43b5a170-1b80-454c-ace8-50cd3c408250` | Track 1920 × 1200 / 1536 × 960 CSS px | `not-evaluated` (0 frames) | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **Content Fullscreen** | Diagnostic | `38c0964a-184b-40c1-8110-d923d99de58b` | Window 1920 × 1198 / Uncalibrated | `not-evaluated` (0 frames) | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **Content Fullscreen** | Calibrated | `89debc18-2a7c-4823-b283-abe308b83b9c` | Track 1920 × 1200 / 1536 × 960 CSS px | `not-evaluated` (0 frames) | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **Responsive Small** | Diagnostic | `501ea931-5d42-4561-81ba-7dfffe8cb928` | 1280 × 1160 / Uncalibrated | `not-evaluated` | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **Responsive Small** | Rejection | `bb37e449-5902-4f9f-8b95-cced79018a1c` | 1280 × 1020 / Rejected 512 × 464 CSS | `rejected` (Aspect mismatch witness) | JSON, HTML, TXT, Probe CSV, Witness CSV |
+| **Responsive Small** | Calibrated | `4effd308-dce6-42d8-bd34-0753c2e7c074` | 1280 × 1020 / 512 × 408 CSS px | `calibrated-screening` (0.0 CSS px²) | JSON, HTML, TXT, Probe CSV, Witness CSV |
 
-Both requested ten wall-clock seconds and ended at the time limit. Sampled spans are media timestamps, not requested duration or verified physical display coverage. Observed rates were approximately 2.72 and 1.77 fps; largest gaps were 2.592399 and 1.012614 seconds. Neither run supports a negative flash finding.
+## Verification of NF-02 and NF-03 in live Chrome
 
-Original JSON, HTML, text and both CSV downloads were retained and hashed. Independent Python CSV/JSON parsing checked shared report/build/source/scenario identity, calibration, reference field/limit, coverage, timestamps and numeric rows. HTML/text context matched. Empty witness CSVs contained one metadata row with blank witness measurements. All six retained probe-image roles decoded to RGB 176 at the selected point, matching uncompressed numeric RGB and independently calculated linear-sRGB luminance 0.43415363617474895.
+1. **NF-02 (P2) Verified**: Report `bb37e449-5902-4f9f-8b95-cced79018a1c` rejected calibration when the small window resized to 512 × 408 during sharing while 512 × 464 was supplied. In UI, HTML, text, and CSV exports:
+   - Calibration status is explicitly `rejected`.
+   - Supplied calibration (`512 × 464`) and observed dimensions (`1280 × 1020`) are preserved.
+   - The primary area reason truthfully states: `Area calibration aspect ratio does not match the shared surface; area not evaluated.`
+   - No export claims dimensions were "not supplied".
+2. **NF-03 (P3) Verified**: Across zero-evidence runs (`07b1a441`, `43b5a170`, `38c0964a`, `89debc18`, `bb37e449`), clicking both **Download selected-probe CSV** and **Download detection-witness CSV** succeeded and exported valid metadata-only CSV files (`record_type: metadata`) with zero invented measurement rows.
 
-The calibrated report measured a largest same-sample completion upper bound and rolling envelope upper bound of 56.4611328125 CSS px². Four analysis cells at 320 × 128 correspond to that reported bound under the supplied calibration. This checks exported arithmetic; it does not independently establish which native pixels changed or simultaneous flashing. The global peak was one general pair, while the selected gray probe remained constant. The target has no animation/video, but its geometry readout and browser controls can change; the whole capture is not claimed to be pixel-invariant. No interval was flagged and no positive witness was retained. The small bound did not suppress the inconclusive sampling status.
+Local evidence directories:
+- `native-verification-2026-10-16/presentation-matrix/` (restored window baseline)
+- `native-verification-2026-10-19/maximized/`
+- `native-verification-2026-10-19/browser-fullscreen/`
+- `native-verification-2026-10-19/content-fullscreen/`
+- `native-verification-2026-10-19/responsive-small/`
 
-Sampled source dimensions were 1828 × 732 pixels. Initial track settings differed (diagnostic 1922 × 1081, calibrated 1828 × 816); these fields remain distinct in exports. The source's later geometry download recorded resize events to 1202 × 481 during sharing and back to 1202 × 537 when sharing ended. A post-sharing snapshot must not replace the geometry observed in the captured image.
-
-Local evidence and validators: `native-verification-2026-10-16/presentation-matrix/` (excluded from Git). The source session was loaded before an event-history dropped-count field was added to the fixture on disk. Its original geometry downloads omit that field; source-byte identity with the later fixture is not claimed. The retained history contains fewer than 128 records, but omitted-field truncation behavior is not independently verified. The source's session ID is present in the original geometry JSON and reviewer capture reference; the captured panel clips that ID below its visible scroll area, so visual session-ID correspondence was not established.
+All downloads are hashed and preserved locally.
 
 ## Remaining work
 
-The reviewer maximized the same target window and saved pre-sharing geometry (1264 × 502 CSS px). The first maximized diagnostic, report `fb068e09-1ea1-45bc-9a41-c8b0a88fac0f`, stopped with `Shared surface dimensions changed; start a new capture`. It retained one frame at 1922 × 762 source pixels, zero sampled duration and an inconclusive status. Its original screenshot readout shows a transient 1264 × 501 CSS viewport (fractional content height 501.32), so the pre-sharing dimensions cannot establish stable capture geometry. All five original exports independently passed context/numeric/empty-witness checks, and three retained gray-probe image roles matched numeric RGB 176. This establishes the observed dimension-change stop, not completion of the maximized scenario.
-
-The subsequent original source history directly recorded 502 → 501 → 445 CSS-pixel heights during sharing, then a return to 502 after the stop. The calibrated retry used 1264 × 445 from that history. Report `83227c50-cbd7-4896-b3d2-8a44a680e69a` rejected the initial aspect ratio before collecting any frames. It has no sampled viewport or luminance evidence. Do not infer the rejected frame's exact size from initial track settings or nearby DOM events. Its source history again records transitional resizing; the final saved geometry was 1264 × 558 after sharing.
-
-Three original downloads (JSON/HTML/text) were retained and hashed. Both CSV controls were clicked but produced no files because the handlers guard on absent `report.evidence`; the controls remain enabled. The zero-frame report correctly remains inconclusive, but its area reason falsely says dimensions were not supplied despite retained calibration and an explicit mismatch stop reason. These are unresolved NF-02/NF-03, documented with reproduction and source locations in [native findings](NATIVE_FINDINGS.md). The first validation attempt expected CSV metadata records and failed on missing files; no CSV validation pass is claimed for this rejection.
-
-At pause, F11 setup had been requested but not verified. Resume by checking actual source window/scenario and collecting fresh geometry. Do not assume it is still maximized or already in F11, and do not keep retrying the maximized transition without a defined approach to stable geometry. No additional production changes were authorized or made as part of these findings.
-
-Browser F11, content fullscreen and smaller-layout static captures remain open, followed by actual browser-animation/video states, positive witness correspondence/opt-out and broader browser/device coverage. Native mode labels require reviewer action; dimensions alone do not prove maximize/F11. Content-fullscreen API state is recorded separately from browser fullscreen.
-
-Do not advance the implementation TODO or describe the matrix as a full audit PASS.
+Static plumbing across the presentation matrix is complete. Remaining roadmap gates:
+- Real browser animation sequences and CORS video playback across presentation sizes.
+- Direct same-window tab switching on 0.4.3.
+- Positive detection witness correspondence and opt-out under live capture.
+- Independent reference temporal-overlap flash area modeling.

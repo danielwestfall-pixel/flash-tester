@@ -4,6 +4,7 @@ import {Analyzer} from './dist/analyzer.mjs';
 import {schedule,imageAt} from './dist/image-sequence.mjs';
 import {Evidence,csv,witnessCsv,reportHtml} from './dist/evidence.mjs';
 import {stampReport,reviewText} from './dist/report.mjs';
+import {areaSummary} from './dist/area.mjs';
 
 const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/shuffle-orphan.json',import.meta.url)));
 assert.deepEqual(schedule(fixture.count,3,fixture.rate,fixture.seed),fixture.plan);
@@ -62,4 +63,42 @@ for(const value of ['default','maximized','browser-fullscreen','content-fullscre
 }
 const empty=new Evidence(1,1).report();
 assert.equal(parseCsv(csv(empty,report))[1].includes('metadata'),true,'Zero-row probe export retains metadata');
-console.log('AI-01 and AI-03 regressions passed: both pairing phases, frozen shuffle, three/four boundaries, red orphan cases, complete standalone export metadata and escaping.');
+
+// NF-02 / NF-03: Zero-frame calibration rejection preserves mismatch status,
+// attempted geometry, and supplies metadata-only CSV downloads without evidence.
+const rejectedArea = {
+  status: 'rejected',
+  reason: 'Area calibration aspect ratio does not match the shared surface; area not evaluated.',
+  calibration: {cssWidth: 1264, cssHeight: 445},
+  observedDimensions: {width: 1922, height: 762},
+  method: 'Not evaluated'
+};
+const rejectedAnalyzer = new Analyzer(0, 0, {area: rejectedArea});
+const rejectedReport = stampReport({
+  ...rejectedAnalyzer.report(),
+  captureSettings: {presentation: 'maximized', calibration: {cssWidth: 1264, cssHeight: 445}},
+  endedBecause: 'Area calibration aspect ratio does not match the shared surface; correct CSS dimensions and start a new capture',
+  viewport: {width: 1922, height: 762},
+  createdAt: 'test'
+});
+assert.equal(rejectedReport.area.status, 'rejected');
+assert.equal(rejectedReport.area.reason, 'Area calibration aspect ratio does not match the shared surface; area not evaluated.');
+assert.deepEqual(rejectedReport.area.calibration, {cssWidth: 1264, cssHeight: 445});
+assert.deepEqual(rejectedReport.area.observedDimensions, {width: 1922, height: 762});
+assert.deepEqual(rejectedReport.viewport, {width: 1922, height: 762});
+assert.ok(!areaSummary(rejectedReport.area).includes('not supplied'), 'Area summary must not claim dimensions were not supplied');
+assert.ok(areaSummary(rejectedReport.area).includes('aspect ratio'), 'Area summary preserves aspect mismatch explanation');
+
+for (const [format, content] of [['probe', csv(rejectedReport.evidence, rejectedReport)], ['witness', witnessCsv(rejectedReport.evidence, rejectedReport)]]) {
+  const [header, ...rows] = parseCsv(content), first = Object.fromEntries(header.map((k, i) => [k, rows[0][i]]));
+  assert.equal(rows.length, 1, `${format}: exactly one metadata row`);
+  assert.ok(rows.every(row => row.length === header.length), `${format}: equal column count`);
+  assert.equal(first.record_type, 'metadata', `${format}: record_type is metadata`);
+  assert.equal(first.calibration_status, 'rejected');
+  assert.equal(first.calibration_css_width, '1264');
+  assert.equal(first.calibration_css_height, '445');
+  assert.deepEqual(JSON.parse(first.captured_viewport_json), {width: 1922, height: 762});
+  assert.equal(first.time_seconds, '', `${format}: no invented measurements`);
+}
+
+console.log('AI-01, AI-03, NF-02, and NF-03 regressions passed: both pairing phases, frozen shuffle, three/four boundaries, red orphan cases, zero-frame calibration mismatch status/geometry, and metadata-only CSV exports without evidence.');

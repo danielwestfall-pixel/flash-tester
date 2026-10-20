@@ -83,6 +83,8 @@ async function analyze(kind){
   const ctx=scratch.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
   try{
     const frames=images.map(item=>{draw(ctx,item,c.analysisWidth,c.analysisHeight);return ctx.getImageData(0,0,c.analysisWidth,c.analysisHeight).data;});
+    const linear=Array.from({length:256},(_,i)=>{const v=i/255;return v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4;});
+    const meanY=frames.map(data=>{let sum=0,count=data.length/4;for(let i=0;i<data.length;i+=4)sum+=0.2126*linear[data[i]]+0.7152*linear[data[i+1]]+0.0722*linear[data[i+2]];return sum/count;});
     const jobs=pairs??[null],results=[],shufflePlan=schedule(images.length,c.seconds,c.rate,c.seed);
     for(let j=0;j<jobs.length;j++){
       if(token!==generation||suspended)return;
@@ -91,14 +93,17 @@ async function analyze(kind){
         const t=i/120,index=pair?pair[Math.floor(t*c.rate+1e-9)%2]:imageAt(shufflePlan,t);a.push(frames[index],t);
       }
       const r=stampReport({...a.report(),synthetic:true,source:'Decoded static images in generated schedules; no tab captured',pair});results.push(r);
-      const name=pair?`${pair[0]+1} → ${pair[1]+1} → ${pair[0]+1}`:'Seeded shuffle';tableRow(name,r);
+      const delta=pair?Math.abs(meanY[pair[0]]-meanY[pair[1]]):null;
+      const name=pair?`${pair[0]+1} → ${pair[1]+1} → ${pair[0]+1} (ΔY: ${delta.toFixed(3)})`:'Seeded shuffle';
+      tableRow(name,r);
       $('result').textContent=`Screened ${j+1}/${jobs.length} finite sequences…`;
       await new Promise(resolve=>setTimeout(resolve,0));
     }
     if(token!==generation||suspended)return;
-    output={...base(c,kind),plan:kind==='shuffle'?shufflePlan:undefined,results};
+    output={...base(c,kind),plan:kind==='shuffle'?shufflePlan:undefined,results,imageLuminance:images.map((i,idx)=>({name:i.name,meanRelativeLuminance:Number(meanY[idx].toFixed(4))}))};
     const candidates=results.filter(r=>r.windows.length).length;
-    $('result').textContent=`${results.length} finite sequence${results.length===1?'':'s'} screened; flash candidates in ${candidates}. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination. Changes per second are transitions; A/B flashes occur at half that rate.`;
+    const lumSummary=images.map((i,idx)=>`#${idx+1}: Y≈${meanY[idx].toFixed(3)}`).join(', ');
+    $('result').textContent=`${results.length} finite sequence${results.length===1?'':'s'} screened; flash candidates in ${candidates}. Loaded image luminance: [${lumSummary}]. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination. Changes per second are transitions; A/B flashes occur at half that rate.`;
   }catch(e){$('result').textContent=`Screening interrupted; coverage incomplete: ${e.message}`;output=null;}
   finally{if(token===generation){busy=false;update();}}
 }

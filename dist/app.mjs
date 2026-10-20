@@ -19,9 +19,10 @@ function cleanup(){
   if(callback!==null)video.cancelVideoFrameCallback?.(callback);callback=null;
   stream?.getTracks().forEach(t=>t.stop());stream=null;video.pause();video.srcObject=null;
 }
-function finish(reason){
+function finish(reason,areaOverride=null){
   if(!active)return;active=false;cleanup();lock(false);
-  const result=analyzer?analyzer.report():new Analyzer(0,0).report();
+  const fallbackArea=areaOverride??(meta?.calibration?{status:'not-evaluated',reason:'Capture ended before frames were received; area not evaluated.',calibration:meta.calibration,observedDimensions:meta.viewport??null}:{status:'not-evaluated',reason:'Displayed CSS dimensions were not supplied.'});
+  const result=analyzer?analyzer.report():new Analyzer(0,0,{area:fallbackArea}).report();
   report=stampReport({...result,createdAt:new Date().toISOString(),criterion:'WCAG 2.2 SC 2.3.1 (Level A)',
     reference:meta.reference,interactions:meta.interactions,requestedSeconds:meta.seconds,
     captureSettings:settings,endedBecause:reason,viewport:meta.viewport,evidence:evidence?.report(),
@@ -60,12 +61,16 @@ function frame(now,info){
     if(lastMedia!==null&&info.mediaTime<=lastMedia){callback=requestNextFrame();return;}
     lastMedia=info.mediaTime;
     if(!analyzer){
-      if(meta.calibration&&Math.abs((video.videoWidth/video.videoHeight)/(meta.calibration.cssWidth/meta.calibration.cssHeight)-1)>.02){finish('Area calibration aspect ratio does not match the shared surface; correct CSS dimensions and start a new capture');return;}
+      meta.viewport={width:video.videoWidth,height:video.videoHeight};
+      if(meta.calibration&&Math.abs((video.videoWidth/video.videoHeight)/(meta.calibration.cssWidth/meta.calibration.cssHeight)-1)>.02){
+        const stopReason='Area calibration aspect ratio does not match the shared surface; correct CSS dimensions and start a new capture';
+        finish(stopReason,{status:'rejected',reason:'Area calibration aspect ratio does not match the shared surface; area not evaluated.',calibration:meta.calibration,observedDimensions:{width:video.videoWidth,height:video.videoHeight},method:'Not evaluated'});
+        return;
+      }
       const scale=Math.min(meta.width/video.videoWidth,640/video.videoHeight,1);
       canvas.width=Math.max(1,Math.round(video.videoWidth*scale));canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
       analyzer=new Analyzer(canvas.width,canvas.height,{calibration:meta.calibration});
       evidence=new Evidence(canvas.width,canvas.height,meta.probeX,meta.probeY);
-      meta.viewport={width:video.videoWidth,height:video.videoHeight};
     }
     if(meta.viewport.width!==video.videoWidth||meta.viewport.height!==video.videoHeight){finish('Shared surface dimensions changed; start a new capture');return;}
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
@@ -129,8 +134,8 @@ window.addEventListener('pagehide',()=>{run++;active=false;cleanup();});
 function download(text,type,extension,suffix=''){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=`flash-review-${report.reportId}${suffix}.${extension}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('json').addEventListener('click',()=>{if(report)download(JSON.stringify(report,null,2),'application/json','json');});
 $('html-report').addEventListener('click',()=>{if(report)download(reportHtml(report),'text/html','html');});
-$('csv').addEventListener('click',()=>{if(report?.evidence)download(csv(report.evidence,report),'text/csv','csv','-selected-probe');});
-$('witness-csv').addEventListener('click',()=>{if(report?.evidence)download(witnessCsv(report.evidence,report),'text/csv','csv','-detection-witness');});
+$('csv').addEventListener('click',()=>{if(report)download(csv(report.evidence,report),'text/csv','csv','-selected-probe');});
+$('witness-csv').addEventListener('click',()=>{if(report)download(witnessCsv(report.evidence,report),'text/csv','csv','-detection-witness');});
 $('text').addEventListener('click',()=>{if(report)download(reviewText(report),'text/plain','txt');});
 for(const example of examples){
   const card=document.createElement('article');card.className='example-card';

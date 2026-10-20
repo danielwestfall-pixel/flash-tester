@@ -1,10 +1,10 @@
 # Flash Review agent handoff
 
-Work paused at the user's request on October 16, 2026. Read the current pause/resume note in `TODO.md` and `docs/PRESENTATION_MATRIX.md` first. Maximized capture is incomplete; F11 setup/capture is unverified. Newly observed NF-02/NF-03 remain unrepaired: current reporting/export scope FAIL, remaining native coverage BLOCKED. Do not resume native actions until the user resumes work.
+Work resumed on October 19, 2026. NF-02/NF-03 code repairs and unit/UI regressions pass in build 0.4.3; detector algorithm remains 0.4.1. Maximized capture and F11 setup/capture in PC Chrome are being resumed.
 
 Read [the agent plan](docs/AGENT_PLAN.md), [TODO.md](TODO.md), and [the input/size guide](docs/INPUTS_AND_SIZE_TESTING.md) before starting work.
 
-The current build is 0.4.2; the detector algorithm remains 0.4.1. AI-01/02/03 passed independent targeted retest. NF-01's clock repair passes all nine scripts and targeted native duration/resize/visibility-hidden log checks. The overall gate remains BLOCKED on the remaining presentation/video/device matrix, positive witness coverage and other documented limits. Read [the repair status](docs/NF01_REPAIR.md), [native results](docs/NATIVE_RESULTS.md) and [the runbook](docs/NATIVE_VERIFICATION.md) before starting another implementation milestone.
+The current build is 0.4.3; the detector algorithm remains 0.4.1. AI-01/02/03 passed independent targeted retest. NF-01's clock repair passed native verification. NF-02 and NF-03 code repairs pass all nine test suites; native Chrome verification is in progress. The overall gate remains BLOCKED on the remaining presentation/video/device matrix, positive witness coverage and other documented limits. Read [the repair status](docs/NF01_REPAIR.md), [native results](docs/NATIVE_RESULTS.md) and [the runbook](docs/NATIVE_VERIFICATION.md) before starting another implementation milestone.
 
 Keep generated frames, mocked browser APIs, decoded-image numerical screening, real playback, and real capture evidence distinct. Neither labels nor callback logs establish native presentation or capture. Never report WCAG conformance from this prototype.
 

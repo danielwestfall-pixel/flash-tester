@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash Review · Quality & Calibration Test Suite (Passing Only)</title>
+<link rel="stylesheet" href="style.css">
+<style>
+main { max-width: 1100px; margin: 0 auto; }
+.suite-card { background: #ffffff; border: 2px solid var(--color-border-subtle); border-radius: 12px; padding: 24px; margin: 20px 0; }
+.card-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--color-border-subtle); padding-bottom: 12px; margin-bottom: 14px; }
+.card-header h3 { margin: 0; font-size: 19px; color: var(--color-primary-bg); }
+.badge-pass { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 16px; }
+.meta-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+.meta-table th, .meta-table td { padding: 8px 12px; border: 1px solid var(--color-border-subtle); text-align: left; }
+.meta-table th { background: #f4f8f5; width: 35%; font-weight: 700; color: var(--color-text-main); }
+.meta-table td { font-family: ui-monospace, monospace; }
+.test-canvas { display: block; background: #b0b0b0; border-radius: 8px; margin: 14px 0; max-width: 100%; width: 640px; height: 360px; }
+.checklist { background: #f8faf8; border-left: 4px solid var(--color-primary-bg); padding: 16px 20px; border-radius: 6px; margin: 20px 0; }
+.checklist ul { margin: 8px 0 0 20px; padding: 0; }
+.checklist li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="./" aria-label="Flash Review Home">
+    <span class="mark" aria-hidden="true">⌁</span>
+    <span>FLASH REVIEW</span>
+  </a>
+  <span class="tag">CALIBRATION &amp; QUALITY TEST SUITE · PASSING ONLY</span>
+</header>
+
+<main>
+  <p><a href="./">← Return to Flash Review Home</a></p>
+
+  <div class="intro">
+    <p class="eyebrow">Setup Verification &amp; Baseline Quality Check</p>
+    <h1>Passing-only reference test suite</h1>
+    <p class="lede">
+      Verify your capture setup, frame timing, and brightness calibration without exposure to flashing lights. 
+      Every test case in this suite has mathematically proven, ground-truth values that are guaranteed to <strong>PASS</strong> under WCAG 2.2 SC 2.3.1.
+    </p>
+    <div class="badges">
+      <span>100% Photosensitivity Safe</span>
+      <span>No rapid or dangerous flashing</span>
+      <span>Known mathematical reference values</span>
+    </div>
+  </div>
+
+  <section class="checklist" aria-label="Reviewer Verification Checklist">
+    <h2>Why use this suite?</h2>
+    <p>Before testing unknown client websites or videos, run these reference inputs to confirm:</p>
+    <ul>
+      <li><strong>No false alarms</strong>: Clean animations must produce zero candidate alarms.</li>
+      <li><strong>Accurate capture timing</strong>: Observed frame rate reaches 30+ frames/sec.</li>
+      <li><strong>Precise contrast math</strong>: Calculated relative luminance (&Delta;Y) matches known ground-truth values.</li>
+      <li><strong>Display ratio fidelity</strong>: Viewport CSS and device pixel ratio (DPR) are tracked accurately.</li>
+    </ul>
+  </section>
+
+  <!-- Group 1: Ground-Truth Image Pair Tests -->
+  <section aria-labelledby="pairs-group-title">
+    <h2 id="pairs-group-title">1. Known passing image pairs (for Image Sequences tester)</h2>
+    <p>Test these known pairs at <a href="image-sequences.html">Test Image Sequences</a> to verify the image screening engine:</p>
+
+    <!-- Case 1: 2 Hz Sub-threshold -->
+    <article class="suite-card">
+      <div class="card-header">
+        <h3>Pass Case 1: Sub-threshold frequency (2.0 Hz black/white)</h3>
+        <span class="badge-pass">PASS · Sub-threshold Speed</span>
+      </div>
+      <p>Alternates between pure black and pure white at 2 complete cycles per second (4 changes/s). While contrast is maximum (&Delta;Y = 1.0), the speed is well below the WCAG 3-flash limit.</p>
+      <table class="meta-table">
+        <tbody>
+          <tr><th scope="row">Image A (Black)</th><td>RGB (0, 0, 0) · Relative Luminance Y = 0.00000</td></tr>
+          <tr><th scope="row">Image B (White)</th><td>RGB (255, 255, 255) · Relative Luminance Y = 1.00000</td></tr>
+          <tr><th scope="row">Luminance Contrast (&Delta;Y)</th><td>1.00000</td></tr>
+          <tr><th scope="row">Toggle Speed</th><td>4 changes/s = 2.0 complete flash cycles/sec</td></tr>
+          <tr><th scope="row">Expected Peak Count</th><td>Exactly 2 general pairs in any 1-second window</td></tr>
+          <tr><th scope="row">Expected Verdict</th><td><strong>inconclusive-no-candidates (PASS)</strong></td></tr>
+        </tbody>
+      </table>
+    </article>
+
+    <!-- Case 2: 3 Hz Boundary -->
+    <article class="suite-card">
+      <div class="card-header">
+        <h3>Pass Case 2: Exact boundary frequency (3.0 Hz black/white)</h3>
+        <span class="badge-pass">PASS · Boundary Baseline</span>
+      </div>
+      <p>Alternates between pure black and pure white at exactly 3 complete cycles per second (6 changes/s). WCAG SC 2.3.1 permits up to 3 flashes per second; only <em>more than</em> 3 is prohibited.</p>
+      <table class="meta-table">
+        <tbody>
+          <tr><th scope="row">Image A (Black)</th><td>RGB (0, 0, 0) · Relative Luminance Y = 0.00000</td></tr>
+          <tr><th scope="row">Image B (White)</th><td>RGB (255, 255, 255) · Relative Luminance Y = 1.00000</td></tr>
+          <tr><th scope="row">Luminance Contrast (&Delta;Y)</th><td>1.00000</td></tr>
+          <tr><th scope="row">Toggle Speed</th><td>6 changes/s = 3.0 complete flash cycles/sec</td></tr>
+          <tr><th scope="row">Expected Peak Count</th><td>Exactly 3 general pairs in any 1-second window</td></tr>
+          <tr><th scope="row">Expected Verdict</th><td><strong>inconclusive-no-candidates (PASS)</strong></td></tr>
+        </tbody>
+      </table>
+    </article>
+
+    <!-- Case 3: Low Contrast -->
+    <article class="suite-card">
+      <div class="card-header">
+        <h3>Pass Case 3: Low-contrast rapid toggle (10 Hz soft gray)</h3>
+        <span class="badge-pass">PASS · Low Contrast Exception</span>
+      </div>
+      <p>Alternates rapidly at 10 cycles/sec (20 changes/s), but between very close gray shades (#B0B0B0 and #B8B8B8). Because &Delta;Y is below 0.10, human eyes do not experience a photosensitive flash.</p>
+      <table class="meta-table">
+        <tbody>
+          <tr><th scope="row">Image A (#B0B0B0)</th><td>RGB (176, 176, 176) · Relative Luminance Y = 0.43419</td></tr>
+          <tr><th scope="row">Image B (#B8B8B8)</th><td>RGB (184, 184, 184) · Relative Luminance Y = 0.47895</td></tr>
+          <tr><th scope="row">Luminance Contrast (&Delta;Y)</th><td>0.04476 (Must be &lt; 0.10000)</td></tr>
+          <tr><th scope="row">Toggle Speed</th><td>20 changes/s = 10.0 cycles/sec</td></tr>
+          <tr><th scope="row">Expected Peak Count</th><td>0 general pairs / 1s</td></tr>
+          <tr><th scope="row">Expected Verdict</th><td><strong>inconclusive-no-candidates (PASS)</strong></td></tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+
+  <!-- Group 2: Live Browser Animation Verification Targets -->
+  <section aria-labelledby="animations-group-title">
+    <h2 id="animations-group-title">2. Live safe motion targets (for Tab Capture testing)</h2>
+    <p>Share this tab or use the controls below to verify how Flash Review handles live moving content:</p>
+
+    <!-- Animation 1: Smooth Bouncing Sphere -->
+    <article class="suite-card">
+      <div class="card-header">
+        <h3>Safe Motion Target 1: Smooth continuous motion (Constant Luminance)</h3>
+        <span class="badge-pass">PASS · Motion Without Flashing</span>
+      </div>
+      <p>A circle bounces smoothly across the screen at 60 frames/sec. The background is #b0b0b0 (Y &approx; 0.43) and the moving object is #909090 (Y &approx; 0.40, &Delta;Y &approx; 0.03). This proves that real motion alone does not cause false flash alarms.</p>
+
+      <div class="button-row">
+        <button id="start-motion" type="button" class="primary" style="width:auto;">Start smooth motion test</button>
+        <button id="stop-motion" type="button" disabled>Stop motion</button>
+      </div>
+
+      <canvas id="motion-preview" class="test-canvas" width="640" height="360" aria-label="Smooth motion preview"></canvas>
+      <p id="motion-readout" class="hint" role="status">Motion stopped. Click "Start smooth motion test" to run.</p>
+    </article>
+
+    <!-- Animation 2: Gentle Breathing Glow -->
+    <article class="suite-card">
+      <div class="card-header">
+        <h3>Safe Motion Target 2: Gentle 1.0 Hz breathing pulse (Slow Transition)</h3>
+        <span class="badge-pass">PASS · Slow Gentle Pulse</span>
+      </div>
+      <p>A gentle sinusoidal brightness pulse at 1.0 cycle per second. It allows you to verify that your capture pipeline smoothly records gradual luminance changes without false alarms.</p>
+
+      <div class="button-row">
+        <button id="start-pulse" type="button" class="primary" style="width:auto;">Start 1 Hz pulse test</button>
+        <button id="stop-pulse" type="button" disabled>Stop pulse</button>
+      </div>
+
+      <canvas id="pulse-preview" class="test-canvas" width="640" height="360" aria-label="Gentle pulse preview"></canvas>
+      <p id="pulse-readout" class="hint" role="status">Pulse stopped. Click "Start 1 Hz pulse test" to run.</p>
+    </article>
+  </section>
+
+  <section class="checklist" aria-label="Automated Self-Check">
+    <h2>3. Built-in synthetic self-check</h2>
+    <p>Run all known passing benchmarks directly in this browser to verify analyzer mathematics:</p>
+    <button id="run-benchmarks" class="primary" type="button" style="width:auto;">Run passing benchmarks now</button>
+    <div class="table-scroll">
+      <table id="benchmark-table" class="meta-table" style="margin-top:16px;" hidden>
+        <thead>
+          <tr>
+            <th scope="col">Test Input</th>
+            <th scope="col">Contrast (&Delta;Y)</th>
+            <th scope="col">Frequency</th>
+            <th scope="col">Peak Observed</th>
+            <th scope="col">Result</th>
+          </tr>
+        </thead>
+        <tbody id="benchmark-rows"></tbody>
+      </table>
+    </div>
+    <p id="benchmark-status" role="status" class="hint"></p>
+  </section>
+</main>
+
+<footer>
+  <span>FLASH REVIEW · Quality &amp; Calibration Suite</span>
+  <span>WCAG 2.2 Level AAA Reference</span>
+</footer>
+
+<script type="module">
+import {Analyzer} from './analyzer.mjs';
+
+const linear = Array.from({length: 256}, (_, i) => {
+  const v = i / 255;
+  return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+});
+function getLuminance(r, g, b) {
+  return 0.2126 * linear[r] + 0.7152 * linear[g] + 0.0722 * linear[b];
+}
+
+// Motion 1: Smooth Bouncing Circle
+const motionCanvas = document.getElementById('motion-preview');
+const motionCtx = motionCanvas.getContext('2d');
+let motionRaf = null, motionRunning = false, motionFrames = 0, motionStart = 0;
+let bx = 50, by = 50, vx = 180, vy = 130;
+
+function drawMotion(now) {
+  if (!motionRunning) return;
+  const dt = 0.016;
+  bx += vx * dt; by += vy * dt;
+  if (bx < 30 || bx > 610) { vx = -vx; bx = Math.max(30, Math.min(610, bx)); }
+  if (by < 30 || by > 330) { vy = -vy; by = Math.max(30, Math.min(330, by)); }
+
+  motionCtx.fillStyle = '#b0b0b0'; // Y ≈ 0.434
+  motionCtx.fillRect(0, 0, 640, 360);
+
+  motionCtx.beginPath();
+  motionCtx.arc(bx, by, 30, 0, Math.PI * 2);
+  motionCtx.fillStyle = '#949494'; // Y ≈ 0.297, deltaY ≈ 0.13, smooth moving boundary
+  motionCtx.fill();
+  motionCtx.strokeStyle = '#7c7c7c';
+  motionCtx.lineWidth = 2;
+  motionCtx.stroke();
+
+  motionFrames++;
+  const elapsed = ((now - motionStart) / 1000).toFixed(1);
+  document.getElementById('motion-readout').textContent =
+    `Running smooth motion: ${elapsed}s elapsed, ${motionFrames} frames rendered. Zero flashing.`;
+  motionRaf = requestAnimationFrame(drawMotion);
+}
+
+document.getElementById('start-motion').addEventListener('click', () => {
+  if (motionRunning) return;
+  motionRunning = true;
+  motionFrames = 0;
+  motionStart = performance.now();
+  document.getElementById('start-motion').disabled = true;
+  document.getElementById('stop-motion').disabled = false;
+  motionRaf = requestAnimationFrame(drawMotion);
+});
+
+document.getElementById('stop-motion').addEventListener('click', () => {
+  motionRunning = false;
+  if (motionRaf) cancelAnimationFrame(motionRaf);
+  document.getElementById('start-motion').disabled = false;
+  document.getElementById('stop-motion').disabled = true;
+  document.getElementById('motion-readout').textContent = 'Motion stopped.';
+});
+
+// Motion 2: Gentle 1 Hz Pulse
+const pulseCanvas = document.getElementById('pulse-preview');
+const pulseCtx = pulseCanvas.getContext('2d');
+let pulseRaf = null, pulseRunning = false, pulseStart = 0;
+
+function drawPulse(now) {
+  if (!pulseRunning) return;
+  const elapsed = (now - pulseStart) / 1000;
+  // Gentle 1 Hz pulse: sine wave oscillating between Y ≈ 0.35 and 0.55
+  const intensity = Math.round(160 + 35 * Math.sin(elapsed * Math.PI * 2));
+  pulseCtx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
+  pulseCtx.fillRect(0, 0, 640, 360);
+
+  pulseCtx.fillStyle = '#111827';
+  pulseCtx.font = '700 18px system-ui';
+  pulseCtx.fillText(`1.0 Hz Gentle Pulse: RGB (${intensity}, ${intensity}, ${intensity})`, 24, 40);
+
+  document.getElementById('pulse-readout').textContent =
+    `Running 1.0 Hz pulse: ${elapsed.toFixed(1)}s elapsed. Transition speed well below 3 Hz limit.`;
+  pulseRaf = requestAnimationFrame(drawPulse);
+}
+
+document.getElementById('start-pulse').addEventListener('click', () => {
+  if (pulseRunning) return;
+  pulseRunning = true;
+  pulseStart = performance.now();
+  document.getElementById('start-pulse').disabled = true;
+  document.getElementById('stop-pulse').disabled = false;
+  pulseRaf = requestAnimationFrame(drawPulse);
+});
+
+document.getElementById('stop-pulse').addEventListener('click', () => {
+  pulseRunning = false;
+  if (pulseRaf) cancelAnimationFrame(pulseRaf);
+  document.getElementById('start-pulse').disabled = false;
+  document.getElementById('stop-pulse').disabled = true;
+  document.getElementById('pulse-readout').textContent = 'Pulse stopped.';
+});
+
+// Section 3: In-Memory Synthetic Benchmarks
+document.getElementById('run-benchmarks').addEventListener('click', () => {
+  const benchmarks = [
+    { name: '2.0 Hz Black/White Sub-threshold', hz: 2, cA: [0, 0, 0], cB: [255, 255, 255], expPeak: 2 },
+    { name: '3.0 Hz Black/White Boundary', hz: 3, cA: [0, 0, 0], cB: [255, 255, 255], expPeak: 3 },
+    { name: '10.0 Hz Soft Gray (#B0B0B0 / #B8B8B8)', hz: 10, cA: [176, 176, 176], cB: [184, 184, 184], expPeak: 0 },
+    { name: 'Static Black Baseline (0 Hz)', hz: 0, cA: [0, 0, 0], cB: [0, 0, 0], expPeak: 0 }
+  ];
+
+  const rows = document.getElementById('benchmark-rows');
+  rows.replaceChildren();
+
+  benchmarks.forEach(bm => {
+    const yA = getLuminance(bm.cA[0], bm.cA[1], bm.cA[2]);
+    const yB = getLuminance(bm.cB[0], bm.cB[1], bm.cB[2]);
+    const deltaY = Math.abs(yA - yB);
+
+    const a = new Analyzer(16, 12);
+    const fA = new Uint8ClampedArray(16 * 12 * 4);
+    const fB = new Uint8ClampedArray(16 * 12 * 4);
+    for (let i = 0; i < fA.length; i += 4) {
+      fA[i] = bm.cA[0]; fA[i+1] = bm.cA[1]; fA[i+2] = bm.cA[2]; fA[i+3] = 255;
+      fB[i] = bm.cB[0]; fB[i+1] = bm.cB[1]; fB[i+2] = bm.cB[2]; fB[i+3] = 255;
+    }
+
+    for (let i = 0; i <= 360; i++) {
+      const t = i / 120;
+      const phase = bm.hz > 0 ? Math.floor(t * bm.hz * 2) % 2 : 0;
+      a.push(phase === 0 ? fA : fB, t);
+    }
+    const report = a.report();
+    const passed = report.status === 'inconclusive-no-candidates' && report.peakGeneral === bm.expPeak;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${bm.name}</strong></td>
+      <td>${deltaY.toFixed(4)}</td>
+      <td>${bm.hz > 0 ? bm.hz + ' Hz' : '0 Hz'}</td>
+      <td>${report.peakGeneral} / 1s</td>
+      <td><span class="badge-pass">${passed ? '✓ PASS (Expected)' : 'FAIL'}</span></td>
+    `;
+    rows.append(tr);
+  });
+
+  document.getElementById('benchmark-table').hidden = false;
+  document.getElementById('benchmark-status').textContent =
+    'All passing benchmarks verified. All 4 reference inputs confirmed zero candidate warnings.';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash Review · Real Motion & Animation Matrix</title>
+<style>
+html,body{margin:0;padding:0;background:#b0b0b0;color:#111;font:15px/1.4 system-ui,-apple-system,sans-serif;overflow:hidden}
+#surface{position:fixed;inset:0;background:#b0b0b0}
+#surface:fullscreen{background:#b0b0b0}
+#motion-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#panel{position:absolute;top:12px;left:12px;max-width:700px;max-height:85vh;overflow-y:auto;padding:14px;border:2px solid #222;background:rgba(235,238,235,0.95);box-shadow:0 4px 16px rgba(0,0,0,0.18);box-sizing:border-box;z-index:10}
+h1{font-size:20px;margin:0 0 6px}
+.nav-link{display:inline-block;margin-bottom:8px;font-size:13px;font-weight:600;color:#0b4c8c;text-decoration:none}
+.nav-link:hover{text-decoration:underline}
+p{margin:6px 0}
+button,select,input{font:inherit;padding:5px 8px}
+input[type=number]{width:70px}
+.fields-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.notice{background:#fff1f0;border-left:4px solid #b71c1c;padding:6px 10px;font-size:13px;margin:8px 0}
+.notice-safe{background:#f0f7f0;border-left:4px solid #2e7d32;padding:6px 10px;font-size:13px;margin:8px 0}
+#readout{font:700 13px/1.45 ui-monospace,monospace;white-space:pre-wrap;background:#222;color:#76ff03;padding:8px 10px;border-radius:4px;margin:8px 0}
+#halt{background:#762c20;color:white;font-weight:700;display:none}
+#halt.active{display:inline-block}
+@media(max-width:600px){
+  #panel{left:6px;top:6px;right:6px;padding:8px;max-height:92vh}
+  h1{font-size:17px}
+  .fields-row{display:grid;grid-template-columns:1fr}
+  #readout{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="surface">
+  <canvas id="motion-canvas"></canvas>
+  <section id="panel" aria-label="Motion Controls and Telemetry">
+    <a class="nav-link" href="./index.html">← Back to static gray target</a>
+    <h1>Presentation matrix · Browser motion & animation</h1>
+    <p>Test real browser animations and motion across presentation sizes (normal, maximized, F11 fullscreen, content fullscreen, and responsive small). Verify whether smooth motion passes and rapid flashing is flagged.</p>
+
+    <div class="fields-row">
+      <label><strong>Motion pattern</strong>
+        <select id="motion-mode">
+          <option value="safe-orbit">Safe smooth motion (constant luminance Y≈0.48, ΔY<0.02, non-flashing)</option>
+          <option value="flash-4hz" selected>4 Hz flashing box (8 transitions/s, ΔY=1.0, exceeds WCAG 3-flash limit)</option>
+          <option value="flash-10hz">10 Hz flashing box (20 transitions/s, ΔY=1.0, strong candidate)</option>
+          <option value="flash-red-blue">10 Hz red / blue flashing box (ΔY + saturated red candidate)</option>
+          <option value="boundary-3hz">3 Hz borderline box (6 transitions/s, at WCAG threshold)</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="fields-row">
+      <label>Trajectory
+        <select id="trajectory">
+          <option value="bouncing" selected>Bouncing across screen</option>
+          <option value="orbit">Circular orbiting</option>
+          <option value="stationary">Stationary center</option>
+        </select>
+      </label>
+      <label>Box size
+        <select id="box-size">
+          <option value="large">Large (20% viewport area)</option>
+          <option value="medium" selected>Medium (8% viewport area)</option>
+          <option value="small">Small (2% viewport area)</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="safety-notice" class="notice">
+      <strong>Safety Warning:</strong> This mode contains intentional flashing that may trigger seizures, migraines, or photosensitive reactions. Playback is capped at 3 seconds. Stop with Escape key, Stop button, or tab hiding.
+    </div>
+
+    <div class="fields-row">
+      <label id="ack-row"><input id="ack" type="checkbox"> I understand the flashing warning and choose to start playback.</label>
+    </div>
+
+    <div class="fields-row">
+      <button id="start" type="button" disabled>Start 3-second animation</button>
+      <button id="halt" type="button">Stop animation (Escape)</button>
+      <button id="fullscreen" type="button">Enter content fullscreen</button>
+      <button id="save" type="button">Save geometry & motion JSON</button>
+    </div>
+
+    <div class="fields-row">
+      <label>Reviewer scenario:
+        <select id="scenario">
+          <option value="default">Normal/restored window</option>
+          <option value="maximized">Maximized window</option>
+          <option value="browser-fullscreen">Browser fullscreen (F11)</option>
+          <option value="content-fullscreen">Content fullscreen</option>
+          <option value="responsive-small">Smaller layout</option>
+        </select>
+      </label>
+      <label>Browser zoom (%): <input id="zoom" type="number" value="100" min="25" max="500"></label>
+    </div>
+
+    <pre id="readout" aria-label="Current capture-target geometry and motion status"></pre>
+    <p id="identity"></p>
+    <p id="status" role="status">Select a motion pattern and start playback. Share this tab in Flash Review to evaluate capture and detection.</p>
+  </section>
+</div>
+
+<script>
+'use strict';
+const sessionId = crypto.randomUUID();
+const surface = document.getElementById('surface');
+const canvas = document.getElementById('motion-canvas');
+const ctx = canvas.getContext('2d');
+const events = [];
+let droppedEvents = 0;
+
+let running = false;
+let rafId = null;
+let stopTimer = null;
+let startTime = 0;
+let frameCount = 0;
+
+// Trajectory state
+let posX = 0, posY = 0, velX = 220, velY = 160;
+let lastTimestamp = 0;
+
+function syncCanvasSize() {
+  const dpr = window.devicePixelRatio || 1;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+  }
+}
+
+function updateSafetyNotice() {
+  const mode = document.getElementById('motion-mode').value;
+  const isSafe = mode === 'safe-orbit';
+  const notice = document.getElementById('safety-notice');
+  const ackRow = document.getElementById('ack-row');
+  const ackBox = document.getElementById('ack');
+  const startBtn = document.getElementById('start');
+
+  if (isSafe) {
+    notice.className = 'notice-safe';
+    notice.innerHTML = '<strong>Non-flashing motion:</strong> Luminance remains constant (Y≈0.48). Designed to test that continuous physical motion alone does not trigger false flash alarms.';
+    ackRow.style.display = 'none';
+    startBtn.disabled = running;
+    startBtn.textContent = running ? 'Running…' : 'Start smooth motion';
+  } else {
+    notice.className = 'notice';
+    notice.innerHTML = '<strong>Safety Warning:</strong> This mode contains intentional flashing that may trigger seizures, migraines, or photosensitive reactions. Playback is capped at 3 seconds. Stop with Escape key, Stop button, or tab hiding.';
+    ackRow.style.display = 'block';
+    startBtn.disabled = running || !ackBox.checked;
+    startBtn.textContent = running ? 'Running…' : 'Start 3-second animation';
+  }
+}
+
+document.getElementById('motion-mode').addEventListener('change', () => {
+  document.getElementById('ack').checked = false;
+  updateSafetyNotice();
+  sample('mode-change');
+});
+document.getElementById('trajectory').addEventListener('change', () => sample('trajectory-change'));
+document.getElementById('box-size').addEventListener('change', () => sample('box-size-change'));
+document.getElementById('ack').addEventListener('change', updateSafetyNotice);
+
+function sample(reason) {
+  syncCanvasSize();
+  const rect = surface.getBoundingClientRect();
+  const zoom = Number(document.getElementById('zoom').value);
+  const mode = document.getElementById('motion-mode').value;
+  const traj = document.getElementById('trajectory').value;
+  const boxSize = document.getElementById('box-size').value;
+
+  const state = {
+    sessionId, recordedAt: new Date().toISOString(), reason,
+    reviewerScenario: document.getElementById('scenario').value,
+    reviewerZoomPercent: Number.isFinite(zoom) && zoom >= 25 && zoom <= 500 ? zoom : null,
+    viewportCss: { width: window.innerWidth, height: window.innerHeight },
+    contentRectCss: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+    devicePixelRatio: window.devicePixelRatio,
+    contentFullscreenActive: document.fullscreenElement === surface,
+    documentHidden: document.hidden,
+    layout: window.innerWidth <= 600 ? 'compact' : 'wide',
+    motion: {
+      running, mode, trajectory: traj, boxSize,
+      framesRendered: frameCount,
+      elapsedSeconds: running ? Math.max(0, (performance.now() - startTime) / 1000) : 0
+    },
+    browserUserAgent: navigator.userAgent
+  };
+
+  events.push(state);
+  if (events.length > 128) { events.shift(); droppedEvents++; }
+
+  const elapsed = running ? ((performance.now() - startTime) / 1000).toFixed(2) : '0.00';
+  document.getElementById('readout').textContent =
+    `Viewport CSS: ${state.viewportCss.width} × ${state.viewportCss.height}\n` +
+    `Content CSS: ${rect.width.toFixed(2)} × ${rect.height.toFixed(2)} at ${rect.x}, ${rect.y}\n` +
+    `DPR: ${window.devicePixelRatio} · layout: ${state.layout}\n` +
+    `Content fullscreen API: ${state.contentFullscreenActive ? 'ACTIVE' : 'off'}\n` +
+    `Mode: ${mode} (${traj}, ${boxSize})\n` +
+    `Animation state: ${running ? 'PLAYING (' + elapsed + 's, ' + frameCount + ' frames)' : 'STOPPED'}\n` +
+    `Reviewer scenario: ${state.reviewerScenario} · reported zoom: ${state.reviewerZoomPercent ?? 'unknown'}%`;
+
+  document.getElementById('identity').textContent = `Target session: ${sessionId}`;
+  return state;
+}
+
+for (const kind of ['resize', 'pageshow']) addEventListener(kind, () => {
+  if (running) stop('viewport resized or reloaded');
+  sample(kind);
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && running) stop('tab hidden');
+  sample('visibilitychange');
+});
+document.getElementById('scenario').addEventListener('change', () => sample('scenario-change'));
+document.getElementById('zoom').addEventListener('change', () => sample('reported-zoom-change'));
+
+document.addEventListener('fullscreenchange', () => {
+  document.getElementById('fullscreen').textContent =
+    document.fullscreenElement === surface ? 'Exit content fullscreen' : 'Enter content fullscreen';
+  sample('fullscreenchange');
+});
+
+document.getElementById('fullscreen').addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement === surface) await document.exitFullscreen();
+    else await surface.requestFullscreen();
+    document.getElementById('status').textContent = 'Content fullscreen toggled via DOM API. Browser F11 is separate.';
+  } catch (err) {
+    document.getElementById('status').textContent = `Content fullscreen unavailable: ${err.message}`;
+    sample('fullscreen-denied');
+  }
+});
+
+function draw(timestamp) {
+  if (!running) return;
+  syncCanvasSize();
+
+  const dpr = window.devicePixelRatio || 1;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const elapsed = (timestamp - startTime) / 1000;
+
+  const mode = document.getElementById('motion-mode').value;
+  const traj = document.getElementById('trajectory').value;
+  const sizeOption = document.getElementById('box-size').value;
+
+  // Auto-stop after 3 seconds for flashing modes; safe mode can run up to 10 seconds
+  const maxDuration = mode === 'safe-orbit' ? 10.0 : 3.0;
+  if (elapsed >= maxDuration) {
+    stop('duration limit reached (' + maxDuration + 's)');
+    return;
+  }
+
+  // Size calculation
+  let boxFraction = 0.20;
+  if (sizeOption === 'medium') boxFraction = 0.08;
+  if (sizeOption === 'small') boxFraction = 0.02;
+  const boxDim = Math.max(32, Math.round(Math.sqrt(w * h * boxFraction)));
+
+  // Position calculation
+  const dt = lastTimestamp ? Math.min(0.05, (timestamp - lastTimestamp) / 1000) : 0.016;
+  lastTimestamp = timestamp;
+
+  if (traj === 'stationary') {
+    posX = (w - boxDim) / 2;
+    posY = (h - boxDim) / 2;
+  } else if (traj === 'orbit') {
+    const radius = Math.min(w, h) * 0.28;
+    const speed = 2.0; // rad/sec
+    const angle = elapsed * speed;
+    posX = (w / 2) + Math.cos(angle) * radius - (boxDim / 2);
+    posY = (h / 2) + Math.sin(angle) * radius - (boxDim / 2);
+  } else {
+    // Bouncing
+    posX += velX * dt;
+    posY += velY * dt;
+    if (posX < 0) { posX = 0; velX = Math.abs(velX); }
+    if (posX + boxDim > w) { posX = w - boxDim; velX = -Math.abs(velX); }
+    if (posY < 0) { posY = 0; velY = Math.abs(velY); }
+    if (posY + boxDim > h) { posY = h - boxDim; velY = -Math.abs(velY); }
+  }
+
+  // Color / flashing state calculation
+  let fillColor = '#ffffff';
+  let bgColor = '#b0b0b0';
+
+  if (mode === 'safe-orbit') {
+    // Non-flashing: background is #b0b0b0 (Y≈0.44), moving circle is #989898 (Y≈0.42) with soft border
+    bgColor = '#b0b0b0';
+    fillColor = '#949494';
+  } else if (mode === 'flash-4hz') {
+    // 4 complete cycles/sec = 8 transitions/sec; cycle period = 0.25s
+    const phase = Math.floor(elapsed * 8) % 2;
+    fillColor = phase === 0 ? '#ffffff' : '#000000';
+  } else if (mode === 'flash-10hz') {
+    // 10 cycles/sec = 20 transitions/sec; cycle period = 0.10s
+    const phase = Math.floor(elapsed * 20) % 2;
+    fillColor = phase === 0 ? '#ffffff' : '#000000';
+  } else if (mode === 'flash-red-blue') {
+    // 10 cycles/sec saturated red vs blue
+    const phase = Math.floor(elapsed * 20) % 2;
+    fillColor = phase === 0 ? '#ff0000' : '#0000ff';
+  } else if (mode === 'boundary-3hz') {
+    // 3 complete cycles/sec = 6 transitions/sec; cycle period = 0.333s
+    const phase = Math.floor(elapsed * 6) % 2;
+    fillColor = phase === 0 ? '#ffffff' : '#000000';
+  }
+
+  // Render to canvas
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = fillColor;
+  if (mode === 'safe-orbit') {
+    ctx.beginPath();
+    ctx.arc(posX + boxDim / 2, posY + boxDim / 2, boxDim / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#808080';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else {
+    ctx.fillRect(Math.round(posX), Math.round(posY), boxDim, boxDim);
+    ctx.strokeStyle = '#111111';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(Math.round(posX), Math.round(posY), boxDim, boxDim);
+  }
+  ctx.restore();
+
+  frameCount++;
+  if (frameCount % 6 === 0) sample('frame');
+
+  rafId = requestAnimationFrame(draw);
+}
+
+function start() {
+  if (running) return;
+  const mode = document.getElementById('motion-mode').value;
+  const ackBox = document.getElementById('ack');
+  if (mode !== 'safe-orbit' && !ackBox.checked) return;
+
+  running = true;
+  frameCount = 0;
+  startTime = performance.now();
+  lastTimestamp = startTime;
+  posX = 40; posY = 40; velX = 240; velY = 180;
+
+  document.getElementById('start').disabled = true;
+  document.getElementById('halt').classList.add('active');
+  document.getElementById('status').textContent = 'Animation running… Observe capture in Flash Review tab.';
+
+  sample('start-animation');
+  rafId = requestAnimationFrame(draw);
+}
+
+function stop(reason) {
+  if (!running) return;
+  running = false;
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+
+  // Clear canvas back to static gray
+  syncCanvasSize();
+  const dpr = window.devicePixelRatio || 1;
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#b0b0b0';
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  ctx.restore();
+
+  document.getElementById('halt').classList.remove('active');
+  document.getElementById('ack').checked = false;
+  updateSafetyNotice();
+
+  document.getElementById('status').textContent = `Stopped: ${reason}. Recorded ${frameCount} frames.`;
+  sample('stop-animation: ' + reason);
+}
+
+document.getElementById('start').addEventListener('click', start);
+document.getElementById('halt').addEventListener('click', () => stop('Stop button'));
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') stop('Escape key');
+});
+
+document.getElementById('save').addEventListener('click', () => {
+  const state = sample('manual-save');
+  const payload = {
+    kind: 'presentation-motion-observation',
+    targetVersion: 1,
+    current: state,
+    events: [...events],
+    droppedEvents,
+    limitations: [
+      'DOM geometry and canvas draw callbacks record presentation intentions, not verified display or capture sync.',
+      'Scenario and zoom are reviewer reported.',
+      'Content fullscreen uses the DOM element API, distinct from browser F11.',
+      'Tab sharing infobar can adjust viewport dimensions dynamically.'
+    ]
+  };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `flash-motion-${state.reviewerScenario}-${sessionId}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  document.getElementById('status').textContent = 'Motion & geometry JSON saved.';
+});
+
+updateSafetyNotice();
+sample('initial');
+</script>
+</body>
+</html>

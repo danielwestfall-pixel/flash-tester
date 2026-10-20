@@ -1,8 +1,8 @@
 # Native verification findings
 
-## Current pause status — October 16, 2026
+## Current status — October 19, 2026
 
-NF-01 passes its targeted repair retest. New NF-02/NF-03 below remain actionable and unrepaired: **current reporting/export scope FAIL; incomplete native coverage BLOCKED.** Work paused at the user's request. These findings were observed in real Chrome against build `flash-review-0.4.2-20261016`, algorithm `flash-screen-0.4.1`; production source was unchanged from baseline `617251c` during this verification. Source/docs fixture publication `073f760` did not change production. No conformance finding is made.
+NF-01 passed targeted repair retest in 0.4.2. NF-02 and NF-03 are repaired in build `flash-review-0.4.3-20261019` (algorithm `flash-screen-0.4.1`): automated unit, export, and UI contract regressions pass all nine suites; real Chrome capture/download retest is in progress. Coverage gate remains **BLOCKED** on the remaining presentation/video/device matrix.
 
 ### P2 — NF-02: rejected supplied calibration is reported as missing
 
