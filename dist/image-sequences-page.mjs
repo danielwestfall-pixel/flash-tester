@@ -56,6 +56,7 @@ $('samples').addEventListener('click',()=>{
   $('load-status').textContent='Sample URLs filled in. Click Load images without playback to replace the loaded set.';
 });
 function draw(ctx,item,width,height){
+  ctx.imageSmoothingEnabled=false;
   ctx.fillStyle='#000000';ctx.fillRect(0,0,width,height);
   const r=containRect(item.bitmap.width,item.bitmap.height,width,height);ctx.drawImage(item.bitmap,r.x,r.y,r.width,r.height);
 }

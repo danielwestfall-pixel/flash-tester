@@ -27,6 +27,17 @@ assert.throws(()=>a.push([],1),/Frame size/);
 // Independent spatial phases should not invent flashes by averaging the image.
 const b=new Analyzer(2,1);for(let i=0;i<=120;i++){const v=i%20<10?0:255;b.push([v,v,v,255,255-v,255-v,255-v,255],i/120);}
 assert.ok(b.report().peakGeneral>3,'Opposing regions remain detectable');
+// RED-04: 10 Hz 2D counter-phase checkerboard flags candidates
+const cb=new Analyzer(4,4);
+for(let i=0;i<=180;i++){
+  const t=i/60,isP1=Math.floor(t*20)%2===0,raw=new Uint8ClampedArray(4*4*4);
+  for(let y=0;y<4;y++)for(let x=0;x<4;x++){
+    const k=(y*4+x)*4,val=((x+y)%2===0)?(isP1?0:255):(isP1?255:0);
+    raw[k]=raw[k+1]=raw[k+2]=val;raw[k+3]=255;
+  }
+  cb.push(raw,t);
+}
+assert.ok(cb.report().peakGeneral>3,'RED-04: 10 Hz counter-phase checkerboard detected');
 console.log('Analyzer checks passed');
 for(const example of examples){
   const report=syntheticExample(example,()=> 'data:image/png;base64,TEST');

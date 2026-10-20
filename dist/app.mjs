@@ -74,6 +74,7 @@ function frame(now,info){
       evidence=new Evidence(canvas.width,canvas.height,meta.probeX,meta.probeY);
     }
     if(meta.viewport.width!==video.videoWidth||meta.viewport.height!==video.videoHeight){finish('Shared surface dimensions changed; start a new capture');return;}
+    ctx.imageSmoothingEnabled=false;
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
     const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
     const frameResult=analyzer.push(rgba,info.mediaTime-frameStart);
