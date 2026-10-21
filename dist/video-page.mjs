@@ -279,4 +279,19 @@ $('halt')?.addEventListener('click',()=>stopLivePlayback('stopped by user'));
 window.addEventListener('keydown',e=>{if(e.key==='Escape')stopLivePlayback('aborted by Escape key');});
 window.addEventListener('blur',()=>stopLivePlayback('stopped: window lost focus'));
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopLivePlayback('stopped: tab hidden');});
+window.addEventListener('pagehide',()=>{
+  stopLivePlayback('aborted by page navigation');
+  if(loadController){loadController.abort();loadController=null;}
+  if(scanController){scanController.abort();scanController=null;}
+  if(currentSource&&currentSource.startsWith('blob:')){
+    URL.revokeObjectURL(currentSource);
+  }
+  currentVideo=null;currentSource=null;currentMetadata=null;outputReport=null;outputEvidence=null;isScreening=false;isPlaying=false;
+  $('progress-box')?.setAttribute('hidden','true');
+  $('result-table')?.setAttribute('hidden','true');
+  $('report-box')?.setAttribute('hidden','true');
+  if($('load-status'))$('load-status').textContent='Video resources released during navigation. Load video again to screen.';
+  updateButtons();
+});
+window.addEventListener('pageshow',()=>{updateButtons();});
 updateButtons();

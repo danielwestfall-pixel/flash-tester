@@ -42,7 +42,11 @@ export function schedule(count,seconds,changesPerSecond,seed){
 }
 
 export function imageAt(plan,time){
-  let i=Math.min(plan.length-1,Math.max(0,Math.floor(time/(plan[1].time-plan[0].time)+1e-9)));
+  if(!Array.isArray(plan)||!plan.length)return 0;
+  if(plan.length===1)return plan[0].image;
+  const stepDur=plan[1].time-plan[0].time;
+  if(!stepDur||stepDur<=0)return plan[0].image;
+  let i=Math.min(plan.length-1,Math.max(0,Math.floor(time/stepDur+1e-9)));
   return plan[i].image;
 }
 
@@ -110,6 +114,12 @@ export function rasterKind(bytes){
 }
 
 export function fitRect(sourceWidth,sourceHeight,targetWidth,targetHeight,mode='contain'){
+  if(!Number.isFinite(sourceWidth)||sourceWidth<=0||!Number.isFinite(sourceHeight)||sourceHeight<=0||
+     !Number.isFinite(targetWidth)||targetWidth<=0||!Number.isFinite(targetHeight)||targetHeight<=0){
+    const w=Math.max(1,Math.round(targetWidth>0?targetWidth:1));
+    const h=Math.max(1,Math.round(targetHeight>0?targetHeight:1));
+    return {x:0,y:0,width:w,height:h};
+  }
   let scale;
   if(mode==='cover'){
     scale=Math.max(targetWidth/sourceWidth,targetHeight/sourceHeight);
@@ -143,10 +153,18 @@ export function importSequencePlan(jsonString,imageCount){
   if(!data||typeof data!=='object'||!Array.isArray(data.plan)){
     throw Error('Invalid sequence plan: missing plan array.');
   }
+  if(data.plan.length<2){
+    throw Error('Invalid sequence plan: plan requires at least 2 steps.');
+  }
+  let prevTime=-Infinity;
   for(const step of data.plan){
     if(typeof step!=='object'||!Number.isInteger(step.image)||step.image<0||step.image>=imageCount||!Number.isFinite(step.time)||step.time<0){
       throw Error(`Invalid step in plan: image index ${step.image} out of range (loaded: ${imageCount}) or invalid time.`);
     }
+    if(step.time<prevTime){
+      throw Error('Invalid sequence plan: step timestamps must be monotonically increasing.');
+    }
+    prevTime=step.time;
   }
   return data;
 }

@@ -174,4 +174,21 @@ docEvents.visibilitychange();
 document.hidden = false;
 assert.equal($('stage').hidden, true, 'Emergency abort on tab hide');
 
-console.log('Video UI contracts, failsafe lockouts, screening flow and emergency aborts passed.');
+
+// 6. Navigation Cleanup (pagehide / pageshow)
+$('confirm-text').value = 'I agree';
+$('confirm-text').fire('input');
+$('ack').checked = true;
+$('ack').fire('change');
+$('file').files = [{ name: 'test.mp4', size: 1024, slice: () => new globalThis.Blob([]) }];
+await $('load-btn').fire('click');
+assert.equal($('screen-btn').disabled, false);
+
+winEvents.pagehide();
+assert.equal($('screen-btn').disabled, true, 'Screen button disabled after pagehide navigation');
+assert.equal($('play-btn').disabled, true, 'Play button disabled after pagehide navigation');
+assert.ok($('load-status').textContent.includes('Video resources released during navigation'), 'Status notes released resources');
+winEvents.pageshow();
+assert.equal($('screen-btn').disabled, true, 'Resources must be reloaded after pageshow');
+
+console.log('Video UI contracts, failsafe lockouts, screening flow, emergency aborts and navigation cleanup passed.');

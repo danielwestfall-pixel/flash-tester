@@ -42,6 +42,9 @@ assert.deepEqual(containRect(200,100,100,100),{x:0,y:25,width:100,height:50});
 assert.deepEqual(fitRect(200,100,100,100,'cover'),{x:-50,y:0,width:200,height:100});
 assert.deepEqual(fitRect(200,100,100,100,'crop'),{x:-50,y:0,width:200,height:100});
 const thinRect=containRect(16000,1,64,64);assert.ok(thinRect.width>=1&&thinRect.height>=1,'TEST-10: Extreme aspect ratio clamped to minimum 1px');
+assert.deepEqual(fitRect(0,0,100,100),{x:0,y:0,width:100,height:100},'fitRect zero dimensions fall back safely without NaN');
+assert.deepEqual(fitRect(-10,-5,100,100),{x:0,y:0,width:100,height:100},'fitRect negative dimensions fall back safely');
+
 
 // Sequence import / export
 const exported=exportSequencePlan([{name:'a.png',width:100,height:100},{name:'b.png',width:100,height:100}],plan);
@@ -50,6 +53,10 @@ assert.equal(imported.format,'flash-review-sequence-v1');
 assert.equal(imported.plan.length,61);
 assert.throws(()=>importSequencePlan(exported,3),/out of range/,'Rejects plan referencing unallocated image indices');
 assert.throws(()=>importSequencePlan('not json',4),/Invalid JSON/);
+assert.equal(imageAt([{image:2,time:0}],0.5),2,'imageAt safely handles single-step plan without throwing');
+assert.throws(()=>importSequencePlan(JSON.stringify({plan:[{image:0,time:0}]}),2),/requires at least 2 steps/);
+assert.throws(()=>importSequencePlan(JSON.stringify({plan:[{image:0,time:1.0},{image:1,time:0.5}]}),2),/monotonically increasing/);
+
 
 // Raster formats
 assert.equal(rasterKind(new Uint8Array([255,216,255,0])),'jpeg');
