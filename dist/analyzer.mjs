@@ -164,7 +164,30 @@ export class Analyzer {
     return {algorithm:'flash-screen-0.4.2',status,outcome:status==='candidates-detected'?'Potential flashing — review required':
       status==='insufficient-observation'?'Insufficient observation — inconclusive':'No candidates in sampled data — conformance inconclusive',
       observation:{meetsScreeningMinimum:!reasons.length,reasons,warning:'Minimum sampling checks do not rule out aliasing or establish page coverage.'},
-      evaluation:{general:'screening-only',red:'experimental-incomplete',area:this.area?'calibrated-screening':'not-evaluated',conformance:'not-determined'},
+      evaluation:{
+        general:'screening-only',
+        red:'experimental-incomplete',
+        area:this.area?'calibrated-screening':'not-evaluated',
+        conformance:'not-determined',
+        sc232:{
+          criterion:'SC 2.3.2 Three Flashes (Level AAA)',
+          status:(this.peakGeneral>3||this.peakRed>3)?'exceeds-three-flash-limit':(!reasons.length?'no-excess-flashes-in-sample':'insufficient-observation'),
+          peakFlashesPerSecond:Math.max(this.peakGeneral,this.peakRed),
+          areaExceptionPermitted:false,
+          note:'SC 2.3.2 allows NO flashing whatsoever that exceeds 3 flashes per second, even if below the general flash and red flash thresholds or smaller than the 21,824 CSS px area exception.'
+        },
+        sc233:{
+          criterion:'SC 2.3.3 Animation from Interactions (Level AAA)',
+          status:'manual-verification-required',
+          checklist:[
+            {item:'prefers-reduced-motion',description:'Verify CSS @media (prefers-reduced-motion: reduce) or system accessibility setting disables non-essential motion animations or transitions.'},
+            {item:'in-page-control',description:'Verify an in-page control, pause button, or user setting allows disabling motion animation.'},
+            {item:'essential-motion-rationale',description:'If animation cannot be disabled, verify and document whether the motion is strictly essential to conveying information or functionality (e.g. interactive chart manipulation, drag gesture).'},
+            {item:'interaction-state-coverage',description:'Verify all interaction triggers and states (hover, focus, click, scroll, page transitions) have been exercised and audited.'}
+          ],
+          note:'Automated pixel analysis cannot evaluate interactive user triggers or system reduced-motion settings; manual interaction testing is required.'
+        }
+      },
       area:this.area?.report()??this.areaFallback??{status:'not-evaluated',reason:'Displayed CSS dimensions were not supplied.'},
       duration,frames:this.frames,observedFps:fps,maxFrameGapSeconds:this.maxGap,
       analysisResolution:{width:this.width,height:this.height},peakGeneral:this.peakGeneral,

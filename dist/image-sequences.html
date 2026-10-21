@@ -107,19 +107,44 @@ canvas#surface { display: block; background: black; border-radius: 8px; }
         <input id="height" type="number" value="768" min="64" max="2160" step="1">
       </div>
     </div>
+
+    <div class="fields">
+      <div>
+        <label for="fit">Image fit mode <span>(Aspect ratio handling)</span></label>
+        <select id="fit">
+          <option value="contain" selected>Contain (Fit entire image inside frame)</option>
+          <option value="cover">Cover (Fill frame, crop overflow)</option>
+          <option value="crop">Center Crop (1:1 scale, center aligned)</option>
+        </select>
+      </div>
+      <div>
+        <label for="bg-color">Canvas background <span>(Matte color behind images)</span></label>
+        <select id="bg-color">
+          <option value="#000000" selected>Black (#000000)</option>
+          <option value="#1a1a1a">Dark Gray (#1a1a1a)</option>
+          <option value="#808080">Medium Gray (#808080)</option>
+          <option value="#ffffff">White (#ffffff)</option>
+        </select>
+      </div>
+    </div>
     <p class="hint">Note: Two image changes equal one complete flash cycle (Image A &rarr; Image B &rarr; Image A). WCAG restricts content from flashing more than 3 times per second.</p>
 
     <h2>3. Screen image combinations</h2>
     <div class="explainer-box" style="background:#f0fdf4; border:2px solid #16a34a; border-radius:8px; padding:16px; margin:14px 0; color:#14532d;">
       <strong style="color:#14532d; font-size:15px;">💡 Background screening without playback:</strong>
       <p style="margin:6px 0 0 0; line-height:1.6;">
-        <strong>"Screen all ordered pairs"</strong>, <strong>"Screen seeded shuffle"</strong>, and <strong>"Find worst-case flash sequence (Adversarial Search)"</strong> test image toggling 100% in memory in the background. No images are displayed or flashed on your screen (0% photosensitivity risk), and testing continues uninterrupted even if you switch browser tabs or work in another window.
+        <strong>"Screen all ordered pairs"</strong>, <strong>"Screen ordered triples"</strong>, <strong>"Screen seeded shuffle"</strong>, and <strong>"Find worst-case flash sequence (Adversarial Search)"</strong> test image toggling 100% in memory in the background. No images are displayed or flashed on your screen (0% photosensitivity risk), and testing continues uninterrupted even if you switch browser tabs or work in another window.
       </p>
     </div>
     <div class="button-row">
       <button id="pairs" type="button" disabled>Screen all ordered pairs without playback</button>
+      <button id="triples" type="button" disabled>Screen ordered triples without playback</button>
       <button id="shuffle" type="button" disabled>Screen seeded shuffle without playback</button>
       <button id="adversarial" type="button" disabled>Find worst-case flash sequence (Adversarial Search)</button>
+      <button id="export-plan" type="button" disabled>Export sequence plan (JSON)</button>
+      <button id="import-plan-btn" type="button" disabled>Import sequence plan (JSON)</button>
+      <input id="import-plan-file" type="file" accept="application/json" hidden>
+      <button id="screen-plan" type="button" disabled hidden>Screen imported trajectory without playback</button>
       <button id="download" type="button" disabled>Download JSON results and sequence</button>
     </div>
 

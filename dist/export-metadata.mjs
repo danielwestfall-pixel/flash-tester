@@ -11,6 +11,8 @@ export function exportMetadata(report={},evidence=report.evidence){
     calibration_css_width:calibration?.cssWidth??null,calibration_css_height:calibration?.cssHeight??null,
     reference_field_css_width:FIELD.width,reference_field_css_height:FIELD.height,reference_area_limit_css_px:FIELD.limit,
     area_method:report.area?.method??'Not evaluated',
+    sc232_status:report.evaluation?.sc232?.status??'not-evaluated',
+    sc233_status:report.evaluation?.sc233?.status??'manual-verification-required',
     evaluation_coverage_json:JSON.stringify(report.evaluation??{conformance:'not-determined'}),
     observation_coverage_json:JSON.stringify(report.observation??null),
     evidence_coverage_json:JSON.stringify(evidence?.coverage??null),

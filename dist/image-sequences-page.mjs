@@ -1,15 +1,22 @@
 import {Analyzer} from './analyzer.mjs';
 import {stampReport,BUILD_ID} from './report.mjs';
-import {imageUrls,orderedPairs,schedule,imageAt,rasterKind,containRect} from './image-sequence.mjs';
+import {imageUrls,orderedPairs,orderedTriples,schedule,imageAt,rasterKind,containRect,fitRect,exportSequencePlan,importSequencePlan} from './image-sequence.mjs';
 const $=id=>document.getElementById(id),canvas=$('surface'),context=canvas.getContext('2d',{colorSpace:'srgb'});
 let images=[],failures=[],busy=false,sourceDirty=false,output=null,running=false,raf=null,timer=null,started=null,plan=[],liveLog=[],liveConfig=null;
-let generation=0,suspended=false,loadController=null;
-const controls=['files','urls','load','samples','changes','seed','width','height','pairs','shuffle','adversarial','ack','play','download'];
+let generation=0,suspended=false,loadController=null,importedPlan=null;
+const controls=['files','urls','load','samples','changes','seed','width','height','fit','bg-color','pairs','triples','shuffle','adversarial','export-plan','import-plan-btn','ack','play','download'];
 function update(){
   for(const id of controls){const el=$(id);if(el)el.disabled=busy||running||suspended;}
   $('pairs').disabled=busy||running||suspended||sourceDirty||images.length<2||images.length>12;
+  if($('triples'))$('triples').disabled=busy||running||suspended||sourceDirty||images.length<3||images.length>8;
   $('shuffle').disabled=busy||running||suspended||sourceDirty||images.length<2;
   if($('adversarial'))$('adversarial').disabled=busy||running||suspended||sourceDirty||images.length<2;
+  if($('export-plan'))$('export-plan').disabled=busy||running||suspended||sourceDirty||images.length<2;
+  if($('import-plan-btn'))$('import-plan-btn').disabled=busy||running||suspended;
+  if($('screen-plan')){
+    $('screen-plan').hidden=!importedPlan;
+    $('screen-plan').disabled=busy||running||suspended||sourceDirty||!importedPlan;
+  }
   if($('cancel-load')){
     $('cancel-load').hidden=!loadController;
     $('cancel-load').disabled=!loadController;
@@ -21,8 +28,10 @@ function update(){
 function config(){
   const width=Number($('width').value),height=Number($('height').value),rate=Number($('changes').value),seed=Number($('seed').value);
   if(!Number.isInteger(width)||width<64||width>3840||!Number.isInteger(height)||height<64||height>2160||![4,6,8,20,30].includes(rate)||!Number.isInteger(seed)||seed<0||seed>4294967295)throw Error('Enter valid display dimensions, rate and integer shuffle seed.');
+  const fit=$('fit')?.value||'contain';
+  const background=$('bg-color')?.value||'#000000';
   const scale=Math.min(64/width,64/height);
-  return {width,height,rate,seed,seconds:3,fit:'contain',background:'#000000',analysisWidth:Math.max(1,Math.round(width*scale)),analysisHeight:Math.max(1,Math.round(height*scale))};
+  return {width,height,rate,seed,seconds:3,fit,background,analysisWidth:Math.max(1,Math.round(width*scale)),analysisHeight:Math.max(1,Math.round(height*scale))};
 }
 const confirmInput=$('confirm-text'),badge=$('failsafe-badge');
 export function normalizeFailsafeText(text){
@@ -53,7 +62,7 @@ function invalidate(){
   if(badge){badge.textContent='🔒 Locked';badge.className='failsafe-badge';}
   $('result').textContent='Settings changed; screen again for these conditions.';update();
 }
-for(const id of ['changes','seed','width','height'])$(id).addEventListener('change',invalidate);
+for(const id of ['changes','seed','width','height','fit','bg-color'])$(id)?.addEventListener('change',invalidate);
 function sourcesChanged(){sourceDirty=true;invalidate();$('load-status').textContent='Inputs changed. Load images before screening this set.';}
 $('files').addEventListener('change',sourcesChanged);$('urls').addEventListener('input',sourcesChanged);
 $('ack').addEventListener('change',()=>update());
@@ -63,10 +72,10 @@ $('samples').addEventListener('click',()=>{
   sourcesChanged();
   $('load-status').textContent='Sample URLs filled in. Click Load images without playback to replace the loaded set.';
 });
-function draw(ctx,item,width,height){
+function draw(ctx,item,width,height,fitMode='contain',bgColor='#000000'){
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='medium';
-  ctx.fillStyle='#000000';ctx.fillRect(0,0,width,height);
-  const r=containRect(item.bitmap.width,item.bitmap.height,width,height);ctx.drawImage(item.bitmap,r.x,r.y,r.width,r.height);
+  ctx.fillStyle=bgColor;ctx.fillRect(0,0,width,height);
+  const r=fitRect(item.bitmap.width,item.bitmap.height,width,height,fitMode);ctx.drawImage(item.bitmap,r.x,r.y,r.width,r.height);
 }
 async function decode(blob,name){
   if(blob.size>20*1024*1024)throw Error('Image exceeds 20 MB.');
@@ -145,13 +154,13 @@ function tableRow(name,r){
 }
 async function analyze(kind){
   if(busy||running||suspended||sourceDirty||images.length<2)return;
-  let c,pairs;try{c=config();pairs=kind==='pairs'?orderedPairs(images.length):null;}catch(e){$('result').textContent=e.message;return;}
+  let c,pairs=null,triples=null;try{c=config();if(kind==='pairs')pairs=orderedPairs(images.length);else if(kind==='triples')triples=orderedTriples(images.length);}catch(e){$('result').textContent=e.message;return;}
   busy=true;output=null;update();$('rows').replaceChildren();$('result-table').hidden=false;
   const token=++generation;
   const scratch=document.createElement('canvas');scratch.width=c.analysisWidth;scratch.height=c.analysisHeight;
   const ctx=scratch.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
   try{
-    const frames=images.map(item=>{draw(ctx,item,c.analysisWidth,c.analysisHeight);return ctx.getImageData(0,0,c.analysisWidth,c.analysisHeight).data;});
+    const frames=images.map(item=>{draw(ctx,item,c.analysisWidth,c.analysisHeight,c.fit,c.background);return ctx.getImageData(0,0,c.analysisWidth,c.analysisHeight).data;});
     const linear=Array.from({length:256},(_,i)=>{const v=i/255;return v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4;});
     const meanY=frames.map(data=>{let sum=0,count=data.length/4;for(let i=0;i<data.length;i+=4)sum+=0.2126*linear[data[i]]+0.7152*linear[data[i+1]]+0.0722*linear[data[i+2]];return sum/count;});
     const meanRed=frames.map(data=>{let sum=0,count=data.length/4;for(let i=0;i<data.length;i+=4){const r=linear[data[i]],g=linear[data[i+1]],b=linear[data[i+2]];sum+=Math.max(0,(r-g-b)*320);}return sum/count;});
@@ -170,8 +179,12 @@ async function analyze(kind){
     let jobs,adversarialPairs=null;
     if(kind==='pairs'){
       jobs=pairs;
+    }else if(kind==='triples'){
+      jobs=triples;
     }else if(kind==='shuffle'){
       jobs=[null];
+    }else if(kind==='custom'){
+      jobs=[importedPlan];
     }else if(kind==='adversarial'){
       let maxMadY=-1,bestYPair=[0,1];
       let maxMadRed=-1,bestRedPair=[0,1];
@@ -193,13 +206,18 @@ async function analyze(kind){
       if(token!==generation||suspended)return;
       const pair=jobs[j],a=new Analyzer(c.analysisWidth,c.analysisHeight,{calibration:{cssWidth:c.width,cssHeight:c.height}});
       for(let i=0;i<=c.seconds*120;i++){
-        const t=i/120,index=pair?pair[Math.floor(t*c.rate+1e-9)%2]:imageAt(shufflePlan,t);a.push(frames[index],t);
+        const t=i/120;let index;if(kind==='pairs'||kind==='adversarial')index=pair[Math.floor(t*c.rate+1e-9)%2];else if(kind==='triples')index=pair[Math.floor(t*c.rate+1e-9)%3];else if(kind==='custom')index=imageAt(importedPlan,t);else index=imageAt(shufflePlan,t);a.push(frames[index],t);
       }
       const r=stampReport({...a.report(),synthetic:true,source:'Decoded static images in generated schedules; no tab captured',pair});results.push(r);
-      const pairMad=pair?frameMad(frames[pair[0]],frames[pair[1]]):null;
+      const pairMad=(pair&&pair.length===2)?frameMad(frames[pair[0]],frames[pair[1]]):null;
       let name;
       if(kind==='adversarial'){
         name=`Worst-case pair: ${pair[0]+1} ↔ ${pair[1]+1} (MAD Y: ${pairMad.madY.toFixed(3)}${pairMad.madRed>20?`, MAD SR: ${pairMad.madRed.toFixed(1)}`:''})`;
+      }else if(kind==='triples'){
+        const deltas=[Math.abs(meanY[pair[0]]-meanY[pair[1]]),Math.abs(meanY[pair[1]]-meanY[pair[2]]),Math.abs(meanY[pair[2]]-meanY[pair[0]])];
+        name=`${pair[0]+1} → ${pair[1]+1} → ${pair[2]+1} → ${pair[0]+1} (max ΔY: ${Math.max(...deltas).toFixed(3)})`;
+      }else if(kind==='custom'){
+        name=`Imported plan (${importedPlan.length} steps)`;
       }else if(pair){
         const delta=Math.abs(meanY[pair[0]]-meanY[pair[1]]);
         name=`${pair[0]+1} → ${pair[1]+1} → ${pair[0]+1} (ΔY: ${delta.toFixed(3)})`;
@@ -222,14 +240,45 @@ async function analyze(kind){
     const lumSummary=images.map((i,idx)=>`#${idx+1}: Y≈${meanY[idx].toFixed(3)}`).join(', ');
     if(kind==='adversarial'){
       $('result').textContent=`Adversarial worst-case screening complete (${results.length} sequence${results.length===1?'':'s'}); flash candidates in ${candidates}. Screened pair(s) maximizing transition hazard. Loaded image luminance: [${lumSummary}]. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination. Changes per second are transitions; A/B flashes occur at half that rate.`;
+    }else if(kind==='triples'){
+      $('result').textContent=`${results.length} ordered triples screened; flash candidates in ${candidates}. Loaded image luminance: [${lumSummary}]. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination. Changes per second are transitions; 3-image loops cycle at one-third that rate.`;
+    }else if(kind==='custom'){
+      $('result').textContent=`Imported trajectory screened (${results.length} sequence); flash candidates in ${candidates}. Loaded image luminance: [${lumSummary}]. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination.`;
     }else{
       $('result').textContent=`${results.length} finite sequence${results.length===1?'':'s'} screened; flash candidates in ${candidates}. Loaded image luminance: [${lumSummary}]. ${failures.length?'Coverage incomplete due to failed image loads. ':''}No result establishes conformance or clearance of every combination. Changes per second are transitions; A/B flashes occur at half that rate.`;
     }
   }catch(e){$('result').textContent=`Screening interrupted; coverage incomplete: ${e.message}`;output=null;}
   finally{if(token===generation){busy=false;update();}}
 }
-$('pairs').addEventListener('click',()=>analyze('pairs'));$('shuffle').addEventListener('click',()=>analyze('shuffle'));
+$('pairs').addEventListener('click',()=>analyze('pairs'));
+$('triples')?.addEventListener('click',()=>analyze('triples'));
+$('shuffle').addEventListener('click',()=>analyze('shuffle'));
 $('adversarial')?.addEventListener('click',()=>analyze('adversarial'));
+$('screen-plan')?.addEventListener('click',()=>analyze('custom'));
+$('export-plan')?.addEventListener('click',()=>{
+  if(!images.length)return;
+  const c=config();
+  const curPlan=plan.length?plan:schedule(images.length,c.seconds,c.rate,c.seed);
+  const json=exportSequencePlan(images,curPlan,c);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='flash-sequence-plan.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$('import-plan-btn')?.addEventListener('click',()=>$('import-plan-file')?.click());
+$('import-plan-file')?.addEventListener('change',async e=>{
+  const file=e.target?.files?.[0];
+  if(!file)return;
+  try{
+    const text=await file.text();
+    const data=importSequencePlan(text,images.length);
+    importedPlan=data.plan;
+    update();
+    $('load-status').textContent=`Sequence plan loaded (${importedPlan.length} steps). Click Screen imported trajectory without playback.`;
+  }catch(err){
+    $('load-status').textContent=`Plan import error: ${err.message}`;
+  }
+});
 function stop(reason){
   if(!running)return;running=false;cancelAnimationFrame(raf);clearTimeout(timer);raf=null;timer=null;
   $('stage').hidden=true;context.fillStyle='#000000';context.fillRect(0,0,canvas.width,canvas.height);$('setup').hidden=false;
@@ -245,7 +294,7 @@ function tick(){
   // same monotonic entry clock for the immediate draw and every later callback.
   const now=performance.now();if(started===null)started=now;
   const t=(now-started)/1000;if(t>=3){stop('three-second limit');return;}
-  const index=imageAt(plan,t);draw(context,images[index],canvas.width,canvas.height);liveLog.push({time:t,image:index});raf=requestAnimationFrame(tick);
+  const index=imageAt(plan,t);draw(context,images[index],canvas.width,canvas.height,liveConfig.fit,liveConfig.background);liveLog.push({time:t,image:index});raf=requestAnimationFrame(tick);
 }
 $('play').addEventListener('click',()=>{
   const failsafeOk=confirmInput?checkFailsafe(confirmInput.value):true;

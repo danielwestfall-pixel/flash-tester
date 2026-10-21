@@ -129,6 +129,45 @@ await slowLoading;
 assert.ok($('load-status').textContent.includes('cancelled'));
 assert.equal($('cancel-load').hidden,true);
 assert.equal($('cancel-load').disabled,true);
+// Ordered triples, sequence plan import/export, and fit modes:
+$('files').files=[file('black.jpg',0),file('white.jpg',255),file('gray.jpg',128)];
+$('urls').value='';
+await $('load').fire('click');
+assert.equal($('triples').disabled,false,'Triples screening enabled for 3 images');
+assert.equal($('export-plan').disabled,false,'Sequence plan export enabled');
+
+// Export plan:
+$('export-plan').fire('click');
+const exportedPlan=JSON.parse(await download.text());
+assert.equal(exportedPlan.format,'flash-review-sequence-v1');
+assert.equal(exportedPlan.images.length,3);
+assert.ok(exportedPlan.plan.length>0);
+
+// Screen triples:
+await $('triples').fire('click');
+assert.equal($('rows').children.length,6,'3 images produce 6 ordered triples (3*2*1)');
+assert.ok($('result').textContent.includes('6 ordered triples screened'));
+
+// Import plan and screen custom trajectory:
+const customJson=JSON.stringify({
+  format:'flash-review-sequence-v1',
+  plan:[{image:0,time:0},{image:1,time:0.1},{image:2,time:0.2},{image:0,time:0.3}]
+});
+await $('import-plan-file').fire('change',{target:{files:[{text:async()=>customJson}]}});
+assert.equal($('screen-plan').hidden,false);
+assert.equal($('screen-plan').disabled,false);
+await $('screen-plan').fire('click');
+assert.equal($('rows').children.length,1);
+assert.ok($('result').textContent.includes('Imported trajectory screened'));
+
+// Fit mode and background color options:
+$('fit').value='cover';
+$('fit').fire('change');
+$('bg-color').value='#ffffff';
+$('bg-color').fire('change');
+assert.equal($('download').disabled,true,'Changing fit or background invalidates prior output');
+
 
 console.log('Image input/playback contracts, parallel URL loading, cancel-load, and adversarial worst-case search regressions passed.');
+console.log('Ordered triples, plan export/import, fit modes and custom trajectory screening regressions passed.');
 console.log('NF-01 startup-clock regressions passed: earlier/same/later animation timestamps, repeated Start/replay, duplicate entry times, schedule boundaries and duration cap (mock browser APIs).');

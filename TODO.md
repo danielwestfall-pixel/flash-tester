@@ -41,8 +41,8 @@ Native 0.4.3 verification now passes the targeted NF-01, NF-02, and NF-03 retest
 - [x] Provide deterministic ordered-pair screening, including reverse direction, at a chosen transition rate and displayed size.
 - [x] Provide seeded shuffled playback with an exact order/timing log; explicit Start, Stop, Escape, tab-hide stop and duration cap.
 - [x] Provide downloadable deterministic PNG patterns for passing/failing/area/red cases; no automatic flashing preview.
-- [ ] Add sequence import/export, dwell times, fades, contain/cover/crop, background and responsive presentation settings.
-- [ ] Add ordered triples/multi-state trajectories, loop boundaries, adversarial sequence search and whole-sequence review. Pair screening/random samples cannot prove every possible combination passes.
+- [x] Add sequence import/export, dwell times, fades, contain/cover/crop, background and responsive presentation settings.
+- [x] Add ordered triples/multi-state trajectories, loop boundaries, adversarial sequence search and whole-sequence review. Pair screening/random samples cannot prove every possible combination passes.
 - [x] Reject GIF, APNG and animated WebP explicitly; full timeline decoding remains future work.
 - [x] Download reports linking loaded image labels, sequence, rate, geometry and detector build; omit source URLs. Persistent history/content hashes remain future work.
 
@@ -65,8 +65,8 @@ Native 0.4.3 verification now passes the targeted NF-01, NF-02, and NF-03 retest
 
 ## 5. Other criteria and reporting
 
-- [ ] SC 2.3.2 (AAA): separate strict three-flash evaluation; do not apply SC 2.3.1 area/brightness exceptions as a clearance.
-- [ ] SC 2.3.3 (AAA): manual interaction checklist, motion-disable controls, reduced-motion preference, essential-motion rationale and state coverage.
-- [ ] Coverage matrix and exports separating measured results, assumptions, unsupported inputs and untested states. No automatic whole-page conformance verdict.
+- [x] SC 2.3.2 (AAA): separate strict three-flash evaluation; do not apply SC 2.3.1 area/brightness exceptions as a clearance.
+- [x] SC 2.3.3 (AAA): manual interaction checklist, motion-disable controls, reduced-motion preference, essential-motion rationale and state coverage.
+- [x] Coverage matrix and exports separating measured results, assumptions, unsupported inputs and untested states. No automatic whole-page conformance verdict.
 
 Sources: [SC 2.3.1](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold.html), [SC 2.3.2](https://www.w3.org/WAI/WCAG22/Understanding/three-flashes.html), [SC 2.3.3](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html).
