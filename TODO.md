@@ -30,7 +30,7 @@ Native 0.4.3 verification now passes the targeted NF-01, NF-02, and NF-03 retest
 - [x] Preserve candidate detection even for small areas; export geometry, algorithm scope, measurement bounds and incomplete coverage.
 - [x] Test below/equal/above threshold, window edges, nearby/separated regions, staggered timing, scaling and missing calibration.
 - [x] Validate asynchronous/gradual/moving flash areas against an independent reference; support precise temporal overlap, not just sample-aligned completions.
-- [ ] Validate real tab capture at reference geometry and largest available presentation scale.
+- [x] Validate real tab capture at reference geometry and largest available presentation scale.
 - [x] Automate/document full validation of the size matrix for BOTH video and browser animations: initial/default presentation, maximized browser, browser fullscreen (F11), and content/player fullscreen where supported. Record viewport CSS size, displayed content rectangle, source resolution, DPR, zoom and fullscreen kind for each run. F11 and player fullscreen are distinct scenarios.
 - [x] Include smaller responsive breakpoints when they change the animation, crop, layout or visible content; test all relevant states at standard zoom. Smaller viewports are coverage cases, not a universal WCAG-prescribed list of dimensions.
 
