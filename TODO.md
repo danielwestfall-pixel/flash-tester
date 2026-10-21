@@ -56,12 +56,12 @@ Native 0.4.3 verification now passes the targeted NF-01, NF-02, and NF-03 retest
 
 ## 4. Detector boundaries and exceptions
 
-- [ ] Luminance delta just below/at/above 0.10; darker-state luminance around 0.80; quantization and codec changes.
-- [ ] Saturated-red ratio around 0.8 and chromaticity around 0.2; constant-luminance changes, black endpoints, curved trajectories, independent red validation.
-- [ ] Balanced fine patterns/checkerboards/noise below/at/above 0.1 degree, with geometry and antialiasing checks.
-- [ ] Extend rolling-second irregular burst, phase, duty cycle, gradual ramp, moving-region and mixed-frequency tests.
-- [ ] Browser/device matrix: presentation vs capture rates, aliasing, throttling, DPR/zoom, resizing, protected video, canvas filtering and dropped frames.
-- [ ] Cross-check reference outputs using a validated specialist analyzer and retain disagreements as regressions.
+- [x] Luminance delta just below/at/above 0.10; darker-state luminance around 0.80; quantization and codec changes.
+- [x] Saturated-red ratio around 0.8 and chromaticity around 0.2; constant-luminance changes, black endpoints, curved trajectories, independent red validation.
+- [x] Balanced fine patterns/checkerboards/noise below/at/above 0.1 degree, with geometry and antialiasing checks.
+- [x] Extend rolling-second irregular burst, phase, duty cycle, gradual ramp, moving-region and mixed-frequency tests.
+- [x] Browser/device matrix: presentation vs capture rates, aliasing, throttling, DPR/zoom, resizing, protected video, canvas filtering and dropped frames.
+- [x] Cross-check reference outputs using a validated specialist analyzer and retain disagreements as regressions.
 
 ## 5. Other criteria and reporting
 
