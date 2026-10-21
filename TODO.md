@@ -48,11 +48,11 @@ Native 0.4.3 verification now passes the targeted NF-01, NF-02, and NF-03 retest
 
 ## 3. Video
 
-- [ ] Accept local video files and CORS-enabled video URLs, decode without a flashing preview, retain frame timestamps and source metadata.
-- [ ] Add reproducible encoded video fixtures (frequency, contrast, red and area), validate decoded pixels/timestamps against source patterns.
-- [ ] Handle variable frame rate, duplicate/drop frames, decode errors, seeks, loop seams and short bursts.
-- [ ] Record displayed CSS size independently of encoded resolution, including fullscreen testing.
-- [ ] Reject/mark unsupported HDR or wide-gamut inputs; add a validated color-management path before claiming coverage.
+- [x] Accept local video files and CORS-enabled video URLs, decode without a flashing preview, retain frame timestamps and source metadata.
+- [x] Add reproducible encoded video fixtures (frequency, contrast, red and area), validate decoded pixels/timestamps against source patterns.
+- [x] Handle variable frame rate, duplicate/drop frames, decode errors, seeks, loop seams and short bursts.
+- [x] Record displayed CSS size independently of encoded resolution, including fullscreen testing.
+- [x] Reject/mark unsupported HDR or wide-gamut inputs; add a validated color-management path before claiming coverage.
 
 ## 4. Detector boundaries and exceptions
 

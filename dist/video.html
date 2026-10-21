@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flash Review · Direct Video File & URL Screening</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="evidence.css">
+<style>
+main { max-width: 1100px; margin: 0 auto; }
+.video-container { background: #ffffff; border: 2px solid var(--color-border-subtle); border-radius: 12px; padding: 28px; margin: 24px 0; }
+#stage { width: max-content; padding: 20px; background: #ffffff; border: 2px solid var(--color-danger-bg); border-radius: 12px; margin: 20px 0; }
+video#preview-player { display: block; background: black; border-radius: 8px; max-width: 100%; }
+#halt { background: #7f1d1d; color: white; min-height: 44px; font-weight: 700; margin-bottom: 12px; }
+#load-status { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 14px; background: #eef6f0; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--color-border); margin: 16px 0; }
+.button-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 18px 0; }
+.stat-box { background: #f8fafc; border: 1px solid var(--color-border-subtle); border-radius: 8px; padding: 14px; text-align: center; }
+.stat-box strong { display: block; font-size: 24px; color: var(--color-primary); margin-top: 4px; }
+.interval-list { margin: 16px 0; }
+.interval-item { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px; font-size: 14px; color: #9f1239; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="./" aria-label="Flash Review Home">
+    <span class="mark" aria-hidden="true">⌁</span>
+    <span>FLASH REVIEW</span>
+  </a>
+  <span class="tag">WCAG 2.2 · DIRECT VIDEO FILE &amp; STREAM SCREENING</span>
+</header>
+
+<main id="setup">
+  <p><a href="./">← Return to Flash Review Home</a></p>
+  <div class="intro">
+    <p class="eyebrow">Local Video Files &amp; Direct CORS Streams</p>
+    <h1>Screen video files for flashing lights</h1>
+    <p class="lede">
+      Directly analyze MP4, WebM, or OGG video files for seizure-inducing flashes. 
+      Screening runs 100% in the background without playing or flashing video on your screen.
+    </p>
+  </div>
+
+  <section class="quickstart-banner" aria-labelledby="video-quickstart-title">
+    <h2 id="video-quickstart-title">How video screening works (Safe &amp; Automated)</h2>
+    <div class="quickstart-steps">
+      <div class="quickstart-step">
+        <span class="step-number" aria-hidden="true">1</span>
+        <strong>Select a video</strong>
+        <p>Choose an MP4, WebM, or OGG file from your computer or enter a direct video link.</p>
+      </div>
+      <div class="quickstart-step">
+        <span class="step-number" aria-hidden="true">2</span>
+        <strong>Screen safely</strong>
+        <p>Click "Screen video safely without playback". Decoding happens completely in memory.</p>
+      </div>
+      <div class="quickstart-step">
+        <span class="step-number" aria-hidden="true">3</span>
+        <strong>Export evidence</strong>
+        <p>Review flagged intervals, relative luminance traces, and export forensic JSON, HTML, or CSV reports.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="video-container" aria-label="Video Selection and Configuration">
+    <h2>1. Select video source</h2>
+    <label for="file">Local video file <span>(MP4, WebM, or OGG)</span></label>
+    <input id="file" type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime">
+
+    <label for="url">Or video URL <span>(CORS-enabled HTTPS link)</span></label>
+    <input id="url" type="url" placeholder="https://example.com/video.mp4">
+    <p class="hint">Local files stay 100% in this browser. Video is never uploaded to any remote server.</p>
+
+    <div class="button-row">
+      <button id="load-btn" class="primary" type="button" style="width: auto;">Load video &amp; inspect metadata</button>
+      <button id="cancel-load-btn" type="button" style="width: auto;" hidden disabled>Cancel load</button>
+    </div>
+
+    <p id="load-status" role="status">No video loaded yet. Choose a video file or enter a URL above.</p>
+
+    <h2>2. Screening parameters</h2>
+    <div class="fields">
+      <div>
+        <label for="max-duration">Maximum screening duration (seconds)</label>
+        <input id="max-duration" type="number" value="30" min="1" max="300" step="1">
+      </div>
+      <div>
+        <label for="fps">Sampling rate (FPS)</label>
+        <select id="fps">
+          <option value="30" selected>30 frames / second (Standard screening)</option>
+          <option value="60">60 frames / second (High fidelity)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="fields">
+      <div>
+        <label for="css-width">Displayed CSS width (px) <span>(For area calibration)</span></label>
+        <input id="css-width" type="number" value="1024" min="64" max="3840" step="1">
+      </div>
+      <div>
+        <label for="css-height">Displayed CSS height (px) <span>(For area calibration)</span></label>
+        <input id="css-height" type="number" value="768" min="64" max="2160" step="1">
+      </div>
+    </div>
+
+    <h2>3. Screen video content</h2>
+    <div class="explainer-box" style="background:#f0fdf4; border:2px solid #16a34a; border-radius:8px; padding:16px; margin:14px 0; color:#14532d;">
+      <strong style="color:#14532d; font-size:15px;">💡 Background screening without playback:</strong>
+      <p style="margin:6px 0 0 0; line-height:1.6;">
+        "Screen video safely without playback" extracts and evaluates frames on an offscreen canvas. 
+        Zero photosensitivity risk. You can safely switch tabs or minimize the window while screening proceeds.
+      </p>
+    </div>
+
+    <div class="button-row">
+      <button id="screen-btn" class="primary" type="button" style="width: auto;" disabled>Screen video safely without playback</button>
+      <button id="cancel-screen-btn" type="button" style="width: auto;" hidden disabled>Cancel screening</button>
+    </div>
+
+    <div id="progress-container" hidden>
+      <label for="progress-bar">Screening progress:</label>
+      <progress id="progress-bar" value="0" max="100" style="width: 100%; height: 20px;"></progress>
+      <p id="progress-text" style="font-family: ui-monospace, monospace; font-size: 13px;">Screening: 0%</p>
+    </div>
+
+    <div class="stats-grid" id="stats-grid" hidden>
+      <div class="stat-box">
+        <span>Status</span>
+        <strong id="stat-status" style="font-size: 18px;">Ready</strong>
+      </div>
+      <div class="stat-box">
+        <span>Frames Analyzed</span>
+        <strong id="stat-frames">0</strong>
+      </div>
+      <div class="stat-box">
+        <span>Peak General (/1s)</span>
+        <strong id="stat-general">0</strong>
+      </div>
+      <div class="stat-box">
+        <span>Peak Red (/1s)</span>
+        <strong id="stat-red">0</strong>
+      </div>
+    </div>
+
+    <div id="results-section" hidden>
+      <h3>Screening Outcome</h3>
+      <p id="result-summary" style="font-weight: 600; font-size: 16px;"></p>
+
+      <div class="interval-list" id="intervals"></div>
+
+      <div class="button-row">
+        <button id="download-json" type="button" style="width: auto;">Download JSON report</button>
+        <button id="download-html" type="button" style="width: auto;">Download HTML report</button>
+        <button id="download-csv" type="button" style="width: auto;">Download CSV evidence</button>
+      </div>
+    </div>
+
+    <div class="double-warning-container" style="margin-top:28px;">
+      <div class="double-warning-banner-top">
+        <span class="danger-icon-large" aria-hidden="true">⚠️</span>
+        <span>CRITICAL PHOTOSENSITIVITY WARNING FOR LIVE PLAYBACK</span>
+      </div>
+      <p class="notice" style="margin:0 0 14px 0;">
+        <strong>Safety Warning for Live Playback:</strong>
+        Watching potentially flashing video can trigger seizures, migraines, or severe dizziness. Live playback is strictly optional; complete mathematical analysis is performed safely above without displaying video frames.
+      </p>
+
+      <div class="failsafe-box" id="video-failsafe">
+        <label for="confirm-text"><strong>Fail-safe confirmation:</strong> Type <code>I agree</code> or <code>I understand</code> to unlock live video playback:</label>
+        <div>
+          <input id="confirm-text" type="text" autocomplete="off" placeholder="Type I agree or I understand" class="failsafe-input">
+          <span id="failsafe-badge" class="failsafe-badge">🔒 Locked</span>
+        </div>
+      </div>
+
+      <div class="fields-row">
+        <label class="check-row">
+          <input id="ack" type="checkbox">
+          <strong>I understand the flashing-content warning and choose to preview live video playback.</strong>
+        </label>
+      </div>
+
+      <div class="button-row">
+        <button id="play-btn" class="primary" style="background:#7f1d1d; border-color:#7f1d1d; width:auto;" disabled>Play video preview (Escape to abort)</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section id="stage" hidden aria-label="Live video playback">
+  <button id="halt" type="button">Stop playback now (Escape key)</button>
+  <span id="live-state" role="status"></span>
+  <video id="preview-player" controls playsinline></video>
+</section>
+
+<footer>
+  <span>FLASH REVIEW · Accessible Video File &amp; Stream Screening</span>
+  <span>WCAG 2.2 Level AAA Interface Design</span>
+</footer>
+
+<script type="module" src="video-page.mjs?v=0.4.3"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@ import {exportMetadata} from './export-metadata.mjs';
 export const BUILD_ID='flash-review-0.4.3-20261019';
 export function stampReport(report){
   return {...report,reportId:globalThis.crypto?.randomUUID?.()??`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
-    buildId:BUILD_ID,sourceType:report.synthetic?'generated-frames':'shared-surface-capture'};
+    buildId:BUILD_ID,sourceType:(report.sourceType&&report.sourceType!=='generated-frames')?report.sourceType:(report.synthetic?'generated-frames':'shared-surface-capture')};
 }
 export function reviewText(report){
   const synthetic=report.sourceType==='generated-frames'||report.synthetic;
